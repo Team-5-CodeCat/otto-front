@@ -1,0 +1,60 @@
+{
+  "name": "TypeScript React Next.js Development",
+  "image": "node:24",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "installOhMyZsh": true,
+      "username": "otto_front_dev"
+    },
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "24",
+      "nodeGypDependencies": true,
+      "installYarnUsingApt": false
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.vscode-typescript-next",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-eslint",
+        "ms-vscode.vscode-json",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+        "syler.sass-indented",
+        "GitHub.copilot"
+      ],
+      "settings": {
+        "typescript.updateImportsOnFileMove.enabled": "always",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
+        },
+        "emmet.includeLanguages": {
+          "javascript": "javascriptreact",
+          "typescript": "typescriptreact"
+        },
+        "tailwindCSS.includeLanguages": {
+          "typescript": "javascript",
+          "typescriptreact": "javascript"
+        }
+      }
+    }
+  },
+  "forwardPorts": [
+    3000
+  ],
+  "portsAttributes": {
+    "3000": {
+      "label": "Next.js App",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "corepack enable && corepack prepare pnpm@latest --activate && npm install -g typescript ts-node && git config --global --unset-all user.name || true && git config --global --unset-all user.email || true && pnpm install",
+  "remoteUser": "otto_front_dev"
+}
