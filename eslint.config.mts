@@ -107,6 +107,7 @@ export default defineConfig([
       'package.json',
       'pnpm-lock.yaml',
       'tsconfig.json',
+      '.devcontainer/devcontainer.json',
     ],
   },
 ]);
