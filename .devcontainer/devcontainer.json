@@ -51,7 +51,8 @@
   "portsAttributes": {
     "3000": {
       "label": "Next.js App",
-      "onAutoForward": "notify"
+      "onAutoForward": "notify",
+      "protocol": "http"
     }
   },
   "postCreateCommand": "corepack enable && corepack prepare pnpm@latest --activate && npm install -g typescript ts-node && git config --global --unset-all user.name || true && git config --global --unset-all user.email || true && curl -sS https://starship.rs/install.sh | sh -s -- -y && echo 'eval \"$(starship init zsh)\"' >> ~/.zshrc && pnpm install",
