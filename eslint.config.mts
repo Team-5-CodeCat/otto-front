@@ -104,6 +104,9 @@ export default defineConfig([
       'node_modules/**',
       '*.config.js',
       '*.config.mjs',
+      'package.json',
+      'pnpm-lock.yaml',
+      'tsconfig.json',
     ],
   },
 ]);
