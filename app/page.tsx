@@ -1,83 +1,102 @@
-import Image from 'next/image';
+'use client';
+
+import { useCallback, useState } from 'react';
+import { PipelineNodeData } from './flow/codegen';
+import type { Edge, Node } from 'reactflow';
+import { parseShellToNodes, parseYAMLToNodes } from './flow/scriptParser';
+import FlowEditor from './flow/FlowEditor';
+import ScriptEditor from './flow/ScriptEditor';
 
 export default function Home() {
-  return (
-    <div className='font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20'>
-      <main className='flex flex-col gap-[32px] row-start-2 items-center sm:items-start'>
-        <Image
-          className='dark:invert'
-          src='/next.svg'
-          alt='Next.js logo'
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className='font-mono list-inside list-decimal text-sm/6 text-center sm:text-left'>
-          <li className='mb-2 tracking-[-.01em]'>
-            Get started by editing{' '}
-            <code className='bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded'>
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className='tracking-[-.01em]'>Save and see your changes instantly.</li>
-        </ol>
+  const [nodes, setNodes] = useState<Node<PipelineNodeData>[]>([]);
+  const [edges, setEdges] = useState<Edge[]>([]);
+  const [currentYamlScript, setCurrentYamlScript] = useState('');
+  const [currentShellScript, setCurrentShellScript] = useState('');
 
-        <div className='flex gap-4 items-center flex-col sm:flex-row'>
-          <a
-            className='rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto'
-            href='https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app'
-            target='_blank'
-            rel='noopener noreferrer'
-          >
-            <Image
-              className='dark:invert'
-              src='/vercel.svg'
-              alt='Vercel logomark'
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className='rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]'
-            href='https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app'
-            target='_blank'
-            rel='noopener noreferrer'
-          >
-            Read our docs
-          </a>
+  const handleGraphChange = useCallback((ns: Node<PipelineNodeData>[], es: Edge[]) => {
+    setNodes(ns);
+    setEdges(es);
+  }, []);
+
+  const handleScriptChange = useCallback((script: string, type: 'yaml' | 'shell') => {
+    // 스크립트 변경 시 상태 저장
+    if (type === 'yaml') {
+      setCurrentYamlScript(script);
+    } else {
+      setCurrentShellScript(script);
+    }
+    console.log(`Script changed (${type}):`, script);
+  }, []);
+
+  const handleGenerateNodes = useCallback((script: string, type: 'yaml' | 'shell') => {
+    try {
+      console.log('Generating nodes from script:', script, 'type:', type);
+      let parsedNodes: PipelineNodeData[];
+
+      if (type === 'yaml') {
+        parsedNodes = parseYAMLToNodes(script);
+      } else {
+        parsedNodes = parseShellToNodes(script);
+      }
+
+      console.log('Parsed nodes:', parsedNodes);
+
+      // 전역 함수를 통해 FlowEditor에 노드 생성 요청
+      const generateNodesFromScript = (
+        window as { generateNodesFromScript?: (nodes: PipelineNodeData[]) => void }
+      ).generateNodesFromScript;
+      if (generateNodesFromScript) {
+        generateNodesFromScript(parsedNodes);
+      } else {
+        console.error('generateNodesFromScript function not found');
+      }
+    } catch (error) {
+      console.error('Failed to parse script:', error);
+      alert('스크립트 파싱에 실패했습니다.');
+    }
+  }, []);
+
+  return (
+    <div
+      style={{
+        width: '100%',
+        display: 'grid',
+        gridTemplateColumns: '1fr 520px',
+        gap: 16,
+        height: '100vh',
+        padding: 16,
+        boxSizing: 'border-box',
+      }}
+    >
+      <div
+        style={{
+          height: '100%',
+          border: '1px solid rgba(255,255,255,.15)',
+          borderRadius: 8,
+          overflow: 'hidden',
+        }}
+      >
+        <FlowEditor onGraphChange={handleGraphChange} onGenerateFromScript={handleGenerateNodes} />
+      </div>
+      <div
+        style={{
+          height: '100%',
+          border: '1px solid rgba(255,255,255,.15)',
+          borderRadius: 8,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <div style={{ padding: 12, flex: 1, overflow: 'hidden' }}>
+          <ScriptEditor
+            nodes={nodes}
+            edges={edges}
+            onScriptChange={handleScriptChange}
+            onGenerateNodes={handleGenerateNodes}
+          />
         </div>
-      </main>
-      <footer className='row-start-3 flex gap-[24px] flex-wrap items-center justify-center'>
-        <a
-          className='flex items-center gap-2 hover:underline hover:underline-offset-4'
-          href='https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app'
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          <Image aria-hidden src='/file.svg' alt='File icon' width={16} height={16} />
-          Learn
-        </a>
-        <a
-          className='flex items-center gap-2 hover:underline hover:underline-offset-4'
-          href='https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app'
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          <Image aria-hidden src='/window.svg' alt='Window icon' width={16} height={16} />
-          Examples
-        </a>
-        <a
-          className='flex items-center gap-2 hover:underline hover:underline-offset-4'
-          href='https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app'
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          <Image aria-hidden src='/globe.svg' alt='Globe icon' width={16} height={16} />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
     </div>
   );
 }
