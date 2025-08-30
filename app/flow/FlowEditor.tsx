@@ -56,49 +56,60 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
 
   // 스크립트에서 생성된 노드들을 처리
   useEffect(() => {
-    if (onGenerateFromScript) {
-      const handleScriptNodes = (scriptNodes: PipelineNodeData[]) => {
-        // 기존 노드들 제거 (start 노드 제외)
-        const startNode = nodes.find((n) => n.data.kind === 'start');
-        const newNodes: Node<PipelineNodeData>[] = startNode ? [startNode] : [];
+    const handleScriptNodes = (scriptNodes: PipelineNodeData[]) => {
+      console.log('Handling script nodes:', scriptNodes);
 
-        // 스크립트에서 생성된 노드들을 순차적으로 추가
-        scriptNodes.forEach((nodeData, index) => {
-          if (nodeData.kind === 'start') return; // start 노드는 이미 있음
+      // 기존 노드들 제거 (start 노드 제외)
+      const startNode = nodes.find((n) => n.data.kind === 'start');
+      const newNodes: Node<PipelineNodeData>[] = startNode ? [startNode] : [];
 
-          const id = `${nodeData.kind}-${Date.now()}-${index}`;
-          const position = { x: 100, y: 200 + index * 120 };
-          const node: Node<PipelineNodeData> = {
-            id,
-            position,
-            type: 'customNode',
-            data: { ...nodeData, label: nodeData.label || nodeData.kind },
-          };
-          newNodes.push(node);
-        });
+      // 스크립트에서 생성된 노드들을 순차적으로 추가
+      scriptNodes.forEach((nodeData, index) => {
+        if (nodeData.kind === 'start') return; // start 노드는 이미 있음
 
-        setNodes(newNodes);
+        const id = `${nodeData.kind}-${Date.now()}-${index}`;
+        const position = { x: 100, y: 200 + index * 120 };
+        const node: Node<PipelineNodeData> = {
+          id,
+          position,
+          type: 'customNode',
+          data: { ...nodeData, label: nodeData.label || nodeData.kind },
+        };
+        newNodes.push(node);
+      });
 
-        // 노드들을 순차적으로 연결하는 엣지 생성
-        const newEdges: Edge[] = [];
-        for (let i = 0; i < newNodes.length - 1; i++) {
+      console.log('Setting new nodes:', newNodes);
+      setNodes(newNodes);
+
+      // 노드들을 순차적으로 연결하는 엣지 생성
+      const newEdges: Edge[] = [];
+      for (let i = 0; i < newNodes.length - 1; i++) {
+        const currentNode = newNodes[i];
+        const nextNode = newNodes[i + 1];
+        if (currentNode && nextNode) {
           newEdges.push({
-            id: `edge-${newNodes[i].id}-${newNodes[i + 1].id}`,
-            source: newNodes[i].id,
-            target: newNodes[i + 1].id,
+            id: `edge-${currentNode.id}-${nextNode.id}`,
+            source: currentNode.id,
+            target: nextNode.id,
             animated: true,
             markerEnd: { type: MarkerType.ArrowClosed },
           });
         }
-        setEdges(newEdges);
-      };
+      }
+      console.log('Setting new edges:', newEdges);
+      setEdges(newEdges);
+    };
 
-      // 전역 함수로 등록하여 외부에서 호출 가능하게 함
-      (
-        window as { generateNodesFromScript?: (nodes: PipelineNodeData[]) => void }
-      ).generateNodesFromScript = handleScriptNodes;
-    }
-  }, [nodes, setNodes, setEdges, onGenerateFromScript]);
+    // 전역 함수로 등록하여 외부에서 호출 가능하게 함
+    (
+      window as { generateNodesFromScript?: (nodes: PipelineNodeData[]) => void }
+    ).generateNodesFromScript = handleScriptNodes;
+
+    // 컴포넌트 언마운트 시 전역 함수 정리
+    return () => {
+      delete (window as any).generateNodesFromScript;
+    };
+  }, [nodes, setNodes, setEdges]);
 
   // 엣지 연결 시: 화살표와 애니메이션 추가
   const onConnect = useCallback(
@@ -171,7 +182,7 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
       const secondLastNode = nodes[nodes.length - 2];
 
       // start 노드가 아닌 경우에만 이전 노드와 연결
-      if (lastNode.data.kind !== 'start' && secondLastNode) {
+      if (lastNode && lastNode.data.kind !== 'start' && secondLastNode) {
         // 이미 연결된 엣지가 있는지 확인
         const edgeExists = edges.some(
           (e) => e.source === secondLastNode.id && e.target === lastNode.id
@@ -303,6 +314,7 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
 
     for (let i = 0; i < executionNodes.length; i++) {
       const node = executionNodes[i];
+      if (!node) continue;
 
       // 노드 상태를 로딩으로 변경
       setNodes((ns) =>

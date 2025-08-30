@@ -10,6 +10,8 @@ import ScriptEditor from './flow/ScriptEditor';
 export default function Home() {
   const [nodes, setNodes] = useState<Node<PipelineNodeData>[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
+  const [currentYamlScript, setCurrentYamlScript] = useState('');
+  const [currentShellScript, setCurrentShellScript] = useState('');
 
   const handleGraphChange = useCallback((ns: Node<PipelineNodeData>[], es: Edge[]) => {
     setNodes(ns);
@@ -17,12 +19,18 @@ export default function Home() {
   }, []);
 
   const handleScriptChange = useCallback((script: string, type: 'yaml' | 'shell') => {
-    // 스크립트 변경 시 처리 (필요시 로깅 등)
+    // 스크립트 변경 시 상태 저장
+    if (type === 'yaml') {
+      setCurrentYamlScript(script);
+    } else {
+      setCurrentShellScript(script);
+    }
     console.log(`Script changed (${type}):`, script);
   }, []);
 
   const handleGenerateNodes = useCallback((script: string, type: 'yaml' | 'shell') => {
     try {
+      console.log('Generating nodes from script:', script, 'type:', type);
       let parsedNodes: PipelineNodeData[];
 
       if (type === 'yaml') {
@@ -31,12 +39,16 @@ export default function Home() {
         parsedNodes = parseShellToNodes(script);
       }
 
+      console.log('Parsed nodes:', parsedNodes);
+
       // 전역 함수를 통해 FlowEditor에 노드 생성 요청
       const generateNodesFromScript = (
         window as { generateNodesFromScript?: (nodes: PipelineNodeData[]) => void }
       ).generateNodesFromScript;
       if (generateNodesFromScript) {
         generateNodesFromScript(parsedNodes);
+      } else {
+        console.error('generateNodesFromScript function not found');
       }
     } catch (error) {
       console.error('Failed to parse script:', error);
@@ -64,7 +76,7 @@ export default function Home() {
           overflow: 'hidden',
         }}
       >
-        <FlowEditor onGraphChange={handleGraphChange} onGenerateFromScript={() => {}} />
+        <FlowEditor onGraphChange={handleGraphChange} onGenerateFromScript={handleGenerateNodes} />
       </div>
       <div
         style={{
