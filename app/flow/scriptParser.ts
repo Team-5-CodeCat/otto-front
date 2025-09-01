@@ -14,167 +14,173 @@ export function parseYAMLToNodes(yamlScript: string): PipelineNodeData[] {
 
   const lines = yamlScript.split('\n');
   let currentStep: any = null;
+  let inRunBlock = false;
+  let runBlockLines: string[] = [];
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
+    const line = lines[i];
+    const trimmedLine = line.trim();
 
     // steps 섹션 찾기
-    if (line === 'steps:' || line === '- steps:') {
+    if (trimmedLine === 'steps:' || trimmedLine === '- steps:') {
       continue;
     }
 
     // step 시작
-    if (line.startsWith('- name:')) {
+    if (trimmedLine.startsWith('- name:')) {
       const stepName = line.replace('- name:', '').trim().replace(/['"]/g, '');
       currentStep = { name: stepName };
       continue;
     }
 
     // uses 액션 처리
-    if (line.startsWith('uses:') && currentStep) {
-      const action = line.replace('uses:', '').trim();
+    if (trimmedLine.startsWith('uses:') && currentStep) {
+      const action = trimmedLine.replace('uses:', '').trim();
       currentStep.action = action;
 
       if (action.includes('checkout')) {
         nodes.push({
           kind: 'git_clone',
-          label: 'Git Clone',
+          label: currentStep.name || 'Git Clone',
           repoUrl: 'https://github.com/user/repo.git',
           branch: 'main',
         });
       } else if (action.includes('setup-node')) {
         nodes.push({
           kind: 'prebuild_node',
-          label: 'Prebuild Node',
+          label: currentStep.name || 'Prebuild Node',
           manager: 'npm',
         });
       } else if (action.includes('setup-python')) {
         nodes.push({
           kind: 'prebuild_python',
-          label: 'Prebuild Python',
+          label: currentStep.name || 'Prebuild Python',
         });
       } else if (action.includes('setup-java')) {
         nodes.push({
           kind: 'prebuild_java',
-          label: 'Prebuild Java',
+          label: currentStep.name || 'Prebuild Java',
         });
       }
       continue;
     }
 
-    // run 명령어 처리
-    if (line.startsWith('run:') && currentStep) {
-      const command = line.replace('run:', '').trim();
-      currentStep.command = command;
-
-      if (command.includes('npm ci') || command.includes('npm install')) {
-        nodes.push({
-          kind: 'prebuild_node',
-          label: 'Install Dependencies',
-          manager: 'npm',
-        });
-      } else if (command.includes('npm test') || command.includes('yarn test')) {
-        nodes.push({
-          kind: 'run_tests',
-          label: 'Run Tests',
-          testType: 'unit',
-          command: command,
-        });
-      } else if (command.includes('npm run build') || command.includes('yarn build')) {
-        nodes.push({
-          kind: 'build_npm',
-          label: 'Build NPM',
-        });
-      } else if (command.includes('docker build')) {
-        nodes.push({
-          kind: 'docker_build',
-          label: 'Docker Build',
-          dockerfile: 'Dockerfile',
-          tag: 'myapp:latest',
-        });
-      } else if (command.includes('deploy') || command.includes('kubectl')) {
-        nodes.push({
-          kind: 'deploy',
-          label: 'Deploy',
-          environment: 'production',
-          deployScript: command,
-        });
-      } else {
-        // 커스텀 명령어
-        nodes.push({
-          kind: 'prebuild_custom',
-          label: currentStep.name || 'Custom Command',
-          script: command,
-        });
-      }
-
-      currentStep = null;
+    // run 블록 시작
+    if (trimmedLine === 'run: |' && currentStep) {
+      inRunBlock = true;
+      runBlockLines = [];
       continue;
     }
 
-    // 멀티라인 run 블록 처리
-    if (line === 'run: |' && currentStep) {
-      let commandLines: string[] = [];
-      let j = i + 1;
+    // run 블록 내부 라인 처리
+    if (inRunBlock && currentStep) {
+      if (line.startsWith(' ') && line.trim() !== '') {
+        // 들여쓰기된 라인은 run 블록의 일부
+        runBlockLines.push(line.trim());
+      } else if (line.trim() === '' || !line.startsWith(' ')) {
+        // run 블록 종료
+        inRunBlock = false;
+        const command = runBlockLines.join('\n');
 
-      while (j < lines.length) {
-        const nextLine = lines[j];
-        if (nextLine.trim() === '' || !nextLine.startsWith(' ')) {
-          break;
-        }
-        commandLines.push(nextLine.trim());
-        j++;
+        // 명령어 분석 및 노드 생성
+        processCommand(command, currentStep, nodes);
+        currentStep = null;
+        runBlockLines = [];
       }
+      continue;
+    }
 
-      const command = commandLines.join('\n');
-      currentStep.command = command;
+    // 단일 run 명령어 처리
+    if (trimmedLine.startsWith('run:') && currentStep && !inRunBlock) {
+      const command = trimmedLine.replace('run:', '').trim();
 
-      if (command.includes('npm ci') || command.includes('npm install')) {
-        nodes.push({
-          kind: 'prebuild_node',
-          label: 'Install Dependencies',
-          manager: 'npm',
-        });
-      } else if (command.includes('npm test') || command.includes('yarn test')) {
-        nodes.push({
-          kind: 'run_tests',
-          label: 'Run Tests',
-          testType: 'unit',
-          command: command,
-        });
-      } else if (command.includes('npm run build') || command.includes('yarn build')) {
-        nodes.push({
-          kind: 'build_npm',
-          label: 'Build NPM',
-        });
-      } else if (command.includes('docker build')) {
-        nodes.push({
-          kind: 'docker_build',
-          label: 'Docker Build',
-          dockerfile: 'Dockerfile',
-          tag: 'myapp:latest',
-        });
-      } else if (command.includes('deploy') || command.includes('kubectl')) {
-        nodes.push({
-          kind: 'deploy',
-          label: 'Deploy',
-          environment: 'production',
-          deployScript: command,
-        });
-      } else {
-        nodes.push({
-          kind: 'prebuild_custom',
-          label: currentStep.name || 'Custom Command',
-          script: command,
-        });
-      }
-
+      // 명령어 분석 및 노드 생성
+      processCommand(command, currentStep, nodes);
       currentStep = null;
-      i = j - 1;
+      continue;
     }
   }
 
+  // 마지막 run 블록이 끝나지 않은 경우 처리
+  if (inRunBlock && currentStep && runBlockLines.length > 0) {
+    const command = runBlockLines.join('\n');
+    processCommand(command, currentStep, nodes);
+  }
+
   return nodes;
+}
+
+/**
+ * 명령어를 분석하여 적절한 노드를 생성
+ */
+function processCommand(command: string, step: any, nodes: PipelineNodeData[]) {
+  if (command.includes('npm ci') || command.includes('npm install')) {
+    nodes.push({
+      kind: 'prebuild_node',
+      label: step.name || 'Install Dependencies',
+      manager: 'npm',
+    });
+  } else if (command.includes('pip install') || command.includes('python -m pip install')) {
+    nodes.push({
+      kind: 'prebuild_python',
+      label: step.name || 'Install Python Dependencies',
+    });
+  } else if (command.includes('npm test') || command.includes('yarn test')) {
+    nodes.push({
+      kind: 'run_tests',
+      label: step.name || 'Run Tests',
+      testType: 'unit',
+      command: command,
+    });
+  } else if (command.includes('pytest') || command.includes('python -m pytest')) {
+    nodes.push({
+      kind: 'run_tests',
+      label: step.name || 'Run Tests',
+      testType: 'unit',
+      command: command,
+    });
+  } else if (command.includes('npm run build') || command.includes('yarn build')) {
+    nodes.push({
+      kind: 'build_npm',
+      label: step.name || 'Build NPM',
+    });
+  } else if (command.includes('py_compile') || command.includes('python -m py_compile')) {
+    nodes.push({
+      kind: 'build_python',
+      label: step.name || 'Build Python',
+    });
+  } else if (command.includes('docker build')) {
+    nodes.push({
+      kind: 'docker_build',
+      label: step.name || 'Docker Build',
+      dockerfile: 'Dockerfile',
+      tag: 'myapp:latest',
+    });
+  } else if (command.includes('deploy') || command.includes('kubectl')) {
+    nodes.push({
+      kind: 'deploy',
+      label: step.name || 'Deploy',
+      environment: 'production',
+      deployScript: command,
+    });
+  } else if (command.includes('git clone')) {
+    const repoMatch = command.match(/git clone.*?([^\s]+\.git)/);
+    const branchMatch = command.match(/-b\s+([^\s]+)/);
+
+    nodes.push({
+      kind: 'git_clone',
+      label: step.name || 'Git Clone',
+      repoUrl: repoMatch ? repoMatch[1] : 'https://github.com/user/repo.git',
+      branch: branchMatch ? branchMatch[1] : 'main',
+    });
+  } else {
+    // 커스텀 명령어
+    nodes.push({
+      kind: 'prebuild_custom',
+      label: step.name || 'Custom Command',
+      script: command,
+    });
+  }
 }
 
 /**
@@ -228,6 +234,20 @@ export function parseShellToNodes(shellScript: string): PipelineNodeData[] {
       continue;
     }
 
+    // git checkout
+    if (trimmedLine.includes('git checkout')) {
+      const branchMatch = trimmedLine.match(/git checkout\s+([^\s]+)/);
+      if (branchMatch) {
+        nodes.push({
+          kind: 'git_clone',
+          label: 'Git Checkout',
+          repoUrl: 'https://github.com/user/repo.git',
+          branch: branchMatch[1],
+        });
+      }
+      continue;
+    }
+
     // apt-get install
     if (trimmedLine.includes('apt-get install')) {
       const packages = trimmedLine.match(/apt-get install.*?([^\s]+(?:\s+[^\s]+)*)/);
@@ -236,6 +256,47 @@ export function parseShellToNodes(shellScript: string): PipelineNodeData[] {
         label: 'Linux Install',
         osPkg: 'apt',
         packages: packages ? packages[1] : 'git curl',
+      });
+      continue;
+    }
+
+    // pip install
+    if (trimmedLine.includes('pip install') || trimmedLine.includes('python -m pip install')) {
+      nodes.push({
+        kind: 'prebuild_python',
+        label: 'Install Python Dependencies',
+      });
+      continue;
+    }
+
+    // python -m py_compile (컴파일 체크)
+    if (trimmedLine.includes('py_compile') || trimmedLine.includes('python -m py_compile')) {
+      nodes.push({
+        kind: 'build_python',
+        label: 'Build Python',
+      });
+      continue;
+    }
+
+    // python -m pytest (테스트)
+    if (trimmedLine.includes('pytest') || trimmedLine.includes('python -m pytest')) {
+      nodes.push({
+        kind: 'run_tests',
+        label: 'Run Tests',
+        testType: 'unit',
+        command: trimmedLine,
+      });
+      continue;
+    }
+
+    // python deploy.py (배포)
+    if (trimmedLine.includes('python deploy.py') || trimmedLine.includes('python deploy')) {
+      const envMatch = trimmedLine.match(/--env=([^\s]+)/);
+      nodes.push({
+        kind: 'deploy',
+        label: 'Deploy',
+        environment: envMatch ? envMatch[1] : 'production',
+        deployScript: trimmedLine,
       });
       continue;
     }
@@ -266,15 +327,6 @@ export function parseShellToNodes(shellScript: string): PipelineNodeData[] {
         kind: 'prebuild_node',
         label: 'Install Dependencies',
         manager: 'pnpm',
-      });
-      continue;
-    }
-
-    // pip install
-    if (trimmedLine.includes('pip install')) {
-      nodes.push({
-        kind: 'prebuild_python',
-        label: 'Prebuild Python',
       });
       continue;
     }
