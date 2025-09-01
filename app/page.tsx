@@ -99,7 +99,7 @@ export default function Home() {
         style={{
           width: '100%',
           display: 'grid',
-          gridTemplateColumns: '1fr 520px',
+          gridTemplateColumns: '1fr 400px',
           gap: 16,
           height: '100vh',
           padding: 16,
