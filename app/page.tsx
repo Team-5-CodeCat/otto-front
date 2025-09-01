@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { PipelineNodeData } from './flow/codegen';
 import type { Edge, Node } from 'reactflow';
 import { parseShellToNodes, parseYAMLToNodes } from './flow/scriptParser';
+import { generateYAML, generateShell } from './flow/codegen';
 import FlowEditor from './flow/FlowEditor';
 import ScriptEditor from './flow/ScriptEditor';
 import Sidebar from './components/Sidebar';
@@ -19,25 +20,35 @@ export default function Home() {
     setEdges(es);
   }, []);
 
-  const handleScriptChange = useCallback((script: string, type: 'yaml' | 'shell') => {
+  const handleScriptChange = useCallback((script: string, type: 'yaml' | 'shell' | 'env') => {
     // 스크립트 변경 시 상태 저장
     if (type === 'yaml') {
       setCurrentYamlScript(script);
-    } else {
+    } else if (type === 'shell') {
       setCurrentShellScript(script);
+    } else if (type === 'env') {
+      // .env 파일은 별도로 저장하지 않고 ScriptEditor 내부에서만 관리
+      console.log('ENV script changed:', script);
     }
     console.log(`Script changed (${type}):`, script);
   }, []);
 
-  const handleGenerateNodes = useCallback((script: string, type: 'yaml' | 'shell') => {
+  const handleGenerateNodes = useCallback((script: string, type: 'yaml' | 'shell' | 'env') => {
     try {
       console.log('Generating nodes from script:', script, 'type:', type);
       let parsedNodes: PipelineNodeData[];
 
       if (type === 'yaml') {
         parsedNodes = parseYAMLToNodes(script);
-      } else {
+      } else if (type === 'shell') {
         parsedNodes = parseShellToNodes(script);
+      } else if (type === 'env') {
+        // .env 파일은 노드 생성에 직접 사용하지 않음
+        console.log('ENV file content:', script);
+        return;
+      } else {
+        // 기본값 설정
+        parsedNodes = [];
       }
 
       console.log('Parsed nodes:', parsedNodes);

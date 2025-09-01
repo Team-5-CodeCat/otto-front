@@ -3,14 +3,20 @@ import type { Edge, Node } from 'reactflow';
 import type { PipelineNodeData } from './codegen';
 import { parseYAMLToNodes, parseShellToNodes } from './scriptParser';
 import { generateYAML, generateShell } from './codegen';
+import EnvPopup from '../components/EnvPopup';
 
 export interface ScriptEditorProps {
   nodes: Node<PipelineNodeData>[];
   edges: Edge[];
-  onScriptChange: (script: string, type: 'yaml' | 'shell') => void;
-  onGenerateNodes: (script: string, type: 'yaml' | 'shell') => void;
+  onScriptChange: (script: string, type: 'yaml' | 'shell' | 'env') => void;
+  onGenerateNodes: (script: string, type: 'yaml' | 'shell' | 'env') => void;
   currentYamlScript?: string;
   currentShellScript?: string;
+}
+
+interface EnvVariable {
+  key: string;
+  value: string;
 }
 
 export default function ScriptEditor({
@@ -21,11 +27,13 @@ export default function ScriptEditor({
   currentYamlScript,
   currentShellScript,
 }: ScriptEditorProps) {
-  const [activeTab, setActiveTab] = useState<'yaml' | 'shell'>('yaml');
+  const [activeTab, setActiveTab] = useState<'yaml' | 'shell' | 'env'>('yaml');
   const [yamlScript, setYamlScript] = useState('');
   const [shellScript, setShellScript] = useState('');
+  const [envScript, setEnvScript] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isEnvPopupOpen, setIsEnvPopupOpen] = useState(false);
 
   // 외부에서 전달받은 스크립트 업데이트 (중복 방지)
   useEffect(() => {
@@ -59,13 +67,17 @@ export default function ScriptEditor({
       // 기본 Shell 템플릿
       const defaultShell = `Enter file contents here`;
 
+      // 기본 ENV 템플릿
+      const defaultEnv = `Enter file contents here`;
+
       setYamlScript(defaultYaml);
       setShellScript(defaultShell);
+      setEnvScript(defaultEnv);
       setIsInitialized(true);
     }
   }, [isInitialized]);
 
-  const handleScriptChange = (script: string, type: 'yaml' | 'shell') => {
+  const handleScriptChange = (script: string, type: 'yaml' | 'shell' | 'env') => {
     if (type === 'yaml') {
       setYamlScript(script);
       // YAML 변경 시 Shell도 업데이트
@@ -95,7 +107,7 @@ export default function ScriptEditor({
           console.error('Failed to convert YAML to Shell:', error);
         }
       }
-    } else {
+    } else if (type === 'shell') {
       setShellScript(script);
       // Shell 변경 시 YAML도 업데이트
       if (script.trim() !== '') {
@@ -124,24 +136,34 @@ export default function ScriptEditor({
           console.error('Failed to convert Shell to YAML:', error);
         }
       }
+    } else if (type === 'env') {
+      setEnvScript(script);
     }
     onScriptChange(script, type);
   };
 
   const handleGenerateNodes = () => {
-    const currentScript = activeTab === 'yaml' ? yamlScript : shellScript;
+    const currentScript =
+      activeTab === 'yaml' ? yamlScript : activeTab === 'shell' ? shellScript : envScript;
     console.log('Generating nodes with script:', currentScript);
-    onGenerateNodes(currentScript, activeTab);
+    onGenerateNodes(currentScript, activeTab === 'env' ? 'yaml' : activeTab);
     setIsEditing(false);
   };
 
   const handleBoxClick = () => {
     // 편집 시작 시 기본 텍스트가 있다면 지우기
-    if (currentScript === 'Enter file contents here') {
-      if (activeTab === 'yaml') {
+    if (activeTab === 'env') {
+      if (envScript === 'Enter file contents here') {
+        setEnvScript('');
+        onScriptChange('', 'env');
+      }
+    } else if (activeTab === 'yaml') {
+      if (yamlScript === 'Enter file contents here') {
         setYamlScript('');
         onScriptChange('', 'yaml');
-      } else {
+      }
+    } else {
+      if (shellScript === 'Enter file contents here') {
         setShellScript('');
         onScriptChange('', 'shell');
       }
@@ -151,11 +173,18 @@ export default function ScriptEditor({
 
   const handleContentEditableClick = () => {
     // contentEditable 영역 클릭 시에도 기본 텍스트 지우기
-    if (currentScript === 'Enter file contents here') {
-      if (activeTab === 'yaml') {
+    if (activeTab === 'env') {
+      if (envScript === 'Enter file contents here') {
+        setEnvScript('');
+        onScriptChange('', 'env');
+      }
+    } else if (activeTab === 'yaml') {
+      if (yamlScript === 'Enter file contents here') {
         setYamlScript('');
         onScriptChange('', 'yaml');
-      } else {
+      }
+    } else {
+      if (shellScript === 'Enter file contents here') {
         setShellScript('');
         onScriptChange('', 'shell');
       }
@@ -164,11 +193,18 @@ export default function ScriptEditor({
 
   const handleContentEditableFocus = () => {
     // 포커스 시에도 기본 텍스트 지우기
-    if (currentScript === 'Enter file contents here') {
-      if (activeTab === 'yaml') {
+    if (activeTab === 'env') {
+      if (envScript === 'Enter file contents here') {
+        setEnvScript('');
+        onScriptChange('', 'env');
+      }
+    } else if (activeTab === 'yaml') {
+      if (yamlScript === 'Enter file contents here') {
         setYamlScript('');
         onScriptChange('', 'yaml');
-      } else {
+      }
+    } else {
+      if (shellScript === 'Enter file contents here') {
         setShellScript('');
         onScriptChange('', 'shell');
       }
@@ -181,11 +217,22 @@ export default function ScriptEditor({
   };
 
   // 탭 변경 시 현재 스크립트 내용 유지
-  const handleTabChange = (newTab: 'yaml' | 'shell') => {
+  const handleTabChange = (newTab: 'yaml' | 'shell' | 'env') => {
     setActiveTab(newTab);
+    // .env 탭을 선택하면 바로 팝업 열기
+    if (newTab === 'env') {
+      setIsEnvPopupOpen(true);
+    }
   };
 
-  const currentScript = activeTab === 'yaml' ? yamlScript : shellScript;
+  const handleEnvPopupSave = (envVars: EnvVariable[]) => {
+    const envContent = envVars.map((env) => `${env.key}=${env.value}`).join('\n');
+    setEnvScript(envContent);
+    onScriptChange(envContent, 'env');
+  };
+
+  const currentScript =
+    activeTab === 'yaml' ? yamlScript : activeTab === 'shell' ? shellScript : envScript;
   const showPlaceholder =
     !isEditing && (currentScript === 'Enter file contents here' || currentScript === '');
 
@@ -230,8 +277,22 @@ export default function ScriptEditor({
           >
             Shell
           </button>
+          <button
+            onClick={() => handleTabChange('env')}
+            style={{
+              padding: '4px 12px',
+              backgroundColor: activeTab === 'env' ? '#007acc' : 'rgba(255,255,255,.1)',
+              border: '1px solid rgba(255,255,255,.2)',
+              borderRadius: '4px',
+              color: activeTab === 'env' ? 'white' : '#e0e0e0',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            .env
+          </button>
         </div>
-        {isEditing && (
+        {isEditing && activeTab !== 'env' && (
           <button
             onClick={handleGenerateNodes}
             style={{
@@ -250,7 +311,25 @@ export default function ScriptEditor({
       </div>
 
       <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
-        {isEditing ? (
+        {activeTab === 'env' ? (
+          // .env 탭일 때는 환경변수 편집 안내 메시지만 표시
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+              color: '#6a6a6a',
+              textAlign: 'center',
+              padding: '20px',
+            }}
+          >
+            <div style={{ fontSize: '16px', marginBottom: '12px' }}>
+              환경변수를 편집하려면 상단의 ".env" 탭을 클릭하세요
+            </div>
+          </div>
+        ) : isEditing ? (
           <div style={{ position: 'relative', height: '100%' }}>
             <div
               contentEditable={true}
@@ -324,6 +403,12 @@ export default function ScriptEditor({
           </div>
         )}
       </div>
+
+      <EnvPopup
+        isOpen={isEnvPopupOpen}
+        onClose={() => setIsEnvPopupOpen(false)}
+        onSave={handleEnvPopupSave}
+      />
     </div>
   );
 }
