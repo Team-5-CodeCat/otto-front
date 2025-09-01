@@ -6,6 +6,7 @@ import type { Edge, Node } from 'reactflow';
 import { parseShellToNodes, parseYAMLToNodes } from './flow/scriptParser';
 import FlowEditor from './flow/FlowEditor';
 import ScriptEditor from './flow/ScriptEditor';
+import Sidebar from './components/Sidebar';
 
 export default function Home() {
   const [nodes, setNodes] = useState<Node<PipelineNodeData>[]>([]);
@@ -57,44 +58,53 @@ export default function Home() {
   }, []);
 
   return (
-    <div
-      style={{
-        width: '100%',
-        display: 'grid',
-        gridTemplateColumns: '1fr 520px',
-        gap: 16,
-        height: '100vh',
-        padding: 16,
-        boxSizing: 'border-box',
-      }}
-    >
+    <div className='flex h-screen'>
+      {/* 사이드바 */}
+      <Sidebar />
+
+      {/* 메인 콘텐츠 영역 */}
       <div
         style={{
-          height: '100%',
-          border: '1px solid rgba(255,255,255,.15)',
-          borderRadius: 8,
-          overflow: 'hidden',
+          width: '100%',
+          display: 'grid',
+          gridTemplateColumns: '1fr 520px',
+          gap: 16,
+          height: '100vh',
+          padding: 16,
+          boxSizing: 'border-box',
         }}
       >
-        <FlowEditor onGraphChange={handleGraphChange} onGenerateFromScript={handleGenerateNodes} />
-      </div>
-      <div
-        style={{
-          height: '100%',
-          border: '1px solid rgba(255,255,255,.15)',
-          borderRadius: 8,
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        <div style={{ padding: 12, flex: 1, overflow: 'hidden' }}>
-          <ScriptEditor
-            nodes={nodes}
-            edges={edges}
-            onScriptChange={handleScriptChange}
-            onGenerateNodes={handleGenerateNodes}
+        <div
+          style={{
+            height: '100%',
+            border: '1px solid rgba(255,255,255,.15)',
+            borderRadius: 8,
+            overflow: 'hidden',
+          }}
+        >
+          <FlowEditor
+            onGraphChange={handleGraphChange}
+            onGenerateFromScript={handleGenerateNodes}
           />
+        </div>
+        <div
+          style={{
+            height: '100%',
+            border: '1px solid rgba(255,255,255,.15)',
+            borderRadius: 8,
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <div style={{ padding: 12, flex: 1, overflow: 'hidden' }}>
+            <ScriptEditor
+              nodes={nodes}
+              edges={edges}
+              onScriptChange={handleScriptChange}
+              onGenerateNodes={handleGenerateNodes}
+            />
+          </div>
         </div>
       </div>
     </div>

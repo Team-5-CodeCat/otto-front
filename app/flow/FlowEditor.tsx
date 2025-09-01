@@ -13,6 +13,7 @@ import ReactFlow, {
   useEdgesState,
   useNodesState,
   useReactFlow,
+  type EdgeChange,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import type { PipelineNodeData } from './codegen';
@@ -47,6 +48,17 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
   const flowRef = useRef<HTMLDivElement>(null);
   const rf = useReactFlow();
 
+  // nodeTypes를 메모이제이션하여 무한 루프 방지
+  const nodeTypes = useMemo(() => ({ customNode: CustomNode }), []);
+
+  // 고유한 엣지 ID 생성 함수
+  const generateUniqueEdgeId = useCallback((sourceId: string, targetId: string) => {
+    const baseId = `edge-${sourceId}-${targetId}`;
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substr(2, 9);
+    return `${baseId}-${timestamp}-${random}`;
+  }, []);
+
   // 상위(App)로 그래프 변경 통지
   useEffect(() => {
     if (onGraphChange) {
@@ -73,7 +85,7 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
           id,
           position,
           type: 'customNode',
-          data: { ...nodeData, label: nodeData.label || nodeData.kind },
+          data: { ...nodeData, label: nodeData.label || (nodeData.kind ?? 'Unknown') },
         };
         newNodes.push(node);
       });
@@ -88,7 +100,7 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
         const nextNode = newNodes[i + 1];
         if (currentNode && nextNode) {
           newEdges.push({
-            id: `edge-${currentNode.id}-${nextNode.id}`,
+            id: generateUniqueEdgeId(currentNode.id, nextNode.id),
             source: currentNode.id,
             target: nextNode.id,
             animated: true,
@@ -109,7 +121,7 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
     return () => {
       delete (window as any).generateNodesFromScript;
     };
-  }, [nodes, setNodes, setEdges]);
+  }, [setNodes, setEdges, generateUniqueEdgeId]);
 
   // 엣지 연결 시: 화살표와 애니메이션 추가
   const onConnect = useCallback(
@@ -121,6 +133,121 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
     [setEdges]
   );
 
+  // 엣지 변경 처리 개선
+  const handleEdgesChange = useCallback(
+    (changes: EdgeChange[]) => {
+      // 기본 엣지 변경 처리 먼저 실행
+      onEdgesChange(changes);
+
+      // 엣지 삭제 시 추가 처리
+      const deletedEdges = changes.filter((change) => change.type === 'remove');
+
+      if (deletedEdges.length > 0) {
+        // 삭제 후 순서 라벨 재계산과 자동 연결을 위해 약간의 지연
+        setTimeout(() => {
+          // 현재 edges 상태를 다시 가져와서 순서 재계산
+          setEdges((currentEdges) => {
+            const byId = new Map(nodes.map((n) => [n.id, n]));
+            const outgoing = new Map<string, string[]>();
+
+            // 현재 엣지들로 순서 재계산
+            currentEdges.forEach((e) => {
+              if (!outgoing.has(e.source)) outgoing.set(e.source, []);
+              outgoing.get(e.source)!.push(e.target);
+            });
+
+            const start = nodes.find((n) => n.data.kind === 'start');
+            const ordered: string[] = [];
+
+            if (start) {
+              const visited = new Set<string>();
+              let cursor: Node<PipelineNodeData> | undefined = start;
+
+              while (cursor && !visited.has(cursor.id)) {
+                ordered.push(cursor.id);
+                visited.add(cursor.id);
+                const nextIds = outgoing.get(cursor.id) || [];
+                if (nextIds.length !== 1) break;
+                const next = byId.get(nextIds[0]);
+                if (!next) break;
+                cursor = next;
+              }
+            }
+
+            // 순서 매핑 재생성
+            const orderMap = new Map<string, number>();
+            for (let i = 0; i < ordered.length - 1; i++) {
+              const key = `${ordered[i]}->${ordered[i + 1]}`;
+              orderMap.set(key, i + 1);
+            }
+
+            // 엣지 라벨 업데이트
+            return currentEdges.map((e) => {
+              const key = `${e.source}->${e.target}`;
+              const orderValue = orderMap.get(key);
+              const label = orderValue !== undefined ? String(orderValue) : undefined;
+              return { ...e, label };
+            });
+          });
+
+          // 연결이 끊어진 노드들이 있으면 자동으로 연결
+          setTimeout(() => {
+            setEdges((currentEdges) => {
+              const start = nodes.find((n) => n.data.kind === 'start');
+              if (!start) return currentEdges;
+
+              // 연결된 노드들 찾기
+              const connectedNodes = new Set<string>([start.id]);
+              currentEdges.forEach((edge) => {
+                if (connectedNodes.has(edge.source)) {
+                  connectedNodes.add(edge.target);
+                }
+              });
+
+              // 연결되지 않은 노드들 찾기
+              const disconnectedNodes = nodes
+                .filter((n) => n.data.kind !== 'start' && !connectedNodes.has(n.id))
+                .sort((a, b) => a.position.y - b.position.y);
+
+              if (disconnectedNodes.length > 0) {
+                // 마지막 연결된 노드 찾기
+                let lastConnectedNode = start;
+                currentEdges.forEach((edge) => {
+                  if (edge.source === lastConnectedNode.id) {
+                    const targetNode = nodes.find((n) => n.id === edge.target);
+                    if (targetNode) lastConnectedNode = targetNode;
+                  }
+                });
+
+                // 연결되지 않은 노드들을 순서대로 연결
+                const newEdges = [...currentEdges];
+                let currentNode = lastConnectedNode;
+
+                disconnectedNodes.forEach((node, index) => {
+                  const newEdge: Edge = {
+                    id: generateUniqueEdgeId(currentNode.id, node.id),
+                    source: currentNode.id,
+                    target: node.id,
+                    animated: true,
+                    markerEnd: { type: MarkerType.ArrowClosed },
+                    label: String(currentEdges.length + index + 1),
+                  };
+                  newEdges.push(newEdge);
+                  currentNode = node;
+                });
+
+                return newEdges;
+              }
+
+              return currentEdges;
+            });
+          }, 50);
+        }, 100); // 100ms 지연으로 상태 업데이트 완료 후 실행
+      }
+    },
+    [nodes, onEdgesChange, setEdges, generateUniqueEdgeId]
+  );
+
   // 팔레트 항목 → 사용자가 알아볼 라벨 생성
   const labelFor = (data: Partial<PipelineNodeData>): string => {
     switch (data.kind) {
@@ -129,7 +256,7 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
       case 'linux_install':
         return 'Linux Install';
       case 'prebuild_node':
-        return `Prebuild Node (${data.manager || 'npm'})`;
+        return `Prebuild Node (${data.manager ?? 'npm'})`;
       case 'prebuild_python':
         return 'Prebuild Python';
       case 'prebuild_java':
@@ -145,15 +272,15 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
       case 'docker_build':
         return 'Docker Build';
       case 'run_tests':
-        return `Run Tests (${data.testType || ''})`;
+        return `Run Tests (${data.testType ?? ''})`;
       case 'deploy':
-        return `Deploy (${data.environment || ''})`;
+        return `Deploy (${data.environment ?? ''})`;
       case 'notify_slack':
         return 'Notify Slack';
       case 'start':
         return 'Start';
       default:
-        return data.kind || 'Node';
+        return data.kind ?? 'Node';
     }
   };
 
@@ -161,7 +288,7 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
   const addNode = useCallback(
     (data: Partial<PipelineNodeData>, position?: { x: number; y: number }) => {
       setNodes((ns) => {
-        const id = `${data.kind}-${Date.now()}-${Math.round(Math.random() * 1e4)}`;
+        const id = `${data.kind ?? 'unknown'}-${Date.now()}-${Math.round(Math.random() * 1e4)}`;
         const pos = position ?? { x: 100, y: 200 + ns.length * 120 };
         const node: Node<PipelineNodeData> = {
           id,
@@ -190,7 +317,7 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
 
         if (!edgeExists) {
           const newEdge: Edge = {
-            id: `edge-${secondLastNode.id}-${lastNode.id}`,
+            id: generateUniqueEdgeId(secondLastNode.id, lastNode.id),
             source: secondLastNode.id,
             target: lastNode.id,
             animated: true,
@@ -200,7 +327,7 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
         }
       }
     }
-  }, [nodes, edges, setEdges]);
+  }, [nodes, edges, setEdges, generateUniqueEdgeId]);
 
   // 좌측 팔레트 정의 (드래그&클릭으로 추가)
   const palette = useMemo(
@@ -440,9 +567,9 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
           style={{ width: '100%', height: '100%' }}
           nodes={nodes}
           edges={edges}
-          nodeTypes={{ customNode: CustomNode }}
+          nodeTypes={nodeTypes}
           onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
+          onEdgesChange={handleEdgesChange}
           onConnect={onConnect}
           onInit={(instance) => {
             setTimeout(() => instance.fitView(), 0);
