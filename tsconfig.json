@@ -1,90 +1,55 @@
 {
   "compilerOptions": {
-    // 타겟 및 라이브러리
     "target": "ES2022", // 더 최신 버전으로 업데이트
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    // JavaScript 지원
+    "lib": ["dom", "dom.iterable", "esnext"],
+
     "allowJs": true,
     "skipLibCheck": true,
-    // 엄격 모드 설정
+
     "strict": true,
     "noUncheckedIndexedAccess": true, // 배열/객체 접근 시 undefined 체크
     "noImplicitOverride": true, // override 키워드 강제
     "exactOptionalPropertyTypes": true, // 선택적 프로퍼티 엄격 체크
     "strictNullChecks": true,
-    // 모듈 시스템
+
     "module": "esnext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    // 출력 설정
+
     "noEmit": true,
     "incremental": true,
     "removeComments": false,
     "sourceMap": true,
-    // JSX 설정
+
     "jsx": "preserve",
-    "jsxImportSource": "react",
-    // Next.js 플러그인
+
     "plugins": [
       {
         "name": "next"
       }
     ],
-    // 경로 매핑
+
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "@/components/*": [
-        "./components/*"
-      ],
-      "@/lib/*": [
-        "./lib/*"
-      ],
-      "@/utils/*": [
-        "./utils/*"
-      ],
-      "@/types/*": [
-        "./types/*"
-      ],
-      "@/styles/*": [
-        "./styles/*"
-      ],
-      "@/public/*": [
-        "./public/*"
-      ]
+      "@/*": ["./*"],
+      "@/components/*": ["./components/*"],
+      "@/lib/*": ["./lib/*"],
+      "@/utils/*": ["./utils/*"],
+      "@/types/*": ["./types/*"],
+      "@/styles/*": ["./styles/*"],
+      "@/public/*": ["./public/*"]
     },
-    // 추가 유용한 옵션들
+
     "forceConsistentCasingInFileNames": true,
     "declaration": false,
-    "declarationMap": false,
-    "allowImportingTsExtensions": false
+    "declarationMap": false
+    // "allowImportingTsExtensions": false
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.mts",
-    "**/*.cts",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    ".next",
-    "out",
-    "dist",
-    "build",
-    "*.config.js",
-    "*.config.mjs"
-  ],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", ".next", "out", "dist", "build", "*.config.js", "*.config.mjs"],
   "ts-node": {
     "esm": true
   }
