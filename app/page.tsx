@@ -136,6 +136,7 @@ export default function Home() {
               edges={edges}
               onScriptChange={handleScriptChange}
               onGenerateNodes={handleGenerateNodes}
+              onNodesToScript={handleNodesToScript}
               currentYamlScript={currentYamlScript}
               currentShellScript={currentShellScript}
             />

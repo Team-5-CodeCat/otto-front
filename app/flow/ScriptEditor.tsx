@@ -10,6 +10,7 @@ export interface ScriptEditorProps {
   edges: Edge[];
   onScriptChange: (script: string, type: 'yaml' | 'shell' | 'env') => void;
   onGenerateNodes: (script: string, type: 'yaml' | 'shell' | 'env') => void;
+  onNodesToScript: (nodes: PipelineNodeData[], type: 'yaml' | 'shell') => void;
   currentYamlScript?: string;
   currentShellScript?: string;
 }
@@ -24,6 +25,7 @@ export default function ScriptEditor({
   edges,
   onScriptChange,
   onGenerateNodes,
+  onNodesToScript,
   currentYamlScript,
   currentShellScript,
 }: ScriptEditorProps) {

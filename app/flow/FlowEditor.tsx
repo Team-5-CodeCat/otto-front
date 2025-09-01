@@ -141,6 +141,29 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript, onNodesToScript }: 
     [setEdges]
   );
 
+  // 노드 변경 처리 개선
+  const handleNodesChange = useCallback(
+    (changes: any[]) => {
+      // 기본 노드 변경 처리 먼저 실행
+      onNodesChange(changes);
+
+      // 노드 삭제 시 추가 처리
+      const deletedNodes = changes.filter((change) => change.type === 'remove');
+      if (deletedNodes.length > 0) {
+        // 노드 삭제 후 스크립트 자동 업데이트
+        setTimeout(() => {
+          if (onNodesToScript) {
+            const currentNodes = nodes.filter((n) => !deletedNodes.some((d) => d.id === n.id));
+            const nodeData = currentNodes.map((node) => node.data);
+            onNodesToScript(nodeData, 'yaml');
+            onNodesToScript(nodeData, 'shell');
+          }
+        }, 50);
+      }
+    },
+    [onNodesChange, nodes, onNodesToScript]
+  );
+
   // 엣지 변경 처리 개선
   const handleEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
@@ -576,7 +599,7 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript, onNodesToScript }: 
           nodes={nodes}
           edges={edges}
           nodeTypes={nodeTypes}
-          onNodesChange={onNodesChange}
+          onNodesChange={handleNodesChange}
           onEdgesChange={handleEdgesChange}
           onConnect={onConnect}
           onInit={(instance) => {
