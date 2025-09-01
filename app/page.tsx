@@ -84,7 +84,7 @@ export default function Home() {
         >
           <FlowEditor
             onGraphChange={handleGraphChange}
-            onGenerateFromScript={handleGenerateNodes}
+            onGenerateFromScript={(nodes) => handleGenerateNodes('', 'yaml')}
           />
         </div>
         <div
@@ -99,8 +99,8 @@ export default function Home() {
         >
           <div style={{ padding: 12, flex: 1, overflow: 'hidden' }}>
             <ScriptEditor
-              nodes={nodes}
-              edges={edges}
+              _nodes={nodes}
+              _edges={edges}
               onScriptChange={handleScriptChange}
               onGenerateNodes={handleGenerateNodes}
             />

@@ -4,8 +4,8 @@ import type { PipelineNodeData } from './codegen';
 import EnvPopup from '../components/EnvPopup';
 
 export interface ScriptEditorProps {
-  nodes: Node<PipelineNodeData>[];
-  edges: Edge[];
+  _nodes: Node<PipelineNodeData>[];
+  _edges: Edge[];
   onScriptChange: (script: string, type: 'yaml' | 'shell') => void;
   onGenerateNodes: (script: string, type: 'yaml' | 'shell') => void;
 }
