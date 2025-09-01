@@ -57,6 +57,27 @@ export default function Home() {
     }
   }, []);
 
+  const handleNodesToScript = useCallback(
+    (nodeData: PipelineNodeData[], type: 'yaml' | 'shell') => {
+      try {
+        // 현재 노드와 엣지를 사용하여 스크립트 생성
+        let generatedScript: string;
+        if (type === 'yaml') {
+          generatedScript = generateYAML(nodes, edges);
+          setCurrentYamlScript(generatedScript);
+        } else {
+          generatedScript = generateShell(nodes, edges);
+          setCurrentShellScript(generatedScript);
+        }
+
+        console.log(`Generated ${type} script:`, generatedScript);
+      } catch (error) {
+        console.error(`Failed to generate ${type} script:`, error);
+      }
+    },
+    [nodes, edges]
+  );
+
   return (
     <div className='flex h-screen'>
       {/* 사이드바 */}
@@ -67,7 +88,7 @@ export default function Home() {
         style={{
           width: '100%',
           display: 'grid',
-          gridTemplateColumns: '1fr 320px',
+          gridTemplateColumns: '1fr 520px',
           gap: 16,
           height: '100vh',
           padding: 16,
@@ -84,7 +105,8 @@ export default function Home() {
         >
           <FlowEditor
             onGraphChange={handleGraphChange}
-            onGenerateFromScript={(nodes) => handleGenerateNodes('', 'yaml')}
+            onGenerateFromScript={handleGenerateNodes}
+            onNodesToScript={handleNodesToScript}
           />
         </div>
         <div
@@ -99,10 +121,12 @@ export default function Home() {
         >
           <div style={{ padding: 12, flex: 1, overflow: 'hidden' }}>
             <ScriptEditor
-              _nodes={nodes}
-              _edges={edges}
+              nodes={nodes}
+              edges={edges}
               onScriptChange={handleScriptChange}
               onGenerateNodes={handleGenerateNodes}
+              currentYamlScript={currentYamlScript}
+              currentShellScript={currentShellScript}
             />
           </div>
         </div>

@@ -1,27 +1,54 @@
 import { useState, useEffect } from 'react';
 import type { Edge, Node } from 'reactflow';
 import type { PipelineNodeData } from './codegen';
-import EnvPopup from '../components/EnvPopup';
+import { parseYAMLToNodes, parseShellToNodes } from './scriptParser';
+import { generateYAML, generateShell } from './codegen';
 
 export interface ScriptEditorProps {
-  _nodes: Node<PipelineNodeData>[];
-  _edges: Edge[];
+  nodes: Node<PipelineNodeData>[];
+  edges: Edge[];
   onScriptChange: (script: string, type: 'yaml' | 'shell') => void;
   onGenerateNodes: (script: string, type: 'yaml' | 'shell') => void;
+  currentYamlScript?: string;
+  currentShellScript?: string;
 }
 
 export default function ScriptEditor({
-  _nodes,
-  _edges,
+  nodes,
+  edges,
   onScriptChange,
   onGenerateNodes,
+  currentYamlScript,
+  currentShellScript,
 }: ScriptEditorProps) {
   const [activeTab, setActiveTab] = useState<'yaml' | 'shell'>('yaml');
   const [yamlScript, setYamlScript] = useState('');
   const [shellScript, setShellScript] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [isEnvPopupOpen, setIsEnvPopupOpen] = useState(false);
+
+  // 외부에서 전달받은 스크립트 업데이트 (중복 방지)
+  useEffect(() => {
+    if (
+      currentYamlScript !== undefined &&
+      currentYamlScript !== yamlScript &&
+      currentYamlScript !== 'Enter file contents here' &&
+      currentYamlScript.trim() !== ''
+    ) {
+      setYamlScript(currentYamlScript);
+    }
+  }, [currentYamlScript, yamlScript]);
+
+  useEffect(() => {
+    if (
+      currentShellScript !== undefined &&
+      currentShellScript !== shellScript &&
+      currentShellScript !== 'Enter file contents here' &&
+      currentShellScript.trim() !== ''
+    ) {
+      setShellScript(currentShellScript);
+    }
+  }, [currentShellScript, shellScript]);
 
   // 초기 스크립트 설정 (한 번만 실행)
   useEffect(() => {
@@ -41,15 +68,69 @@ export default function ScriptEditor({
   const handleScriptChange = (script: string, type: 'yaml' | 'shell') => {
     if (type === 'yaml') {
       setYamlScript(script);
+      // YAML 변경 시 Shell도 업데이트
+      if (script.trim() !== '') {
+        try {
+          // YAML을 파싱하여 노드 생성
+          const parsedNodes = parseYAMLToNodes(script);
+          // 노드에서 Shell 스크립트 생성 (가상의 엣지와 함께)
+          const virtualNodes = parsedNodes.map((data, index) => ({
+            id: `${data.kind}-${index}`,
+            position: { x: 100, y: 200 + index * 120 },
+            data,
+            type: 'customNode',
+          }));
+          const virtualEdges: Edge[] = [];
+          for (let i = 0; i < virtualNodes.length - 1; i++) {
+            virtualEdges.push({
+              id: `edge-${virtualNodes[i].id}-${virtualNodes[i + 1].id}`,
+              source: virtualNodes[i].id,
+              target: virtualNodes[i + 1].id,
+            });
+          }
+          const generatedShell = generateShell(virtualNodes, virtualEdges);
+          setShellScript(generatedShell);
+          onScriptChange(generatedShell, 'shell');
+        } catch (error) {
+          console.error('Failed to convert YAML to Shell:', error);
+        }
+      }
     } else {
       setShellScript(script);
+      // Shell 변경 시 YAML도 업데이트
+      if (script.trim() !== '') {
+        try {
+          // Shell을 파싱하여 노드 생성
+          const parsedNodes = parseShellToNodes(script);
+          // 노드에서 YAML 스크립트 생성 (가상의 엣지와 함께)
+          const virtualNodes = parsedNodes.map((data, index) => ({
+            id: `${data.kind}-${index}`,
+            position: { x: 100, y: 200 + index * 120 },
+            data,
+            type: 'customNode',
+          }));
+          const virtualEdges: Edge[] = [];
+          for (let i = 0; i < virtualNodes.length - 1; i++) {
+            virtualEdges.push({
+              id: `edge-${virtualNodes[i].id}-${virtualNodes[i + 1].id}`,
+              source: virtualNodes[i].id,
+              target: virtualNodes[i + 1].id,
+            });
+          }
+          const generatedYaml = generateYAML(virtualNodes, virtualEdges);
+          setYamlScript(generatedYaml);
+          onScriptChange(generatedYaml, 'yaml');
+        } catch (error) {
+          console.error('Failed to convert Shell to YAML:', error);
+        }
+      }
     }
     onScriptChange(script, type);
   };
 
   const handleGenerateNodes = () => {
     const currentScript = activeTab === 'yaml' ? yamlScript : shellScript;
-    console.log('Generating nodes with script:', currentScript); // 디버깅용 로그
+    console.log('Generating nodes with script:', currentScript);
     onGenerateNodes(currentScript, activeTab);
     setIsEditing(false);
   };
@@ -68,6 +149,32 @@ export default function ScriptEditor({
     setIsEditing(true);
   };
 
+  const handleContentEditableClick = () => {
+    // contentEditable 영역 클릭 시에도 기본 텍스트 지우기
+    if (currentScript === 'Enter file contents here') {
+      if (activeTab === 'yaml') {
+        setYamlScript('');
+        onScriptChange('', 'yaml');
+      } else {
+        setShellScript('');
+        onScriptChange('', 'shell');
+      }
+    }
+  };
+
+  const handleContentEditableFocus = () => {
+    // 포커스 시에도 기본 텍스트 지우기
+    if (currentScript === 'Enter file contents here') {
+      if (activeTab === 'yaml') {
+        setYamlScript('');
+        onScriptChange('', 'yaml');
+      } else {
+        setShellScript('');
+        onScriptChange('', 'shell');
+      }
+    }
+  };
+
   const handleBlur = () => {
     // 포커스를 잃었을 때 자동으로 편집 모드 해제
     setTimeout(() => setIsEditing(false), 100);
@@ -78,14 +185,9 @@ export default function ScriptEditor({
     setActiveTab(newTab);
   };
 
-  const handleEnvSave = (envVars: { key: string; value: string }[]) => {
-    const envContent = envVars.map((env) => `${env.key}=${env.value}`).join('\n');
-    console.log('Environment variables saved:', envVars);
-    console.log('Generated .env content:', envContent);
-  };
-
   const currentScript = activeTab === 'yaml' ? yamlScript : shellScript;
-  const showPlaceholder = currentScript === 'Enter file contents here' || currentScript === '';
+  const showPlaceholder =
+    !isEditing && (currentScript === 'Enter file contents here' || currentScript === '');
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -128,20 +230,6 @@ export default function ScriptEditor({
           >
             Shell
           </button>
-          <button
-            onClick={() => setIsEnvPopupOpen(true)}
-            style={{
-              padding: '4px 12px',
-              backgroundColor: 'rgba(255,255,255,.1)',
-              border: '1px solid rgba(255,255,255,.2)',
-              borderRadius: '4px',
-              color: '#e0e0e0',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            .env
-          </button>
         </div>
         {isEditing && (
           <button
@@ -164,47 +252,41 @@ export default function ScriptEditor({
       <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
         {isEditing ? (
           <div style={{ position: 'relative', height: '100%' }}>
-            <textarea
-              value={currentScript}
-              onChange={(e) => handleScriptChange(e.target.value, activeTab)}
-              onBlur={handleBlur}
-              autoFocus
+            <div
+              contentEditable={true}
+              spellCheck={false}
+              autoCorrect='off'
+              autoCapitalize='off'
+              data-language={activeTab}
               style={{
                 width: '100%',
                 height: '100%',
                 backgroundColor: '#1e1e1e',
-                color: showPlaceholder ? 'transparent' : '#f0f0f0',
+                color: '#f0f0f0',
                 border: '1px solid rgba(255,255,255,.2)',
                 borderRadius: '4px',
                 padding: '8px',
                 fontFamily: 'monospace',
                 fontSize: '12px',
-                resize: 'none',
-                tabSize: 2,
                 outline: 'none',
+                tabSize: 2,
+                whiteSpace: 'pre-wrap',
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word',
                 caretColor: '#f0f0f0',
+                minHeight: '100px',
               }}
-              spellCheck={false}
-              autoCorrect='off'
-              autoCapitalize='off'
-              data-language={activeTab}
-            />
-            {showPlaceholder && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '8px',
-                  left: '8px',
-                  color: '#6a6a6a',
-                  fontFamily: 'monospace',
-                  fontSize: '12px',
-                  pointerEvents: 'none',
-                  userSelect: 'none',
-                }}
-              >
-                Enter file contents here
-              </div>
-            )}
+              onClick={handleContentEditableClick}
+              onFocus={handleContentEditableFocus}
+              onInput={(e) => {
+                const content = e.currentTarget.textContent || '';
+                handleScriptChange(content, activeTab);
+              }}
+              onBlur={handleBlur}
+              suppressContentEditableWarning={true}
+            >
+              {currentScript}
+            </div>
           </div>
         ) : (
           <div
@@ -242,12 +324,6 @@ export default function ScriptEditor({
           </div>
         )}
       </div>
-
-      <EnvPopup
-        isOpen={isEnvPopupOpen}
-        onClose={() => setIsEnvPopupOpen(false)}
-        onSave={handleEnvSave}
-      />
     </div>
   );
 }
