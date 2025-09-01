@@ -185,7 +185,7 @@ export function linearize(nodes: PipelineNode[], edges: Edge[]): PipelineNode[] 
     visited.add(cursor.id);
     const nextIds = outgoing.get(cursor.id) || [];
     if (nextIds.length !== 1) break;
-    const next = byId.get(nextIds[0]);
+    const next = byId.get(nextIds[0]!);
     if (!next) break;
     cursor = next;
   }
