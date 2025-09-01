@@ -25,41 +25,10 @@ export default function ScriptEditor({
   useEffect(() => {
     if (!isInitialized) {
       // 기본 YAML 템플릿
-      const defaultYaml = `name: CI/CD Pipeline
-on: [push, pull_request]
-jobs:
-  pipeline:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - name: Install dependencies
-        run: npm ci
-      - name: Run tests
-        run: npm test
-      - name: Build
-        run: npm run build`;
+      const defaultYaml = `Enter file contents here`;
 
       // 기본 Shell 템플릿
-      const defaultShell = `#!/bin/bash
-set -e
-
-echo "🚀 Starting CI/CD Pipeline"
-
-# Install dependencies
-npm ci
-
-# Run tests
-npm test
-
-# Build
-npm run build
-
-echo "✅ Pipeline completed successfully"`;
+      const defaultShell = `Enter file contents here`;
 
       setYamlScript(defaultYaml);
       setShellScript(defaultShell);
@@ -84,6 +53,16 @@ echo "✅ Pipeline completed successfully"`;
   };
 
   const handleBoxClick = () => {
+    // 편집 시작 시 기본 텍스트가 있다면 지우기
+    if (currentScript === 'Enter file contents here') {
+      if (activeTab === 'yaml') {
+        setYamlScript('');
+        onScriptChange('', 'yaml');
+      } else {
+        setShellScript('');
+        onScriptChange('', 'shell');
+      }
+    }
     setIsEditing(true);
   };
 
@@ -96,6 +75,9 @@ echo "✅ Pipeline completed successfully"`;
   const handleTabChange = (newTab: 'yaml' | 'shell') => {
     setActiveTab(newTab);
   };
+
+  const currentScript = activeTab === 'yaml' ? yamlScript : shellScript;
+  const showPlaceholder = currentScript === 'Enter file contents here' || currentScript === '';
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -157,57 +139,85 @@ echo "✅ Pipeline completed successfully"`;
         )}
       </div>
 
-      <div style={{ flex: 1, overflow: 'auto' }}>
+      <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
         {isEditing ? (
-          <textarea
-            value={activeTab === 'yaml' ? yamlScript : shellScript}
-            onChange={(e) => handleScriptChange(e.target.value, activeTab)}
-            onBlur={handleBlur}
-            autoFocus
-            style={{
-              width: '100%',
-              height: '100%',
-              backgroundColor: '#2d2d2d',
-              color: '#f0f0f0',
-              border: '1px solid rgba(255,255,255,.2)',
-              borderRadius: '4px',
-              padding: '8px',
-              fontFamily: 'monospace',
-              fontSize: '12px',
-              resize: 'none',
-            }}
-            placeholder={
-              activeTab === 'yaml'
-                ? 'YAML 스크립트를 입력하세요...'
-                : 'Shell 스크립트를 입력하세요...'
-            }
-          />
+          <div style={{ position: 'relative', height: '100%' }}>
+            <textarea
+              value={currentScript}
+              onChange={(e) => handleScriptChange(e.target.value, activeTab)}
+              onBlur={handleBlur}
+              autoFocus
+              style={{
+                width: '100%',
+                height: '100%',
+                backgroundColor: '#1e1e1e',
+                color: showPlaceholder ? 'transparent' : '#f0f0f0',
+                border: '1px solid rgba(255,255,255,.2)',
+                borderRadius: '4px',
+                padding: '8px',
+                fontFamily: 'monospace',
+                fontSize: '12px',
+                resize: 'none',
+                tabSize: 2,
+                outline: 'none',
+                caretColor: '#f0f0f0',
+              }}
+              spellCheck={false}
+              autoCorrect='off'
+              autoCapitalize='off'
+              data-language={activeTab}
+            />
+            {showPlaceholder && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '8px',
+                  left: '8px',
+                  color: '#6a6a6a',
+                  fontFamily: 'monospace',
+                  fontSize: '12px',
+                  pointerEvents: 'none',
+                  userSelect: 'none',
+                }}
+              >
+                Enter file contents here
+              </div>
+            )}
+          </div>
         ) : (
-          <pre
+          <div
             onClick={handleBoxClick}
             style={{
-              whiteSpace: 'pre-wrap',
-              margin: 0,
-              padding: '8px',
-              backgroundColor: '#2d2d2d',
+              position: 'relative',
+              minHeight: '100px',
+              backgroundColor: '#1e1e1e',
               borderRadius: '4px',
-              fontSize: '12px',
-              cursor: 'pointer',
               border: '1px solid transparent',
               transition: 'all 0.2s ease',
-              color: '#f0f0f0',
+              cursor: 'pointer',
+              padding: '8px',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.borderColor = 'rgba(255,255,255,.4)';
-              e.currentTarget.style.backgroundColor = '#3a3a3a';
+              e.currentTarget.style.backgroundColor = '#2a2a2a';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.borderColor = 'transparent';
-              e.currentTarget.style.backgroundColor = '#2d2d2d';
+              e.currentTarget.style.backgroundColor = '#1e1e1e';
             }}
           >
-            {activeTab === 'yaml' ? yamlScript : shellScript}
-          </pre>
+            <pre
+              style={{
+                whiteSpace: 'pre-wrap',
+                margin: 0,
+                fontSize: '12px',
+                fontFamily: 'monospace',
+                color: showPlaceholder ? '#6a6a6a' : '#f0f0f0',
+              }}
+            >
+              {currentScript}
+            </pre>
+          </div>
         )}
       </div>
     </div>
