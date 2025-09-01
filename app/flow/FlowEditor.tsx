@@ -33,10 +33,11 @@ const initialNodes: Node<PipelineNodeData>[] = [
 export interface FlowEditorProps {
   onGraphChange?: (nodes: Node<PipelineNodeData>[], edges: Edge[]) => void;
   onGenerateFromScript?: (nodes: PipelineNodeData[]) => void;
+  onNodesToScript?: (nodes: PipelineNodeData[], type: 'yaml' | 'shell') => void;
 }
 
 // 실제 에디터 캔버스 컴포넌트 (Provider 내부에서만 동작)
-function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) {
+function EditorCanvas({ onGraphChange, onGenerateFromScript, onNodesToScript }: FlowEditorProps) {
   // React Flow 상태 훅: 노드/엣지 배열과 변경 핸들러를 반환
   const [nodes, setNodes, onNodesChange] = useNodesState<PipelineNodeData>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -64,7 +65,14 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
     if (onGraphChange) {
       onGraphChange(nodes, edges);
     }
-  }, [nodes, edges, onGraphChange]);
+
+    // 노드 변경 시 스크립트 업데이트
+    if (onNodesToScript && nodes.length > 0) {
+      const nodeData = nodes.map((node) => node.data);
+      onNodesToScript(nodeData, 'yaml');
+      onNodesToScript(nodeData, 'shell');
+    }
+  }, [nodes, edges, onGraphChange, onNodesToScript]);
 
   // 스크립트에서 생성된 노드들을 처리
   useEffect(() => {
