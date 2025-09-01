@@ -194,23 +194,107 @@ export function linearize(nodes: PipelineNode[], edges: Edge[]): PipelineNode[] 
 
 /**
  * 정렬된 노드 시퀀스를 bash 스크립트로 병합
+ * YAML에서 파싱된 노드의 실제 명령어 내용을 반영
  */
 export function generateShell(nodes: PipelineNode[], edges: Edge[]): string {
   const ordered = linearize(nodes, edges);
   if (ordered.length === 0) return '# Add a Start node and connect stages to generate script.';
-  return ordered.map((n) => nodeToScript(n.data)).join('');
+
+  let script = '#!/bin/bash\n# CI/CD Pipeline\necho "🚀 Starting pipeline..."\n';
+
+  for (const node of ordered) {
+    if (node.data.kind === 'start') continue;
+
+    const nodeData = node.data;
+    const label = nodeData.label || 'Custom Command';
+
+    // 주석 추가
+    script += `\n# ${label}\n`;
+
+    // 노드 종류에 따른 명령어 생성
+    switch (nodeData.kind) {
+      case 'git_clone':
+        script += `git clone -b ${nodeData.branch || 'main'} ${nodeData.repoUrl || 'https://github.com/user/repo.git'}\n`;
+        break;
+      case 'prebuild_python':
+        if (nodeData.script) {
+          // YAML에서 파싱된 실제 스크립트 사용
+          script += `${nodeData.script}\n`;
+        } else {
+          // 기본 명령어
+          script += `python -m pip install -r requirements.txt\n`;
+        }
+        break;
+      case 'build_python':
+        if (nodeData.script) {
+          script += `${nodeData.script}\n`;
+        } else {
+          script += `python -m py_compile app.py\n`;
+        }
+        break;
+      case 'run_tests':
+        if (nodeData.command) {
+          script += `${nodeData.command}\n`;
+        } else {
+          script += `python -m pytest tests/\n`;
+        }
+        break;
+      case 'deploy':
+        if (nodeData.deployScript) {
+          script += `${nodeData.deployScript}\n`;
+        } else {
+          script += `echo "Deploying..."\n`;
+        }
+        break;
+      case 'prebuild_custom':
+        if (nodeData.script) {
+          script += `${nodeData.script}\n`;
+        } else {
+          script += `echo "Custom command"\n`;
+        }
+        break;
+      case 'prebuild_node':
+        script += `${nodeData.manager === 'yarn' ? 'yarn install' : 'npm ci'}\n`;
+        break;
+      case 'build_npm':
+        script += `npm run build\n`;
+        break;
+      case 'docker_build':
+        script += `docker build -f ${nodeData.dockerfile || 'Dockerfile'} -t ${nodeData.tag || 'myapp:latest'} .\n`;
+        break;
+      case 'notify_slack':
+        script += `curl -X POST -H 'Content-type: application/json' --data '{"channel":"${nodeData.channel || '#deployments'}","text":"${nodeData.message || 'Deployment completed!'}"}' $SLACK_WEBHOOK\n`;
+        break;
+      default:
+        if (nodeData.command) {
+          script += `${nodeData.command}\n`;
+        } else if (nodeData.script) {
+          script += `${nodeData.script}\n`;
+        } else {
+          script += `echo "Executing ${label}"\n`;
+        }
+    }
+  }
+
+  return script;
 }
 
 /**
  * GitHub Actions YAML 생성
- * - 사용된 언어에 맞춰 setup 액션을 자동 추가
- * - 최종 run에는 `generateShell` 결과를 들여쓰기하여 삽입
+ * - 각 노드를 개별 step으로 생성
+ * - 더 정확하고 의미 있는 YAML 생성
  */
 export function generateYAML(nodes: PipelineNode[], edges: Edge[]): string {
   const ordered = linearize(nodes, edges);
   if (ordered.length === 0) return '# Add a Start node and connect stages to generate YAML.';
 
   const used = new Set<string>();
+  const steps: string[] = [];
+
+  // Checkout step 추가
+  steps.push('      - name: Checkout code\n        uses: actions/checkout@v3');
+
+  // 언어별 setup 액션 추가
   ordered.forEach((n) => {
     const k = n.data.kind;
     if (k.includes('node') || k.includes('npm') || n.data.lang === 'javascript')
@@ -219,26 +303,79 @@ export function generateYAML(nodes: PipelineNode[], edges: Edge[]): string {
     if (k.includes('java') || n.data.lang === 'java') used.add('java');
   });
 
-  const setup: string[] = [];
   if (used.has('javascript'))
-    setup.push(
+    steps.push(
       "      - name: Setup Node.js\n        uses: actions/setup-node@v3\n        with:\n          node-version: '18'"
     );
   if (used.has('python'))
-    setup.push(
+    steps.push(
       "      - name: Setup Python\n        uses: actions/setup-python@v4\n        with:\n          python-version: '3.x'"
     );
   if (used.has('java'))
-    setup.push(
+    steps.push(
       "      - name: Setup Java\n        uses: actions/setup-java@v3\n        with:\n          distribution: 'temurin'\n          java-version: '17'"
     );
 
-  // bash 스크립트를 생성해 YAML run 블록에 삽입
-  const script = generateShell(nodes, edges);
-  const indented = script
-    .split('\n')
-    .map((l) => (l ? '          ' + l : ''))
-    .join('\n');
+  // 각 노드를 개별 step으로 변환
+  ordered.forEach((node, index) => {
+    if (node.data.kind === 'start') return; // start 노드는 건너뛰기
 
-  return `# Generated CI/CD Pipeline\nname: ReactFlow CI/CD Pipeline\non: [push, pull_request]\njobs:\n  pipeline:\n    runs-on: ubuntu-latest\n    steps:\n      - name: Checkout code\n        uses: actions/checkout@v3\n${setup.join('\n')}\n      - name: Execute Pipeline\n        shell: bash\n        run: |\n${indented}`;
+    const stepName = node.data.label || `Step ${index + 1}`;
+    let stepContent = '';
+
+    switch (node.data.kind) {
+      case 'git_clone':
+        stepContent = `        git clone -b ${node.data.branch || 'main'} ${node.data.repoUrl || 'https://github.com/user/repo.git'}`;
+        break;
+      case 'linux_install':
+        stepContent = `        sudo apt-get update && sudo apt-get install -y ${node.data.packages || 'git curl'}`;
+        break;
+      case 'prebuild_node':
+        stepContent = `        ${node.data.manager === 'yarn' ? 'yarn install' : 'npm ci'}`;
+        break;
+      case 'prebuild_python':
+        stepContent = `        python -m pip install -r requirements.txt`;
+        break;
+      case 'prebuild_java':
+        stepContent = `        mvn dependency:resolve`;
+        break;
+      case 'build_npm':
+        stepContent = `        npm run build`;
+        break;
+      case 'build_python':
+        stepContent = `        python -m py_compile app.py`;
+        break;
+      case 'build_java':
+        stepContent = `        mvn package`;
+        break;
+      case 'docker_build':
+        stepContent = `        docker build -f ${node.data.dockerfile || 'Dockerfile'} -t ${node.data.tag || 'myapp:latest'} .`;
+        break;
+      case 'run_tests':
+        stepContent = `        ${node.data.command || 'npm test'}`;
+        break;
+      case 'deploy':
+        stepContent = `        ${node.data.deployScript || 'echo "Deploying..."'}`;
+        break;
+      case 'notify_slack':
+        stepContent = `        curl -X POST -H 'Content-type: application/json' --data '{"channel":"${node.data.channel || '#deployments'}","text":"${node.data.message || 'Deployment completed!'}"}' $SLACK_WEBHOOK`;
+        break;
+      case 'prebuild_custom':
+        stepContent = `        ${node.data.script || 'echo "Custom command"'}`;
+        break;
+      default:
+        stepContent = `        echo "Executing ${stepName}"`;
+    }
+
+    steps.push(`      - name: ${stepName}\n        run: ${stepContent}`);
+  });
+
+  return `# Generated CI/CD Pipeline
+name: ReactFlow CI/CD Pipeline
+on: [push, pull_request]
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    steps:
+${steps.join('\n')}`;
 }
