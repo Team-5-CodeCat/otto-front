@@ -2,11 +2,7 @@
   "compilerOptions": {
     // 타겟 및 라이브러리
     "target": "ES2022", // 더 최신 버전으로 업데이트
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     // JavaScript 지원
     "allowJs": true,
     "skipLibCheck": true,
@@ -40,27 +36,13 @@
     // 경로 매핑
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "@/components/*": [
-        "./components/*"
-      ],
-      "@/lib/*": [
-        "./lib/*"
-      ],
-      "@/utils/*": [
-        "./utils/*"
-      ],
-      "@/types/*": [
-        "./types/*"
-      ],
-      "@/styles/*": [
-        "./styles/*"
-      ],
-      "@/public/*": [
-        "./public/*"
-      ]
+      "@/*": ["./*"],
+      "@/components/*": ["./components/*"],
+      "@/lib/*": ["./lib/*"],
+      "@/utils/*": ["./utils/*"],
+      "@/types/*": ["./types/*"],
+      "@/styles/*": ["./styles/*"],
+      "@/public/*": ["./public/*"]
     },
     // 추가 유용한 옵션들
     "forceConsistentCasingInFileNames": true,
@@ -68,23 +50,8 @@
     "declarationMap": false,
     "allowImportingTsExtensions": false
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.mts",
-    "**/*.cts",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    ".next",
-    "out",
-    "dist",
-    "build",
-    "*.config.js",
-    "*.config.mjs"
-  ],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", ".next", "out", "dist", "build", "*.config.js", "*.config.mjs"],
   "ts-node": {
     "esm": true
   }

@@ -6,7 +6,7 @@ interface SidebarProps {
   children?: React.ReactNode;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ children }) => {
+const Sidebar: React.FC<SidebarProps> = ({ _children }) => {
   return (
     <div className='w-16 h-full bg-gray-50 border-r border-gray-200 flex flex-col items-center py-4'>
       {/* 로고 영역 - 맨 위 */}

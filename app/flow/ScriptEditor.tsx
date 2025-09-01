@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Edge, Node } from 'reactflow';
 import type { PipelineNodeData } from './codegen';
+import EnvPopup from '../components/EnvPopup';
 
 export interface ScriptEditorProps {
   nodes: Node<PipelineNodeData>[];
@@ -10,8 +11,8 @@ export interface ScriptEditorProps {
 }
 
 export default function ScriptEditor({
-  nodes,
-  edges,
+  _nodes,
+  _edges,
   onScriptChange,
   onGenerateNodes,
 }: ScriptEditorProps) {
@@ -20,6 +21,7 @@ export default function ScriptEditor({
   const [shellScript, setShellScript] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isEnvPopupOpen, setIsEnvPopupOpen] = useState(false);
 
   // 초기 스크립트 설정 (한 번만 실행)
   useEffect(() => {
@@ -76,6 +78,12 @@ export default function ScriptEditor({
     setActiveTab(newTab);
   };
 
+  const handleEnvSave = (envVars: { key: string; value: string }[]) => {
+    const envContent = envVars.map((env) => `${env.key}=${env.value}`).join('\n');
+    console.log('Environment variables saved:', envVars);
+    console.log('Generated .env content:', envContent);
+  };
+
   const currentScript = activeTab === 'yaml' ? yamlScript : shellScript;
   const showPlaceholder = currentScript === 'Enter file contents here' || currentScript === '';
 
@@ -119,6 +127,20 @@ export default function ScriptEditor({
             }}
           >
             Shell
+          </button>
+          <button
+            onClick={() => setIsEnvPopupOpen(true)}
+            style={{
+              padding: '4px 12px',
+              backgroundColor: 'rgba(255,255,255,.1)',
+              border: '1px solid rgba(255,255,255,.2)',
+              borderRadius: '4px',
+              color: '#e0e0e0',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            .env
           </button>
         </div>
         {isEditing && (
@@ -220,6 +242,12 @@ export default function ScriptEditor({
           </div>
         )}
       </div>
+
+      <EnvPopup
+        isOpen={isEnvPopupOpen}
+        onClose={() => setIsEnvPopupOpen(false)}
+        onSave={handleEnvSave}
+      />
     </div>
   );
 }
