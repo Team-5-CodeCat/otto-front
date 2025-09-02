@@ -25,3 +25,39 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* 파이프라인 간선 애니메이션 */
+@keyframes dashFlow {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 18;
+  }
+}
+
+@keyframes pulseWidth {
+  0%,
+  100% {
+    stroke-width: 4;
+    opacity: 0.9;
+  }
+  50% {
+    stroke-width: 5.5;
+    opacity: 1;
+  }
+}
+
+.animated-edge {
+  transition:
+    stroke 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    stroke-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+}
+
+.animated-edge.selected {
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
+}
