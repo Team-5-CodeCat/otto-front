@@ -7,6 +7,12 @@ interface JobNodeProps {
 }
 
 const JobNode: React.FC<JobNodeProps> = ({ data }) => {
+  // 환경 변수 값을 마스킹하는 함수 (전체 마스킹)
+  const maskValue = (value: string | number): string => {
+    const str = String(value);
+    return '*'.repeat(str.length);
+  };
+
   return (
     <div className='px-4 py-3 shadow-lg rounded-lg bg-white border border-gray-200 min-w-[180px] max-w-[220px] relative hover:shadow-xl transition-shadow'>
       {/* 입력 핸들 (위쪽) */}
@@ -31,7 +37,7 @@ const JobNode: React.FC<JobNodeProps> = ({ data }) => {
             .slice(0, 2)
             .map(([key, value]) => (
               <div key={key} className='text-xs text-gray-500 truncate'>
-                {key}: {String(value)}
+                {key}: {maskValue(value)}
               </div>
             ))}
           {Object.entries(data.environment).length > 2 && (

@@ -1,7 +1,15 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { addEdge, useNodesState, useEdgesState, Connection, Edge, NodeChange } from 'reactflow';
+import {
+  addEdge,
+  useNodesState,
+  useEdgesState,
+  Connection,
+  Edge,
+  NodeChange,
+  Node,
+} from 'reactflow';
 import NodePalette from './components/NodePalette';
 import FlowCanvas from './components/FlowCanvas';
 import RightPanel from './components/RightPanel';
@@ -142,6 +150,35 @@ const YamlFlowEditor = () => {
     setYamlText(value);
   }, []);
 
+  // 노드 환경 변수 업데이트 핸들러
+  const handleUpdateNodeEnvironment = useCallback(
+    (nodeId: string, environment: Record<string, string>) => {
+      setNodes((currentNodes) => {
+        const updatedNodes = currentNodes.map((node) => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                environment: environment,
+              },
+            };
+          }
+          return node;
+        });
+
+        // YAML도 업데이트
+        setTimeout(() => {
+          const newYaml = nodesToYaml(updatedNodes, edges);
+          setYamlText(newYaml);
+        }, 50);
+
+        return updatedNodes;
+      });
+    },
+    [edges, setNodes, setYamlText]
+  );
+
   return (
     <>
       {/* 대시보드 레이아웃을 벗어나서 전체 화면 사용 */}
@@ -173,7 +210,12 @@ const YamlFlowEditor = () => {
         </div>
 
         {/* 오른쪽 패널 - YAML 편집기 */}
-        <RightPanel yamlText={yamlText} onYamlChange={handleYamlChange} />
+        <RightPanel
+          yamlText={yamlText}
+          onYamlChange={handleYamlChange}
+          nodes={nodes}
+          onUpdateNodeEnvironment={handleUpdateNodeEnvironment}
+        />
       </div>
     </>
   );
