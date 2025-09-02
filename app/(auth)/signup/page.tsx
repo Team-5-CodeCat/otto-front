@@ -134,7 +134,7 @@ export default function SignUpPage() {
       await new Promise((resolve) => setTimeout(resolve, 1000)); // 로딩 시뮬레이션
 
       // 성공 시 로그인 페이지로 리다이렉트
-      router.push('/auth/signin?message=회원가입이 완료되었습니다. 로그인해주세요.');
+      router.push('/signin?message=회원가입이 완료되었습니다. 로그인해주세요.');
     } catch (error) {
       console.error('회원가입 오류:', error);
       // 에러 처리

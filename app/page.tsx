@@ -18,9 +18,9 @@ export default function Home() {
     const go = async () => {
       try {
         const ok = await validateToken();
-        router.replace(ok ? '/projects' : '/auth/signin');
+        router.replace(ok ? '/projects' : '/signin');
       } catch {
-        router.replace('/auth/signin');
+        router.replace('/signin');
       }
     };
 
