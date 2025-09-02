@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-
-// UI 컴포넌트들
 import Button from '@/app/components/ui/Button';
 import Input from '@/app/components/ui/Input';
 import Card from '@/app/components/ui/Card';
