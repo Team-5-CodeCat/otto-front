@@ -1,13 +1,7 @@
 import React from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { NodeStatusIndicator, NodeStatus } from './NodeStatusIndicator';
-
-// PipelineNodeData 타입 정의 (임시 - 실제 타입은 types 디렉토리로 이동 예정)
-interface PipelineNodeData {
-  kind: string;
-  label?: string;
-  description?: string;
-}
+import type { PipelineNodeData } from '../flow/codegen';
 
 interface CustomNodeData extends PipelineNodeData {
   status?: NodeStatus;
