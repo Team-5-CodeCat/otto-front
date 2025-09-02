@@ -8,8 +8,8 @@
     "start": "next start"
   },
   "dependencies": {
-    "@Team-5-CodeCat/otto-sdk": "^0.1.2",
     "@radix-ui/themes": "^3.2.1",
+    "@Team-5-CodeCat/otto-sdk": "npm:@team-5-codecat/otto-sdk@^0.1.2",
     "eslint-plugin-react-hooks": "^5.2.0",
     "lucide-react": "^0.542.0",
     "next": "15.5.2",

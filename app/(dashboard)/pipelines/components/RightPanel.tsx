@@ -54,7 +54,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
       const updated = { ...prev };
       if (!updated[nodeId]) updated[nodeId] = [];
       updated[nodeId] = [...updated[nodeId]];
-      updated[nodeId][index] = { ...updated[nodeId][index], [field]: value };
+      updated[nodeId][index] = { ...updated[nodeId][index], [field]: value } as EnvironmentVariable;
 
       // 노드의 환경 변수를 업데이트
       const envObject: Record<string, string> = {};
@@ -75,10 +75,13 @@ const RightPanel: React.FC<RightPanelProps> = ({
       const updated = { ...prev };
       if (!updated[nodeId]) return prev;
       updated[nodeId] = [...updated[nodeId]];
-      updated[nodeId][index] = {
-        ...updated[nodeId][index],
-        isVisible: !updated[nodeId][index].isVisible,
-      };
+      const currentEnv = updated[nodeId][index];
+      if (currentEnv) {
+        updated[nodeId][index] = {
+          ...currentEnv,
+          isVisible: !currentEnv.isVisible,
+        } as EnvironmentVariable;
+      }
       return updated;
     });
   };
@@ -233,7 +236,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       ))}
 
                       {/* 환경 변수가 없을 때 */}
-                      {(!nodeEnvironments[node.id] || nodeEnvironments[node.id].length === 0) && (
+                      {(!nodeEnvironments[node.id] || nodeEnvironments[node.id]?.length === 0) && (
                         <div className='text-xs text-gray-500 italic py-2'>
                           No environment variables set
                         </div>
