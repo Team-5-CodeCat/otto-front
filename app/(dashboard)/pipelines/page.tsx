@@ -1,19 +1,120 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { addEdge, useNodesState, useEdgesState, Connection, Edge, NodeChange } from 'reactflow';
+import YamlEditor from './components/YamlEditor';
+import FlowCanvas from './components/FlowCanvas';
+import { yamlToNodes, yamlToEdges, nodesToYaml } from './components/utils';
 
-export default function PipelinesPage() {
+const YamlFlowEditor = () => {
+  // YAML 텍스트 상태 - 이것이 우리의 단일 진실 소스입니다
+  const [yamlText, setYamlText] = useState(`- name: build
+  image: node:20
+  commands: |
+    npm ci
+    npm run build
+    
+- name: test
+  image: node:20
+  dependencies:
+    - build
+  commands: |
+    npm test
+    
+- name: deploy 
+  image: ubuntu:22.04
+  dependencies:
+    - test
+  environment: 
+    hello: 1234
+    hi: 1234
+  commands: | 
+    deploy.sh`);
+
+  // React Flow 상태
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
+  // YAML 텍스트가 변경될 때 노드와 간선을 업데이트
+  useEffect(() => {
+    setNodes((currentNodes) => {
+      const newNodes = yamlToNodes(yamlText, currentNodes);
+      return newNodes;
+    });
+    const newEdges = yamlToEdges(yamlText);
+    setEdges(newEdges);
+  }, [yamlText, setNodes, setEdges]);
+
+  // 노드 변경사항을 처리하는 함수 (위치 변경 시에는 YAML을 업데이트하지 않음)
+  const handleNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      // 노드 상태만 업데이트하고, YAML은 건드리지 않음
+      // 노드의 시각적 위치와 YAML은 독립적으로 관리됨
+      onNodesChange(changes);
+    },
+    [onNodesChange]
+  );
+
+  // 간선 연결 시 YAML 업데이트
+  const onConnect = useCallback(
+    (params: Edge | Connection) => {
+      setEdges((eds) => {
+        const newEdges = addEdge({ ...params, type: 'custom-edge' }, eds);
+
+        // 간선이 추가되면 YAML을 업데이트 (노드 위치는 변경하지 않음)
+        setTimeout(() => {
+          setNodes((currentNodes) => {
+            const newYaml = nodesToYaml(currentNodes, newEdges);
+            setYamlText(newYaml);
+            return currentNodes; // 노드 위치는 그대로 유지
+          });
+        }, 50);
+
+        return newEdges;
+      });
+    },
+    [setEdges, setNodes]
+  );
+
+  // 간선 삭제 핸들러
+  const handleEdgeDelete = useCallback(
+    (edgeId: string) => {
+      setEdges((eds) => {
+        const newEdges = eds.filter((edge) => edge.id !== edgeId);
+
+        // 간선이 삭제되면 YAML을 업데이트 (노드 위치는 변경하지 않음)
+        setTimeout(() => {
+          setNodes((currentNodes) => {
+            const newYaml = nodesToYaml(currentNodes, newEdges);
+            setYamlText(newYaml);
+            return currentNodes; // 노드 위치는 그대로 유지
+          });
+        }, 50);
+
+        return newEdges;
+      });
+    },
+    [setEdges, setNodes]
+  );
+
+  // YAML 텍스트 변경 핸들러
+  const handleYamlChange = useCallback((value: string) => {
+    setYamlText(value);
+  }, []);
+
   return (
-    <div className='p-6'>
-      {/* 파이프라인(블록 코딩) 개요: 추후 드래그앤드롭 에디터 연결 */}
-      <h1 className='text-2xl font-bold text-gray-900'>Pipelines</h1>
-      <p className='mt-1 text-sm text-gray-600'>Compose pipelines using blocks (PaB).</p>
-
-      {/* Placeholder: 파이프라인 목록/생성 */}
-      <div className='mt-6 rounded-lg border border-gray-200 bg-white p-4'>
-        {/* TODO: 블록 라이브러리, 샘플 템플릿, 버전 관리 */}
-        <p className='text-sm text-gray-700'>No pipelines yet.</p>
-      </div>
+    <div className='flex h-screen'>
+      <YamlEditor yamlText={yamlText} onYamlChange={handleYamlChange} />
+      <FlowCanvas
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={handleNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onEdgeDelete={handleEdgeDelete}
+      />
     </div>
   );
-}
+};
+
+export default YamlFlowEditor;
