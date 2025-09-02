@@ -33,6 +33,39 @@ export interface AuthState {
   error: string | null;
 }
 
+// 초기 인증 상태를 확인하는 함수
+const getInitialAuthState = (): AuthState => {
+  if (typeof window === 'undefined') {
+    return {
+      isAuthenticated: false,
+      user: null,
+      isLoading: true,
+      error: null,
+    };
+  }
+
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    return {
+      isAuthenticated: true,
+      user: {
+        id: '1',
+        email: 'test@example.com',
+        name: '테스트 사용자',
+      },
+      isLoading: false,
+      error: null,
+    };
+  }
+
+  return {
+    isAuthenticated: false,
+    user: null,
+    isLoading: false,
+    error: null,
+  };
+};
+
 // useAuth 커스텀 훅
 export const useAuth = () => {
   // 인증 상태 관리

@@ -2,7 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/app/hooks/useAuth';
 
 // 사이드바 메뉴 항목 타입
 interface SidebarItem {
@@ -61,6 +62,14 @@ const linkClasses = (active: boolean) =>
 // Sidebar 컴포넌트
 const Sidebar: React.FC = () => {
   const pathname = usePathname(); // 현재 경로
+  const router = useRouter();
+  const { user, signOut } = useAuth();
+
+  // 로그아웃 핸들러
+  const handleSignOut = () => {
+    signOut();
+    router.push('/signin');
+  };
 
   return (
     <aside className='h-screen w-64 bg-white border-r border-gray-200 flex flex-col'>
@@ -85,6 +94,30 @@ const Sidebar: React.FC = () => {
           );
         })}
       </nav>
+
+      {/* 사용자 정보 및 로그아웃 영역 */}
+      <div className='p-3 border-t border-gray-200 flex-shrink-0'>
+        {user && (
+          <div className='space-y-2'>
+            {/* 사용자 정보 */}
+            <div className='px-3 py-2 bg-gray-50 rounded-md'>
+              <div className='text-xs text-gray-500'>로그인됨</div>
+              <div className='text-sm font-medium text-gray-900 truncate'>
+                {user.name || user.email}
+              </div>
+            </div>
+
+            {/* 로그아웃 버튼 */}
+            <button
+              onClick={handleSignOut}
+              className='w-full flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors'
+            >
+              <span className='mr-2'>🚪</span>
+              <span>로그아웃</span>
+            </button>
+          </div>
+        )}
+      </div>
     </aside>
   );
 };
