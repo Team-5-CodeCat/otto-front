@@ -51,7 +51,7 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
   }));
 
   return (
-    <div className='flex-1'>
+    <div className='flex-1 bg-gray-50'>
       <ReactFlowProvider>
         <ReactFlow
           nodes={nodes}
@@ -62,15 +62,18 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           fitView
-          className='bg-teal-50'
+          className='w-full h-full bg-gray-50'
           defaultEdgeOptions={{
             type: 'custom-edge',
-            animated: true, // ReactFlow 기본 애니메이션도 활성화
+            animated: true,
           }}
         >
-          <Background />
-          <Controls />
-          <MiniMap />
+          <Background color='#e5e7eb' />
+          <Controls className='bg-white border border-gray-200 rounded-lg shadow-sm' />
+          <MiniMap
+            className='bg-white border border-gray-200 rounded-lg shadow-sm'
+            maskColor='rgba(0, 0, 0, 0.1)'
+          />
         </ReactFlow>
       </ReactFlowProvider>
     </div>

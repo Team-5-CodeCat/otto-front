@@ -31,8 +31,8 @@ export const yamlToNodes = (yamlString: string, existingNodes?: Node[]): Node[] 
         id: nodeId,
         type: 'jobNode',
         position: existingPosition || {
-          x: 50 + index * 300, // 기본값으로 가로 배치 (기존 위치가 없을 때만)
-          y: 100,
+          x: 300, // 고정된 x 좌표 (중앙)
+          y: 100 + index * 150, // 세로로 순차 배치 (150px 간격)
         },
         data: {
           name: job.name || `Job ${index + 1}`,

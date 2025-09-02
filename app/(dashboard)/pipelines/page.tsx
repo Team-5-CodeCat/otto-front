@@ -2,8 +2,9 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { addEdge, useNodesState, useEdgesState, Connection, Edge, NodeChange } from 'reactflow';
-import YamlEditor from './components/YamlEditor';
+import NodePalette from './components/NodePalette';
 import FlowCanvas from './components/FlowCanvas';
+import RightPanel from './components/RightPanel';
 import { yamlToNodes, yamlToEdges, nodesToYaml } from './components/utils';
 
 const YamlFlowEditor = () => {
@@ -97,14 +98,53 @@ const YamlFlowEditor = () => {
     [setEdges, setNodes]
   );
 
+  // 노드 추가 핸들러
+  const handleAddNode = useCallback(
+    (nodeType: string) => {
+      const newNodeIndex = nodes.length;
+      const newNode = {
+        id: `job-${newNodeIndex}`,
+        type: 'jobNode',
+        position: {
+          x: 300, // 고정된 x 좌표 (중앙)
+          y: 100 + newNodeIndex * 150, // 세로로 순차 배치 (150px 간격)
+        },
+        data: {
+          name: nodeType,
+          image: nodeType === 'build' || nodeType === 'test' ? 'node:20' : 'ubuntu:22.04',
+          commands:
+            nodeType === 'build'
+              ? 'npm ci\nnpm run build'
+              : nodeType === 'test'
+                ? 'npm test'
+                : 'deploy.sh',
+          environment: nodeType === 'deploy' ? { NODE_ENV: 'production' } : undefined,
+          originalIndex: newNodeIndex,
+        },
+      };
+
+      setNodes((nds) => [...nds, newNode]);
+
+      // YAML도 업데이트
+      setTimeout(() => {
+        setNodes((currentNodes) => {
+          const newYaml = nodesToYaml(currentNodes, edges);
+          setYamlText(newYaml);
+          return currentNodes;
+        });
+      }, 50);
+    },
+    [nodes.length, edges, setNodes, nodesToYaml, setYamlText]
+  );
+
   // YAML 텍스트 변경 핸들러
   const handleYamlChange = useCallback((value: string) => {
     setYamlText(value);
   }, []);
 
   return (
-    <div className='flex h-screen'>
-      <YamlEditor yamlText={yamlText} onYamlChange={handleYamlChange} />
+    <div className='flex h-screen bg-gray-100'>
+      <NodePalette onAddNode={handleAddNode} />
       <FlowCanvas
         nodes={nodes}
         edges={edges}
@@ -113,6 +153,7 @@ const YamlFlowEditor = () => {
         onConnect={onConnect}
         onEdgeDelete={handleEdgeDelete}
       />
+      <RightPanel yamlText={yamlText} onYamlChange={handleYamlChange} />
     </div>
   );
 };
