@@ -3,6 +3,7 @@
     "target": "ES2022", // 더 최신 버전으로 업데이트
     "lib": ["dom", "dom.iterable", "esnext"],
 
+    // JavaScript 지원
     "allowJs": true,
     "skipLibCheck": true,
 

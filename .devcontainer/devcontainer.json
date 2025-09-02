@@ -1,5 +1,5 @@
 {
-  "name": "TypeScript React Next.js Development",
+  "name": "otto-front dev",
   "image": "node:24",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
