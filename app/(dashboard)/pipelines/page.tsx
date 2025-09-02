@@ -98,14 +98,14 @@ const YamlFlowEditor = () => {
     [setEdges, setNodes]
   );
 
-  // 노드 추가 핸들러
+  // 노드 추가 핸들러 (드래그 앤 드롭 지원)
   const handleAddNode = useCallback(
-    (nodeType: string) => {
+    (nodeType: string, position?: { x: number; y: number }) => {
       const newNodeIndex = nodes.length;
       const newNode = {
         id: `job-${newNodeIndex}`,
         type: 'jobNode',
-        position: {
+        position: position || {
           x: 300, // 고정된 x 좌표 (중앙)
           y: 100 + newNodeIndex * 150, // 세로로 순차 배치 (150px 간격)
         },
@@ -168,6 +168,7 @@ const YamlFlowEditor = () => {
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onEdgeDelete={handleEdgeDelete}
+            onAddNode={handleAddNode}
           />
         </div>
 
