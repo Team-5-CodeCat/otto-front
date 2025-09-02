@@ -19,7 +19,7 @@ const RightPanel: React.FC<RightPanelProps> = ({ yamlText, onYamlChange }) => {
   };
 
   return (
-    <div className='w-72 min-w-72 bg-white border-l border-gray-200 flex flex-col md:w-80 lg:w-96 xl:w-[28rem] 2xl:w-[32rem]'>
+    <div className='w-64 min-w-64 bg-white border-l border-gray-200 flex flex-col md:w-72 lg:w-80 xl:w-96 2xl:w-[26rem]'>
       {/* 헤더 */}
       <div className='p-4 border-b border-gray-200 flex items-center justify-between'>
         <div className='flex items-center space-x-2'>
