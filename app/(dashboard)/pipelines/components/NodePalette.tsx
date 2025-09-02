@@ -30,7 +30,7 @@ const nodeTemplates = [
 
 const NodePalette: React.FC<NodePaletteProps> = ({ onAddNode }) => {
   return (
-    <div className='w-64 bg-white border-r border-gray-200 flex flex-col'>
+    <div className='w-60 min-w-60 bg-white border-r border-gray-200 flex flex-col md:w-64 lg:w-72 xl:w-80 2xl:w-96'>
       {/* 헤더 */}
       <div className='p-4 border-b border-gray-200'>
         <h3 className='text-lg font-semibold text-gray-900'>Pipeline Builder</h3>

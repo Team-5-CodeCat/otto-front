@@ -51,7 +51,7 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
   }));
 
   return (
-    <div className='flex-1 bg-gray-50'>
+    <div className='flex-1 bg-gray-50 h-full'>
       <ReactFlowProvider>
         <ReactFlow
           nodes={nodes}

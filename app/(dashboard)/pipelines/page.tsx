@@ -143,18 +143,38 @@ const YamlFlowEditor = () => {
   }, []);
 
   return (
-    <div className='flex h-screen bg-gray-100'>
-      <NodePalette onAddNode={handleAddNode} />
-      <FlowCanvas
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={handleNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onEdgeDelete={handleEdgeDelete}
-      />
-      <RightPanel yamlText={yamlText} onYamlChange={handleYamlChange} />
-    </div>
+    <>
+      {/* 대시보드 레이아웃을 벗어나서 전체 화면 사용 */}
+      <div
+        className='absolute inset-0 flex bg-gray-100 overflow-hidden z-10'
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: '256px', // 사이드바 너비만큼 왼쪽 여백
+          right: 0,
+          bottom: 0,
+          zIndex: 50,
+        }}
+      >
+        {/* 왼쪽 패널 - 노드 팔레트 */}
+        <NodePalette onAddNode={handleAddNode} />
+
+        {/* 중앙 영역 - 플로우 캔버스 */}
+        <div className='flex-1 min-w-0 flex flex-col relative'>
+          <FlowCanvas
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={handleNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onEdgeDelete={handleEdgeDelete}
+          />
+        </div>
+
+        {/* 오른쪽 패널 - YAML 편집기 */}
+        <RightPanel yamlText={yamlText} onYamlChange={handleYamlChange} />
+      </div>
+    </>
   );
 };
 
