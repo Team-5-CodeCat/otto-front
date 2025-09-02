@@ -13,12 +13,21 @@ const RightPanel: React.FC<RightPanelProps> = ({ yamlText, onYamlChange }) => {
     onYamlChange(event.target.value);
   };
 
+  const handleRefresh = () => {
+    // YAML 내용을 빈 문자열로 초기화
+    onYamlChange('');
+  };
+
   return (
     <div className='w-80 bg-white border-l border-gray-200 flex flex-col'>
       {/* 헤더 */}
       <div className='p-4 border-b border-gray-200 flex items-center justify-between'>
         <div className='flex items-center space-x-2'>
-          <button className='p-2 hover:bg-gray-100 rounded-lg transition-colors'>
+          <button
+            onClick={handleRefresh}
+            className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
+            title='스크립트 내용 초기화'
+          >
             <RotateCcw size={16} className='text-gray-600' />
           </button>
           <button className='p-2 hover:bg-gray-100 rounded-lg transition-colors'>
