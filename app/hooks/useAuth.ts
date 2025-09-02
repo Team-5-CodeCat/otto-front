@@ -54,30 +54,28 @@ export const useAuth = () => {
         password: formData.password,
       });
 
-      // 로그인 성공 시 인증 상태 업데이트
-      const mockResponse: SignInResponse = {
-        success: true,
-        message: '로그인 성공',
-        token: 'otto-sdk-token', // Otto SDK에서 자동으로 쿠키에 저장
-        user: {
-          id: '1',
-          email: formData.email,
-          name: '사용자',
-        },
+      // 로그인 성공 시 사용자 정보 설정
+      const user = {
+        id: '1', // TODO: 백엔드에서 실제 사용자 ID 받아오기
+        email: formData.email,
+        name: formData.email.split('@')[0] || '사용자', // 임시 이름 생성 (fallback 추가)
       };
 
       // 인증 상태 업데이트
       setAuthState({
         isAuthenticated: true,
-        user: mockResponse.user!,
+        user: user,
         isLoading: false,
         error: null,
       });
 
-      return mockResponse;
+      return {
+        success: true,
+        message: '로그인 성공',
+        user: user,
+      };
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : '이메일 또는 비밀번호가 올바르지 않습니다';
+      const errorMessage = err instanceof Error ? err.message : '로그인 중 오류가 발생했습니다.';
 
       setAuthState((prev) => ({
         ...prev,
