@@ -61,16 +61,17 @@ export const yamlToEdges = (yamlString: string): Edge[] => {
     }
 
     const edges: Edge[] = [];
+    let edgeCounter = 0; // 고유한 엣지 ID를 위한 카운터
 
     // 각 job의 dependencies를 간선으로 변환
     parsed.forEach((job, targetIndex) => {
       if (job.dependencies && Array.isArray(job.dependencies)) {
         job.dependencies.forEach((depName: string) => {
           // 의존성 job의 인덱스 찾기
-          const sourceIndex = parsed.findIndex((j: any) => j.name === depName);
+          const sourceIndex = parsed.findIndex((j: JobYaml) => j.name === depName);
           if (sourceIndex !== -1) {
             edges.push({
-              id: `edge-${sourceIndex}-${targetIndex}`,
+              id: `edge-${edgeCounter++}`, // 고유한 순차 ID 사용
               source: `job-${sourceIndex}`,
               target: `job-${targetIndex}`,
               type: 'custom-edge',
