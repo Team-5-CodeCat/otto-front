@@ -14,6 +14,8 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import JobNode from './JobNode';
 import CustomEdge from './CustomEdge';
+import NodePalette from './NodePalette';
+import RightPanel from './RightPanel';
 
 // 노드 타입 정의
 const nodeTypes = {
@@ -28,22 +30,28 @@ const edgeTypes = {
 interface FlowCanvasProps {
   nodes: Node[];
   edges: Edge[];
+  yamlText: string;
   onNodesChange: (changes: NodeChange[]) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
   onConnect: (params: Connection) => void;
   onEdgeDelete?: (edgeId: string) => void;
   onAddNode: (nodeType: string, position?: { x: number; y: number }) => void;
+  onYamlChange: (value: string) => void;
+  onUpdateNodeEnvironment: (nodeId: string, environment: Record<string, string>) => void;
 }
 
 // FlowCanvas 내부 컴포넌트
 const FlowCanvasInner: React.FC<FlowCanvasProps> = ({
   nodes,
   edges,
+  yamlText,
   onNodesChange,
   onEdgesChange,
   onConnect,
   onEdgeDelete,
   onAddNode,
+  onYamlChange,
+  onUpdateNodeEnvironment,
 }) => {
   const reactFlowInstance = useReactFlow();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -116,11 +124,40 @@ const FlowCanvasInner: React.FC<FlowCanvasProps> = ({
 
 const FlowCanvas: React.FC<FlowCanvasProps> = (props) => {
   return (
-    <div className='flex-1 bg-gray-50 h-full'>
-      <ReactFlowProvider>
-        <FlowCanvasInner {...props} />
-      </ReactFlowProvider>
-    </div>
+    <>
+      {/* 대시보드 레이아웃을 벗어나서 전체 화면 사용 */}
+      <div
+        className='absolute inset-0 flex bg-gray-100 overflow-hidden z-10'
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: '256px', // 사이드바 너비만큼 왼쪽 여백
+          right: 0,
+          bottom: 0,
+          zIndex: 50,
+        }}
+      >
+        {/* 왼쪽 패널 - 노드 팔레트 */}
+        <NodePalette onAddNode={props.onAddNode} />
+
+        {/* 중앙 영역 - 플로우 캔버스 */}
+        <div className='flex-1 min-w-0 flex flex-col relative'>
+          <div className='flex-1 bg-gray-50 h-full'>
+            <ReactFlowProvider>
+              <FlowCanvasInner {...props} />
+            </ReactFlowProvider>
+          </div>
+        </div>
+
+        {/* 오른쪽 패널 - YAML 편집기 */}
+        <RightPanel
+          yamlText={props.yamlText}
+          onYamlChange={props.onYamlChange}
+          nodes={props.nodes}
+          onUpdateNodeEnvironment={props.onUpdateNodeEnvironment}
+        />
+      </div>
+    </>
   );
 };
 
