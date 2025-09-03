@@ -53,12 +53,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
     setNodeEnvironments((prev) => {
       const updated = { ...prev };
       if (!updated[nodeId]) updated[nodeId] = [];
-      updated[nodeId] = [...updated[nodeId]];
-      updated[nodeId][index] = { ...updated[nodeId][index], [field]: value };
+      const nodeEnvs = updated[nodeId]!;
+      nodeEnvs[index] = { ...nodeEnvs[index]!, [field]: value };
 
       // 노드의 환경 변수를 업데이트
       const envObject: Record<string, string> = {};
-      updated[nodeId].forEach((env) => {
+      nodeEnvs.forEach((env) => {
         if (env.key && env.value) {
           envObject[env.key] = env.value;
         }
@@ -74,10 +74,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
     setNodeEnvironments((prev) => {
       const updated = { ...prev };
       if (!updated[nodeId]) return prev;
-      updated[nodeId] = [...updated[nodeId]];
-      updated[nodeId][index] = {
-        ...updated[nodeId][index],
-        isVisible: !updated[nodeId][index].isVisible,
+      const nodeEnvs = updated[nodeId]!;
+      nodeEnvs[index] = {
+        ...nodeEnvs[index]!,
+        isVisible: !nodeEnvs[index]!.isVisible,
       };
       return updated;
     });
@@ -88,11 +88,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
     setNodeEnvironments((prev) => {
       const updated = { ...prev };
       if (!updated[nodeId]) return prev;
-      updated[nodeId] = updated[nodeId].filter((_, i) => i !== index);
+      const nodeEnvs = updated[nodeId]!;
+      updated[nodeId] = nodeEnvs.filter((_, i) => i !== index);
 
       // 노드의 환경 변수를 업데이트
       const envObject: Record<string, string> = {};
-      updated[nodeId].forEach((env) => {
+      updated[nodeId]!.forEach((env) => {
         if (env.key && env.value) {
           envObject[env.key] = env.value;
         }
@@ -106,7 +107,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
   // 현재 캔버스에 있는 노드들 필터링
   const getAvailableNodes = () => {
     return nodes.filter(
-      (node) => node.type === 'jobNode' && ['build', 'test', 'deploy'].includes(node.data.name)
+      (node) =>
+        node.type === 'jobNode' && ['build', 'test', 'deploy'].includes(node.data.name as string)
     );
   };
 
@@ -233,7 +235,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       ))}
 
                       {/* 환경 변수가 없을 때 */}
-                      {(!nodeEnvironments[node.id] || nodeEnvironments[node.id].length === 0) && (
+                      {(!nodeEnvironments[node.id] || nodeEnvironments[node.id]!.length === 0) && (
                         <div className='text-xs text-gray-500 italic py-2'>
                           No environment variables set
                         </div>
