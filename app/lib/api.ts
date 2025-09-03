@@ -39,8 +39,14 @@ export interface RegisterBranchResponse {
 
 // 백엔드 API 기본 URL
 const getApiBaseUrl = (): string => {
-    // Docker 환경에서는 Docker 네트워크 IP 사용
-    return process.env.NEXT_PUBLIC_API_BASE_URL || 'http://172.18.0.4:4001';
+    // 브라우저에서는 localhost, 서버에서는 host.docker.internal 사용
+    if (typeof window !== 'undefined') {
+        // 클라이언트 사이드 (브라우저)
+        return process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
+    } else {
+        // 서버 사이드
+        return process.env.NEXT_PUBLIC_API_BASE_URL || 'http://host.docker.internal:4000';
+    }
 };
 
 // GitHub 앱 이름
@@ -65,21 +71,21 @@ const getDefaultHeaders = (): HeadersInit => {
 // GitHub 앱 설치 URL 조회
 export const getGitHubInstallUrl = async (): Promise<InstallUrlResponse> => {
     try {
-        const response = await fetch(`${getApiBaseUrl()}/api/integrations/github/install/url`, {
+        const response = await fetch('/api/integrations/github/install/url', {
             headers: getDefaultHeaders(),
         });
 
         if (!response.ok) {
-            throw new Error(`백엔드 API 오류: ${response.status} ${response.statusText}`);
+            throw new Error(`API 오류: ${response.status} ${response.statusText}`);
         }
 
         return response.json();
     } catch (error) {
-        // 백엔드 API가 사용 불가능한 경우 직접 GitHub 앱 설치 URL 생성
-        console.warn('백엔드 API 사용 불가, 직접 GitHub 앱 설치 URL 생성:', error);
+        // API가 사용 불가능한 경우 직접 GitHub 앱 설치 URL 생성
+        console.warn('API 사용 불가, 직접 GitHub 앱 설치 URL 생성:', error);
         return {
             installUrl: `https://github.com/apps/${getGitHubAppName()}/installations/new`,
-            callbackUrl: `${getApiBaseUrl()}/api/integrations/github/install/callback`
+            callbackUrl: `${getApiBaseUrl()}/integrations/github/install/callback`
         };
     }
 };
@@ -89,7 +95,7 @@ export const registerGitHubApp = async (
     installationId: string,
     accessToken: string = ''
 ): Promise<RegisterAppResponse> => {
-    const response = await fetch(`${getApiBaseUrl()}/api/integrations/github/register`, {
+    const response = await fetch(`${getApiBaseUrl()}/integrations/github/register`, {
         method: 'POST',
         headers: getDefaultHeaders(),
         body: JSON.stringify({
@@ -108,7 +114,7 @@ export const registerGitHubApp = async (
 // 브랜치 목록 조회
 export const getGitHubBranches = async (repoFullName: string): Promise<GitHubBranch[]> => {
     const response = await fetch(
-        `${getApiBaseUrl()}/api/integrations/github/branches?repo=${encodeURIComponent(repoFullName)}`,
+        `${getApiBaseUrl()}/integrations/github/branches?repo=${encodeURIComponent(repoFullName)}`,
         {
             headers: getDefaultHeaders(),
         }
@@ -126,7 +132,7 @@ export const registerGitHubBranch = async (
     repoFullName: string,
     branchName: string
 ): Promise<RegisterBranchResponse> => {
-    const response = await fetch(`${getApiBaseUrl()}/api/integrations/github/branches`, {
+    const response = await fetch(`${getApiBaseUrl()}/integrations/github/branches`, {
         method: 'POST',
         headers: getDefaultHeaders(),
         body: JSON.stringify({

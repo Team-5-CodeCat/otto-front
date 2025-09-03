@@ -1,6 +1,7 @@
 {
   "name": "otto-front dev",
   "image": "node:24",
+  "runArgs": ["--name=otto-front-dev"],
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
