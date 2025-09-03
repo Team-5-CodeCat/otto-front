@@ -68,7 +68,8 @@ const YamlFlowEditor = () => {
   const onConnect = useCallback(
     (params: Edge | Connection) => {
       setEdges((eds) => {
-        const newEdges = addEdge({ ...params, type: 'custom-edge' }, eds);
+        // addEdge가 자동으로 고유한 ID를 생성하도록 함
+        const newEdges = addEdge(params, eds);
 
         // 간선이 추가되면 YAML을 업데이트 (노드 위치는 변경하지 않음)
         setTimeout(() => {

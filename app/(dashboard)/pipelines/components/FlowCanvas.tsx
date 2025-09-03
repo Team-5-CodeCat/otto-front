@@ -77,6 +77,7 @@ const FlowCanvasInner: React.FC<FlowCanvasProps> = ({
   // 간선에 삭제 콜백 함수를 전달하기 위해 edges를 수정
   const edgesWithDelete = edges.map((edge) => ({
     ...edge,
+    key: edge.id, // React key prop을 명시적으로 설정
     data: {
       ...edge.data,
       onDelete: onEdgeDelete,
