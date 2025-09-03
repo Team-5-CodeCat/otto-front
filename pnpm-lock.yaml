@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@Team-5-CodeCat/otto-sdk':
-        specifier: ^0.1.2
+        specifier: npm:@team-5-codecat/otto-sdk@^0.1.2
         version: '@team-5-codecat/otto-sdk@0.1.2(@types/node@20.19.11)(typescript@5.9.2)'
       '@radix-ui/themes':
         specifier: ^3.2.1

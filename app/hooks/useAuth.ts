@@ -3,7 +3,7 @@ import { authSignIn } from '@Team-5-CodeCat/otto-sdk/lib/functional/sign_in';
 
 // 인증 설정 상수
 const AUTH_CONFIG = {
-  host: '/',
+  host: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
   options: { credentials: 'include' },
 } as const;
 
