@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@Team-5-CodeCat/otto-sdk':
-        specifier: npm:@team-5-codecat/otto-sdk@^0.2.1
-        version: '@team-5-codecat/otto-sdk@0.1.2(@types/node@20.19.11)(typescript@5.9.2)'
+        specifier: ^0.1.2
+        version: '@team-5-codecat/otto-sdk@0.2.1(@types/node@20.19.11)(typescript@5.9.2)'
       '@radix-ui/themes':
         specifier: ^3.2.1
         version: 3.2.1(@types/react-dom@19.1.9(@types/react@19.1.12))(@types/react@19.1.12)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1282,7 +1282,7 @@ packages:
   '@tailwindcss/postcss@4.1.12':
     resolution: {integrity: sha512-5PpLYhCAwf9SJEeIsSmCDLgyVfdBhdBpzX1OJ87anT9IVR0Z9pjM0FNixCAUAHGnMBGB8K99SwAheXrT0Kh6QQ==}
 
-  '@team-5-codecat/otto-sdk@0.2.1':
+  '@team-5-codecat/otto-sdk@0.1.2':
     resolution: {integrity: sha512-0drx2IRTfmJ1ozF/OVzdZC7alaA1u5/ls1dkfhGAMUfNjO1Df27yLJePsSFDkBpTMbp9io7NFII5GVDF49tZUQ==, tarball: https://npm.pkg.github.com/download/@Team-5-CodeCat/otto-sdk/0.1.2/72c061641215fb0301be201870e091980c9b97a4}
 
   '@tybys/wasm-util@0.10.0':
