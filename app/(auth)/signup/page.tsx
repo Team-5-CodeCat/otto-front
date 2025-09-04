@@ -11,14 +11,16 @@ import Card from '@/app/components/ui/Card';
 
 // 유틸리티
 import { validateEmail, validatePassword } from '@/app/utils/validation';
+import { useAuth } from '@/app/hooks/useAuth';
 
 // Sign Up 페이지 컴포넌트
 export default function SignUpPage() {
   const router = useRouter();
+  const { signUp, isLoading: authLoading, error: authError } = useAuth();
 
   // 폼 상태 관리
   const [formData, setFormData] = useState({
-    name: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -26,14 +28,11 @@ export default function SignUpPage() {
 
   // 폼 에러 상태 관리
   const [formErrors, setFormErrors] = useState<{
-    name?: string;
+    username?: string;
     email?: string;
     password?: string;
     confirmPassword?: string;
   }>({});
-
-  // 로딩 상태
-  const [isLoading, setIsLoading] = useState(false);
 
   // 비밀번호 표시/숨김 상태
   const [showPassword, setShowPassword] = useState(false);
@@ -54,11 +53,11 @@ export default function SignUpPage() {
     let error: string | undefined;
 
     switch (field) {
-      case 'name':
+      case 'username':
         if (!value.trim()) {
-          error = '이름을 입력해주세요.';
+          error = '사용자명을 입력해주세요.';
         } else if (value.trim().length < 2) {
-          error = '이름은 최소 2자 이상이어야 합니다.';
+          error = '사용자명은 최소 2자 이상이어야 합니다.';
         }
         break;
       case 'email':
@@ -84,19 +83,20 @@ export default function SignUpPage() {
     const errors: typeof formErrors = {};
 
     // 각 필드 검증
-    validateField('name', formData.name);
+    validateField('username', formData.username);
     validateField('email', formData.email);
     validateField('password', formData.password);
     validateField('confirmPassword', formData.confirmPassword);
 
     // 에러 수집
-    if (!formData.name.trim()) errors.name = '이름을 입력해주세요.';
+    if (!formData.username.trim()) errors.username = '사용자명을 입력해주세요.';
     if (!formData.email) errors.email = '이메일을 입력해주세요.';
     if (!formData.password) errors.password = '비밀번호를 입력해주세요.';
     if (!formData.confirmPassword) errors.confirmPassword = '비밀번호 확인을 입력해주세요.';
 
     // 추가 검증
-    if (formData.name.trim().length < 2) errors.name = '이름은 최소 2자 이상이어야 합니다.';
+    if (formData.username.trim().length < 2)
+      errors.username = '사용자명은 최소 2자 이상이어야 합니다.';
     if (validateEmail(formData.email)) errors.email = validateEmail(formData.email)!;
     if (validatePassword(formData.password)) errors.password = validatePassword(formData.password)!;
     if (formData.confirmPassword !== formData.password)
@@ -115,31 +115,16 @@ export default function SignUpPage() {
       return;
     }
 
-    setIsLoading(true);
+    // 회원가입 시도
+    const result = await signUp({
+      email: formData.email,
+      password: formData.password,
+      username: formData.username,
+    });
 
-    try {
-      // TODO: 실제 백엔드 API 호출로 교체
-      // const response = await fetch('/api/auth/signup', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     name: formData.name,
-      //     email: formData.email,
-      //     password: formData.password,
-      //   }),
-      // });
-      // const data = await response.json();
-
-      // 임시 회원가입 로직 (백엔드 연동 전 테스트용)
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // 로딩 시뮬레이션
-
-      // 성공 시 로그인 페이지로 리다이렉트
-      router.push('/signin?message=회원가입이 완료되었습니다. 로그인해주세요.');
-    } catch (error) {
-      console.error('회원가입 오류:', error);
-      // 에러 처리
-    } finally {
-      setIsLoading(false);
+    if (result.success) {
+      // 회원가입 성공 시 프로젝트 페이지로 리다이렉트
+      router.push('/projects');
     }
   };
 
@@ -155,15 +140,15 @@ export default function SignUpPage() {
         {/* 회원가입 폼 카드 */}
         <Card className='w-full'>
           <form onSubmit={handleSubmit} className='space-y-6'>
-            {/* 이름 입력 필드 */}
+            {/* 사용자명 입력 필드 */}
             <Input
-              id='name'
+              id='username'
               type='text'
-              label='Name'
-              placeholder='Boa Kim'
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              error={formErrors.name}
+              label='Username'
+              placeholder='사용자명'
+              value={formData.username}
+              onChange={(e) => handleInputChange('username', e.target.value)}
+              error={formErrors.username}
               leftIcon={
                 <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                   <path
@@ -310,9 +295,35 @@ export default function SignUpPage() {
               required
             />
 
+            {/* 인증 에러 메시지 */}
+            {authError && (
+              <div className='bg-red-50 border border-red-200 rounded-md p-4'>
+                <div className='flex'>
+                  <div className='flex-shrink-0'>
+                    <svg
+                      className='h-5 w-5 text-red-400'
+                      fill='none'
+                      stroke='currentColor'
+                      viewBox='0 0 24 24'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+                      />
+                    </svg>
+                  </div>
+                  <div className='ml-3'>
+                    <p className='text-sm text-red-800'>{authError}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* 회원가입 버튼 */}
-            <Button type='submit' className='w-full' isLoading={isLoading} disabled={isLoading}>
-              {isLoading ? 'Signing up...' : 'Sign Up'}
+            <Button type='submit' className='w-full' isLoading={authLoading} disabled={authLoading}>
+              {authLoading ? 'Signing up...' : 'Sign Up'}
             </Button>
           </form>
 
