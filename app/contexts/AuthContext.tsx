@@ -10,6 +10,7 @@ import React, {
 } from 'react';
 import { authApi, ApiError, User } from '@/app/lib/auth-api';
 import { tokenManager, TokenState } from '@/app/lib/token-manager';
+import { getUserFromToken } from '@/app/lib/jwt-utils';
 
 // 인증 상태 타입
 export interface AuthState {
@@ -77,11 +78,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         tokenManager.updateTokens(response);
         updateTokenState();
 
-        // 사용자 정보 설정 (임시 - 백엔드에서 사용자 정보 API가 구현되면 실제 데이터 사용)
+        // JWT 토큰에서 실제 사용자 정보 추출
+        const userInfo = getUserFromToken(response.accessToken);
+        if (!userInfo) {
+          throw new Error('토큰에서 사용자 정보를 추출할 수 없습니다.');
+        }
+
         const user: User = {
-          userID: 'temp-user-id', // TODO: JWT 토큰에서 사용자 ID 추출
-          email: email,
-          name: email.split('@')[0] || '사용자',
+          userID: userInfo.userID,
+          email: userInfo.email,
+          name: userInfo.email.split('@')[0] || '사용자',
           memberRole: 'MEMBER',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -160,30 +166,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         updateTokenState();
 
         // 토큰이 있으면 유효성 확인 및 리프레시
-        if (tokenManager.getAccessToken()) {
+        const accessToken = tokenManager.getAccessToken();
+        if (accessToken) {
           const isTokenValid = await tokenManager.refreshTokensIfNeeded();
 
           if (isTokenValid) {
-            // TODO: 백엔드에서 사용자 정보 가져오기
-            // const user = await authApi.getCurrentUser();
+            // JWT 토큰에서 실제 사용자 정보 추출
+            const userInfo = getUserFromToken(accessToken);
+            if (userInfo) {
+              const user: User = {
+                userID: userInfo.userID,
+                email: userInfo.email,
+                name: userInfo.email.split('@')[0] || '사용자',
+                memberRole: 'MEMBER',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              };
 
-            // 임시 사용자 정보
-            const user: User = {
-              userID: 'temp-user-id',
-              email: 'user@example.com',
-              name: '사용자',
-              memberRole: 'MEMBER',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            };
-
-            setAuthState((prev) => ({
-              ...prev,
-              isAuthenticated: true,
-              user,
-              isLoading: false,
-              error: null,
-            }));
+              setAuthState((prev) => ({
+                ...prev,
+                isAuthenticated: true,
+                user,
+                isLoading: false,
+                error: null,
+              }));
+            } else {
+              setAuthState((prev) => ({
+                ...prev,
+                isAuthenticated: false,
+                user: null,
+                isLoading: false,
+                error: null,
+              }));
+            }
           } else {
             setAuthState((prev) => ({
               ...prev,
