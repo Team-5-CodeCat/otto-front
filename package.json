@@ -3,14 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "dotenv -e .env.local -- next dev --turbopack",
     "build": "next build --turbopack",
-    "start": "next start"
+    "start": "dotenv -e .env.local -- next start"
   },
   "dependencies": {
     "@Team-5-CodeCat/otto-sdk": "^0.2.1",
     "@radix-ui/themes": "^3.2.1",
-    "@Team-5-CodeCat/otto-sdk": "npm:@team-5-codecat/otto-sdk@^0.2.1",
     "eslint-plugin-react-hooks": "^5.2.0",
     "lucide-react": "^0.542.0",
     "next": "15.5.2",
@@ -28,6 +27,8 @@
     "@types/node": "^20.19.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.0.0",
+    "dotenv-cli": "^10.0.0",
     "eslint": "^9.34.0",
     "eslint-config-next": "^15.5.2",
     "eslint-config-prettier": "^10.1.8",
