@@ -53,6 +53,7 @@ export interface AuthState {
 
 // 초기 인증 상태를 확인하는 함수
 const getInitialAuthState = (): AuthState => {
+  // 서버사이드와 클라이언트사이드 모두 로딩 상태로 시작하여 hydration mismatch 방지
   if (typeof window === 'undefined') {
     return {
       isAuthenticated: false,
@@ -62,30 +63,12 @@ const getInitialAuthState = (): AuthState => {
     };
   }
 
-  // 토큰 매니저를 통해 인증 상태 확인
-  const tokenState = tokenManager.getTokenState();
-
-  if (tokenState.accessToken && !isTokenExpired(tokenState.accessToken)) {
-    // JWT 토큰에서 사용자 정보 추출
-    const userInfo = getUserFromToken(tokenState.accessToken);
-    if (userInfo) {
-      return {
-        isAuthenticated: true,
-        user: {
-          id: userInfo.userID,
-          email: userInfo.email,
-          name: userInfo.email.split('@')[0] || '사용자',
-        },
-        isLoading: false,
-        error: null,
-      };
-    }
-  }
-
+  // 클라이언트사이드에서도 초기에는 로딩 상태로 시작
+  // useEffect에서 실제 인증 상태를 확인한 후 업데이트
   return {
     isAuthenticated: false,
     user: null,
-    isLoading: false,
+    isLoading: true,
     error: null,
   };
 };
