@@ -13,10 +13,8 @@ interface NodeVersionContextType {
 const NodeVersionContext = createContext<NodeVersionContextType | undefined>(undefined);
 
 const AVAILABLE_VERSIONS = [
-  { version: '20' as NodeVersion, label: 'Node.js 20', isLTS: true },
-  { version: '21' as NodeVersion, label: 'Node.js 21', isLTS: false },
-  { version: '22' as NodeVersion, label: 'Node.js 22', isLTS: false },
-  { version: '23' as NodeVersion, label: 'Node.js 23', isLTS: false },
+  { version: '20' as NodeVersion, label: 'Node.js 20', isLTS: false },
+  { version: '22' as NodeVersion, label: 'Node.js 22', isLTS: true },
   { version: '24' as NodeVersion, label: 'Node.js 24', isLTS: false },
 ];
 
