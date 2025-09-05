@@ -35,6 +35,19 @@ const RightPanel: React.FC<RightPanelProps> = ({
     onYamlChange('');
   };
 
+  const handleRun = async () => {
+    try {
+      const response = await fetch('/api/v1/user');
+      console.log('API Response:', response);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('API Data:', data);
+      }
+    } catch (error) {
+      console.error('API Error:', error);
+    }
+  };
+
   // 노드별 환경 변수 추가
   const addEnvironmentVariable = (nodeId: string) => {
     setNodeEnvironments((prev) => ({
@@ -124,7 +137,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
           >
             <RotateCcw size={16} className='text-gray-600' />
           </button>
-          <button className='p-2 hover:bg-gray-100 rounded-lg transition-colors'>
+          <button 
+            onClick={handleRun}
+            className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
+          >
             <Play size={16} className='text-gray-600' />
           </button>
         </div>
