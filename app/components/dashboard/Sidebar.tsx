@@ -1,13 +1,25 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/app/hooks/useAuth';
 
+// 프로젝트 데이터 타입
+interface Project {
+  id: string;
+  name: string;
+}
+
+// 파이프라인 데이터 타입
+interface Pipeline {
+  id: string;
+  name: string;
+  projectId: string;
+}
+
 // 사이드바 메뉴 항목 타입
 interface SidebarItem {
-  label: string; // UI 라벨 (영어)
   href: string; // 라우트 경로
   icon?: React.ReactNode; // 아이콘 (옵션)
 }
@@ -15,37 +27,14 @@ interface SidebarItem {
 // 사이드바 메뉴 정의 (우선순위 기반)
 const items: SidebarItem[] = [
   {
-    label: 'Projects',
-    href: '/projects',
-    icon: '📁', // 프로젝트 생성/목록
-  },
-  {
-    label: 'Pipelines',
     href: '/pipelines',
     icon: '🔗', // Pipeline as Blocks (PaB)
   },
   {
-    label: 'Builds',
     href: '/builds',
     icon: '🔨', // 빌드 기능
   },
   {
-    label: 'Tests',
-    href: '/tests',
-    icon: '🧪', // 테스트 기능
-  },
-  {
-    label: 'Deployments',
-    href: '/deployments',
-    icon: '🚀', // 배포 기능
-  },
-  {
-    label: 'Environments',
-    href: '/environments',
-    icon: '🌍', // 환경 설정 (언어/배포)
-  },
-  {
-    label: 'Settings',
     href: '/settings',
     icon: '⚙️', // 사용자/워크스페이스 설정
   },
@@ -59,11 +48,32 @@ const linkClasses = (active: boolean) =>
       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
   }`;
 
+// Sidebar Props
+interface SidebarProps {
+  projects: Project[];
+  pipelines: Pipeline[];
+  selectedProject: Project | null;
+  onProjectSelect: (project: Project) => void;
+  onNewProjectClick: () => void;
+  onNewPipelineClick: () => void;
+}
+
 // Sidebar 컴포넌트
-const Sidebar: React.FC = () => {
+const Sidebar: React.FC<SidebarProps> = ({ 
+  projects, 
+  pipelines, 
+  selectedProject, 
+  onProjectSelect, 
+  onNewProjectClick, 
+  onNewPipelineClick 
+}) => {
   const pathname = usePathname(); // 현재 경로
   const router = useRouter();
   const { user, signOut } = useAuth();
+  
+  // 드롭다운 상태 관리
+  const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
+  const [isPipelineDropdownOpen, setIsPipelineDropdownOpen] = useState(false);
 
   // 로그아웃 핸들러
   const handleSignOut = () => {
@@ -81,43 +91,113 @@ const Sidebar: React.FC = () => {
         </Link>
       </div>
 
-      {/* 메뉴 리스트 - 전체 높이 채우기 */}
-      <nav className='p-3 space-y-1 flex-1'>
+                   {/* 프로젝트 선택 드롭다운 */}
+             <div className='px-4 py-2'>
+               <div className='relative'>
+                 <button
+                   onClick={() => setIsProjectDropdownOpen(!isProjectDropdownOpen)}
+                   className='w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500'
+                 >
+                   <span>{selectedProject?.name || '프로젝트 선택'}</span>
+                   <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                     <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+                   </svg>
+                 </button>
+
+                 {isProjectDropdownOpen && (
+                   <div className='absolute w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg' style={{ zIndex: 1000 }}>
+                     {projects.map((project) => (
+                       <button
+                         key={project.id}
+                         onClick={() => {
+                           onProjectSelect(project);
+                           setIsProjectDropdownOpen(false);
+                         }}
+                         className='w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50'
+                       >
+                         {project.name}
+                       </button>
+                     ))}
+                     <div className='border-t border-gray-200'>
+                       <button
+                         onClick={() => {
+                           setIsProjectDropdownOpen(false);
+                           onNewProjectClick();
+                         }}
+                         className='w-full px-3 py-2 text-left text-sm text-emerald-600 hover:bg-emerald-50 flex items-center'
+                       >
+                         <span className='mr-2'>+</span>
+                         새 프로젝트 생성
+                       </button>
+                     </div>
+                   </div>
+                 )}
+               </div>
+             </div>
+
+             {/* 파이프라인 선택 드롭다운 */}
+             <div className='px-4 py-2'>
+        <div className='relative'>
+          <button
+            onClick={() => setIsPipelineDropdownOpen(!isPipelineDropdownOpen)}
+            disabled={!selectedProject}
+            className='w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed'
+          >
+            <span>{pipelines.length > 0 ? '파이프라인 선택' : '파이프라인 없음'}</span>
+            <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+            </svg>
+          </button>
+          
+          {isPipelineDropdownOpen && selectedProject && (
+            <div className='absolute w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg' style={{ zIndex: 1000 }}>
+              {pipelines.map((pipeline) => (
+                <button
+                  key={pipeline.id}
+                  onClick={() => {
+                    setIsPipelineDropdownOpen(false);
+                    // TODO: 선택된 파이프라인 처리 (백엔드 연결 시)
+                    console.log('선택된 파이프라인:', pipeline);
+                  }}
+                  className='w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50'
+                >
+                  {pipeline.name}
+                </button>
+              ))}
+              <div className='border-t border-gray-200'>
+                <button
+                  onClick={() => {
+                    setIsPipelineDropdownOpen(false);
+                    onNewPipelineClick();
+                  }}
+                  className='w-full px-3 py-2 text-left text-sm text-emerald-600 hover:bg-emerald-50 flex items-center'
+                >
+                  <span className='mr-2'>+</span>
+                  새 파이프라인 생성
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 메뉴 리스트 - 한 줄로 배치 */}
+      <nav className='p-3 flex space-x-2'>
         {items.map((item) => {
           const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
           return (
-            <Link key={item.href} href={item.href} className={linkClasses(!!isActive)}>
-              {/* 아이콘이 있으면 왼쪽에 배치 */}
-              {item.icon ? <span className='mr-2'>{item.icon}</span> : null}
-              <span>{item.label}</span>
+            <Link key={item.href} href={item.href} className={`p-2 rounded-md transition-colors ${
+              isActive
+                ? 'bg-emerald-100 text-emerald-700'
+                : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+            }`}>
+              {/* 아이콘만 표시 */}
+              {item.icon ? <span className='text-xl'>{item.icon}</span> : null}
             </Link>
           );
         })}
       </nav>
 
-      {/* 사용자 정보 및 로그아웃 영역 */}
-      <div className='p-3 border-t border-gray-200 flex-shrink-0'>
-        {user && (
-          <div className='space-y-2'>
-            {/* 사용자 정보 */}
-            <div className='px-3 py-2 bg-gray-50 rounded-md'>
-              <div className='text-xs text-gray-500'>로그인됨</div>
-              <div className='text-sm font-medium text-gray-900 truncate'>
-                {user.name || user.email}
-              </div>
-            </div>
-
-            {/* 로그아웃 버튼 */}
-            <button
-              onClick={handleSignOut}
-              className='w-full flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors'
-            >
-              <span className='mr-2'>🚪</span>
-              <span>로그아웃</span>
-            </button>
-          </div>
-        )}
-      </div>
     </aside>
   );
 };
