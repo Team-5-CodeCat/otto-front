@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { RotateCcw, Play, Plus, Eye, EyeOff } from 'lucide-react';
 import { Node } from 'reactflow';
+import EnvFileUploader from '../../../components/ui/EnvFileUploader';
 
 interface EnvironmentVariable {
   key: string;
@@ -22,9 +23,16 @@ const RightPanel: React.FC<RightPanelProps> = ({
   onUpdateNodeEnvironment,
 }) => {
   const [activeTab, setActiveTab] = useState<'yaml' | 'env'>('yaml');
+  const [activeEnvTab, setActiveEnvTab] = useState<'build' | 'test' | 'deploy'>('build');
   const [nodeEnvironments, setNodeEnvironments] = useState<Record<string, EnvironmentVariable[]>>(
     {}
   );
+  // 각 탭별로 독립적인 업로드된 파일 상태 관리
+  const [uploadedFiles, setUploadedFiles] = useState<Record<'build' | 'test' | 'deploy', File | null>>({
+    build: null,
+    test: null,
+    deploy: null,
+  });
 
   const handleYamlChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     onYamlChange(event.target.value);
@@ -33,6 +41,16 @@ const RightPanel: React.FC<RightPanelProps> = ({
   const handleRefresh = () => {
     // YAML 내용을 빈 문자열로 초기화
     onYamlChange('');
+    
+    // 업로드된 파일들 초기화
+    setUploadedFiles({
+      build: null,
+      test: null,
+      deploy: null,
+    });
+    
+    // 환경 변수들 초기화
+    setNodeEnvironments({});
   };
 
   const handleRun = async () => {
@@ -117,6 +135,51 @@ const RightPanel: React.FC<RightPanelProps> = ({
     });
   };
 
+  // .env 파일 업로드 핸들러 (특정 노드 타입에만 적용)
+  const handleEnvFileUpload = (envVars: Record<string, string>, file: File) => {
+    const targetNodes = getAvailableNodes().filter(node => 
+      node.data.name === activeEnvTab
+    );
+    
+    if (targetNodes.length === 0) {
+      alert(`No ${activeEnvTab} nodes available. Please add a ${activeEnvTab} node first.`);
+      return;
+    }
+
+    // 현재 탭에 파일 저장
+    setUploadedFiles(prev => ({
+      ...prev,
+      [activeEnvTab]: file,
+    }));
+
+    // 해당 타입의 노드들에만 환경 변수 적용
+    targetNodes.forEach((node) => {
+      const envArray: EnvironmentVariable[] = Object.entries(envVars).map(([key, value]) => ({
+        key,
+        value,
+        isVisible: false, // 보안을 위해 기본적으로 숨김
+      }));
+
+      setNodeEnvironments((prev) => ({
+        ...prev,
+        [node.id]: envArray,
+      }));
+
+      // 노드의 환경 변수 업데이트
+      onUpdateNodeEnvironment(node.id, envVars);
+    });
+
+    alert(`Environment variables applied to ${targetNodes.length} ${activeEnvTab} node(s)`);
+  };
+
+  // 파일 제거 핸들러
+  const handleFileRemove = () => {
+    setUploadedFiles(prev => ({
+      ...prev,
+      [activeEnvTab]: null,
+    }));
+  };
+
   // 현재 캔버스에 있는 노드들 필터링
   const getAvailableNodes = () => {
     return nodes.filter(
@@ -185,18 +248,53 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
         {activeTab === 'env' && (
           <div className='h-full flex flex-col'>
-            {getAvailableNodes().length === 0 ? (
-              <div className='flex-1 flex items-center justify-center p-4'>
-                <div className='text-center text-gray-500'>
-                  <p className='text-sm'>No nodes available</p>
-                  <p className='text-xs mt-1'>
-                    Add Build, Test, or Deploy nodes to manage environment variables
-                  </p>
+            {/* Build, Test, Deploy 서브탭 */}
+            <div className='flex border-b border-gray-200'>
+              {(['build', 'test', 'deploy'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveEnvTab(tab)}
+                  className={`flex-1 px-3 py-2 text-xs font-medium transition-colors capitalize ${
+                    activeEnvTab === tab
+                      ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {/* 파일 업로드 섹션 */}
+            <div className='p-4 border-b border-gray-200'>
+              <h3 className='text-sm font-medium text-gray-900 mb-3'>Upload .env File</h3>
+              <EnvFileUploader 
+                onFileUpload={handleEnvFileUpload}
+                onFileRemove={handleFileRemove}
+                uploadedFile={uploadedFiles[activeEnvTab]}
+              />
+            </div>
+
+            {/* 환경 변수 관리 섹션 */}
+            <div className='flex-1 overflow-hidden'>
+              {getAvailableNodes().filter(node => node.data.name === activeEnvTab).length === 0 ? (
+                <div className='flex-1 flex items-center justify-center p-4'>
+                  <div className='text-center text-gray-500'>
+                    <p className='text-sm'>No {activeEnvTab} nodes available</p>
+                    <p className='text-xs mt-1'>
+                      Add a {activeEnvTab} node to manage environment variables
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className='flex-1 overflow-y-auto p-4 space-y-4'>
-                {getAvailableNodes().map((node) => (
+              ) : (
+                <div className='flex-1 overflow-y-auto p-4'>
+                  <div className='mb-3'>
+                    <h3 className='text-sm font-medium text-gray-900'>Environment Variables</h3>
+                    <p className='text-xs text-gray-500 mt-1'>
+                      Manage environment variables for {activeEnvTab} nodes
+                    </p>
+                  </div>
+                  {getAvailableNodes().filter(node => node.data.name === activeEnvTab).map((node) => (
                   <div key={node.id} className='border border-gray-200 rounded-lg p-3'>
                     {/* 노드 헤더 */}
                     <div className='flex items-center justify-between mb-3'>
@@ -258,9 +356,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       )}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
