@@ -32,9 +32,7 @@ export const usePipeline = () => {
   image: ubuntu:22.04
   dependencies:
     - test
-  environment: 
-    hello: 1234
-    hi: 1234
+
   commands: | 
     deploy.sh`);
 

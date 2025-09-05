@@ -31,7 +31,7 @@ const items: SidebarItem[] = [
     icon: '🔗', // Pipeline as Blocks (PaB)
   },
   {
-    href: '/builds',
+    href: '/deployments',
     icon: '🔨', // 빌드 기능
   },
   {
