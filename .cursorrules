@@ -1,0 +1,258 @@
+# Otto Frontend - Cursor Rules
+
+## 🎯 Project Overview
+Otto는 CI/CD 파이프라인 자동화 플랫폼입니다. Next.js 15 (App Router), TypeScript, Tailwind CSS v4, Radix UI로 구성된 프론트엔드 애플리케이션입니다.
+
+## 📁 Core Architecture
+
+### Tech Stack
+- **Framework**: Next.js 15 with App Router + Turbopack
+- **Language**: TypeScript 5+ with strict configuration
+- **Styling**: Tailwind CSS v4 + Radix UI Themes
+- **State Management**: Custom stores in `app/lib/`
+- **Flow Diagrams**: ReactFlow for pipeline visualization
+- **Backend Integration**: `@Team-5-CodeCat/otto-sdk` 
+- **Package Manager**: pnpm with workspace configuration
+- **Authentication**: JWT-based with localStorage token management
+
+### Directory Structure Rules
+```
+app/
+├── (auth)/                 # Authentication pages (signin/signup)
+├── (dashboard)/           # Main dashboard with nested routes
+│   ├── builds/           # Build management pages
+│   ├── deployments/      # Deployment management pages
+│   ├── environments/     # Environment management
+│   ├── pipelines/        # Pipeline editor with ReactFlow
+│   ├── projects/         # Project management
+│   ├── settings/         # Application settings
+│   └── tests/           # Test management
+├── (landing)/            # Marketing pages
+├── api/                 # Next.js API routes (GitHub integration)
+├── components/          # Reusable UI components
+│   ├── ui/             # Basic UI components
+│   ├── dashboard/      # Dashboard-specific components
+│   ├── auth/           # Authentication components
+│   └── github/         # GitHub integration components
+├── contexts/           # React contexts (AuthContext)
+├── hooks/              # Custom hooks (useAuth)
+└── lib/                # Utilities and state management
+    ├── *Store.ts       # Domain-specific state stores
+    ├── api.ts          # GitHub API utilities
+    ├── auth-api.ts     # Authentication API
+    ├── jwt-utils.ts    # JWT handling
+    └── token-manager.ts # Token management
+```
+
+## 🔧 Development Environment
+
+### Commands
+- **Dev**: `pnpm dev` (uses turbopack + .env.local)
+- **Build**: `pnpm build` (uses turbopack)
+- **Start**: `pnpm start` (requires .env.local)
+- **Lint**: `npx eslint .`
+- **Type Check**: `npx tsc --noEmit`
+
+### Environment Variables
+- `PORT`: Frontend port
+- `BACKEND_PORT`: Backend API port  
+- `NEXT_PUBLIC_API_BASE_URL`: API base URL (defaults: localhost:4000 client-side, host.docker.internal:4000 server-side)
+- `NEXT_PUBLIC_GITHUB_APP_NAME`: GitHub app name (defaults: 'otto-test-1')
+
+## 📝 Code Style Guidelines
+
+### TypeScript Configuration
+- **Strict Mode**: Enabled with additional safety features
+- **noUncheckedIndexedAccess**: true - Always check array/object access
+- **exactOptionalPropertyTypes**: true - Strict optional property handling
+- **noImplicitOverride**: true - Explicit override keywords required
+
+### Import/Export Patterns
+- Use path aliases: `@/components/*`, `@/lib/*`, `@/utils/*`
+- Prefer named exports for components
+- Use default exports only for page components and main entry points
+
+### Component Architecture
+- **UI Components** (`app/components/ui/`): Reusable, composable components with variant patterns
+- **Domain Components**: Feature-specific components in appropriate domain folders
+- **Page Components**: Located in route folders, handle data fetching and layout
+
+### Styling Guidelines
+- **Primary**: Tailwind CSS with utility-first approach
+- **Component Variants**: Use object-based variant patterns like Button component
+- **Responsive Design**: Mobile-first approach with sm:, md:, lg: breakpoints
+- **Color Palette**: Consistent color system across components
+- **Dark Mode**: Not currently implemented but structure should support it
+
+## 🧩 Component Patterns
+
+### Button Component Pattern
+```tsx
+interface ComponentProps extends React.HTMLAttributes<HTMLElement> {
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
+  isLoading?: boolean;
+  children: React.ReactNode;
+}
+
+const Component: React.FC<ComponentProps> = ({
+  variant = 'primary',
+  size = 'md',
+  className = '',
+  children,
+  ...props
+}) => {
+  const baseClasses = 'base-styles';
+  const variantClasses = { /* variant mappings */ };
+  const sizeClasses = { /* size mappings */ };
+  
+  return (
+    <element 
+      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+      {...props}
+    >
+      {children}
+    </element>
+  );
+};
+```
+
+### ReactFlow Node Pattern
+```tsx
+interface NodeProps {
+  data: NodeData;
+}
+
+const CustomNode: React.FC<NodeProps> = ({ data }) => {
+  return (
+    <div className="node-styles">
+      <Handle type="target" position={Position.Top} />
+      {/* Node content */}
+      <Handle type="source" position={Position.Bottom} />
+    </div>
+  );
+};
+```
+
+### Store Pattern
+```tsx
+interface StoreState {
+  data: DataType[];
+  loading: boolean;
+  error: string | null;
+}
+
+export const useStore = () => {
+  // State management logic
+  // CRUD operations
+  // Error handling
+};
+```
+
+## 🔒 Security Guidelines
+
+### Authentication
+- JWT tokens stored in localStorage (key: 'auth_token')
+- Bearer token authentication for API calls
+- AuthGuard component for route protection
+- Environment-aware API URLs for client/server-side requests
+
+### Data Handling
+- Mask sensitive environment variables in UI
+- Sanitize user inputs
+- Validate API responses
+- Handle error states gracefully
+
+### GitHub Integration
+- OAuth app integration with installation flow
+- Repository and branch management
+- Secure token handling for GitHub API calls
+
+## 🌐 API Integration
+
+### Backend Communication
+- Custom API utilities in `app/lib/api.ts`
+- Environment-aware base URLs
+- Consistent error handling patterns
+- TypeScript interfaces for API responses
+
+### GitHub API Integration
+- Repository listing and management
+- Branch operations
+- Installation flow handling
+- Error recovery mechanisms
+
+## 🎨 UI/UX Standards
+
+### Layout Patterns
+- Dashboard layout with sidebar navigation
+- Responsive design with mobile support
+- Consistent spacing and typography
+- Loading states and error boundaries
+
+### Form Handling
+- Controlled components with proper validation
+- Loading states during submission
+- Clear error messaging
+- Accessible form elements
+
+### Data Visualization
+- ReactFlow for pipeline visualization
+- Custom nodes and edges for workflow representation
+- Interactive pipeline editing capabilities
+- Real-time updates and state management
+
+## 📋 Code Quality Rules
+
+### File Organization
+- Group related functionality together
+- Use descriptive file names
+- Maintain consistent folder structure
+- Separate concerns appropriately
+
+### Error Handling
+- Use proper TypeScript error types
+- Implement graceful fallbacks
+- Log errors appropriately
+- Provide user-friendly error messages
+
+### Performance
+- Lazy load components when appropriate
+- Optimize bundle size
+- Use React.memo for expensive components
+- Implement proper cleanup in useEffect
+
+### Testing Strategy
+- Component testing for UI components
+- Integration testing for API interactions
+- End-to-end testing for critical user flows
+- Mock external dependencies properly
+
+## 📖 Documentation Standards
+- Comprehensive JSDoc comments for complex functions
+- README files for major features
+- Inline comments for business logic
+- API documentation for custom hooks
+
+## 🚀 Deployment Considerations
+- Environment variable management
+- Build optimization with Turbopack
+- Docker compatibility for API communication
+- Production error handling and monitoring
+
+## 🔄 Development Workflow
+- Feature branches from main
+- Comprehensive PR reviews
+- Consistent commit message format
+- Integration testing before merge
+
+---
+
+**Key Principles:**
+1. **Type Safety**: Leverage TypeScript's strict mode features
+2. **Component Reusability**: Build composable, reusable components
+3. **Performance**: Optimize for bundle size and runtime performance
+4. **Developer Experience**: Maintain clear patterns and documentation
+5. **User Experience**: Prioritize responsive design and accessibility
+6. **Security**: Implement secure authentication and data handling
+7. **Maintainability**: Write clean, testable, and well-documented code
