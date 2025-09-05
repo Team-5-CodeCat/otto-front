@@ -40,8 +40,11 @@ const Button: React.FC<ButtonProps> = ({
   // 최종 클래스 조합
   const buttonClasses = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
 
+  // disabled 상태를 명시적으로 boolean으로 변환
+  const isDisabled = Boolean(disabled || isLoading);
+
   return (
-    <button className={buttonClasses} disabled={disabled || isLoading} {...props}>
+    <button className={buttonClasses} disabled={isDisabled} {...props}>
       {isLoading && (
         <svg
           className='mr-2 h-4 w-4 animate-spin'

@@ -7,8 +7,22 @@ import { useRouter } from 'next/navigation';
 // UI components (shadcn-like wrappers)
 import { Card, Button, Input, Textarea, Select } from '@/app/components/ui';
 
+// GitHub 통합 컴포넌트
+import GitHubIntegration from '@/app/components/github/GitHubIntegration';
+
 // 프로젝트 스토어
 import { createProject } from '@/app/lib/projectStore';
+
+// GitHub 레포지토리 타입
+interface GitHubRepo {
+  id: number;
+  name: string;
+  full_name: string;
+  description: string | null;
+  private: boolean;
+  html_url: string;
+  default_branch: string;
+}
 
 // 프로젝트 폼 타입 개선
 interface ProjectForm {
@@ -35,17 +49,50 @@ export default function ProjectCreatePage() {
     deploy: '',
   });
 
+  // GitHub 통합 상태
+  const [selectedRepo, setSelectedRepo] = useState<GitHubRepo | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
+
   // 에러 상태
   const [errors, setErrors] = useState<Partial<Record<keyof ProjectForm, string>>>({});
   const [isSubmitting, setSubmitting] = useState(false);
+
+  // GitHub 레포지토리 선택 핸들러
+  const handleRepoSelect = (repo: GitHubRepo | null) => {
+    setSelectedRepo(repo);
+    if (repo) {
+      setForm((prev) => ({
+        ...prev,
+        repo: repo.full_name,
+        defaultBranch: repo.default_branch,
+      }));
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        repo: '',
+        defaultBranch: 'main',
+      }));
+    }
+  };
+
+  // GitHub 브랜치 선택 핸들러
+  const handleBranchSelect = (branch: string | null) => {
+    setSelectedBranch(branch);
+    if (branch) {
+      setForm((prev) => ({
+        ...prev,
+        defaultBranch: branch,
+      }));
+    }
+  };
 
   // 간단 검증 로직 (필수값 확인)
   const validate = (data: ProjectForm) => {
     const next: Partial<Record<keyof ProjectForm, string>> = {};
     if (!data.name.trim()) next.name = '프로젝트 이름을 입력하세요.';
-    if (!data.repo.trim()) next.repo = 'GitHub 레포지토리를 입력하세요.';
+    if (!selectedRepo) next.repo = 'GitHub 레포지토리를 선택하세요.';
     if (!data.triggerBranches.trim()) next.triggerBranches = '트리거 브랜치를 입력하세요.';
-    if (!data.defaultBranch.trim()) next.defaultBranch = '기본 브랜치를 입력하세요.';
+    if (!data.defaultBranch.trim()) next.defaultBranch = '기본 브랜치를 선택하세요.';
     if (!data.language) next.language = '언어 환경을 선택하세요.';
     if (!data.deploy) next.deploy = '배포 환경을 선택하세요.';
     return next;
@@ -138,46 +185,66 @@ export default function ProjectCreatePage() {
             onChange={(e) => handleChange('description', e.target.value)}
           />
 
-          {/* GitHub Repository */}
-          <Input
-            id='repo'
-            label='GitHub Repository'
-            placeholder='owner/repo'
-            description='GitHub 앱이 설치된 레포지토리 (앱 설치 후 자동으로 웹훅 설정됨)'
-            value={form.repo}
-            onChange={(e) => handleChange('repo', e.target.value)}
-            error={errors.repo}
-            required
-          />
+          {/* GitHub Repository Integration */}
+          <div>
+            <label className='block text-sm font-medium text-gray-700 mb-1'>
+              GitHub Repository
+            </label>
+            <p className='text-sm text-gray-600 mb-4'>
+              GitHub 앱을 설치하고 레포지토리를 연결하세요. 자동으로 웹훅이 설정됩니다.
+            </p>
+            <GitHubIntegration
+              onRepoSelect={handleRepoSelect}
+              onBranchSelect={handleBranchSelect}
+              initialRepo={selectedRepo}
+              initialBranch={selectedBranch}
+            />
+            {errors.repo && <p className='mt-1 text-sm text-red-600'>{errors.repo}</p>}
+          </div>
 
           {/* Branch Configuration Section */}
-          <div className='border-t pt-6'>
-            <h3 className='text-lg font-medium text-gray-900 mb-4'>Branch Configuration</h3>
+          {selectedRepo && (
+            <div className='border-t pt-6'>
+              <h3 className='text-lg font-medium text-gray-900 mb-4'>Branch Configuration</h3>
 
-            {/* Trigger Branches */}
-            <Input
-              id='triggerBranches'
-              label='Trigger Branches'
-              placeholder='main,develop,feature/*'
-              description='CI/CD를 트리거할 브랜치들 (쉼표로 구분, 와일드카드 지원)'
-              value={form.triggerBranches}
-              onChange={(e) => handleChange('triggerBranches', e.target.value)}
-              error={errors.triggerBranches}
-              required
-            />
+              {/* Selected Branch Display */}
+              {selectedBranch && (
+                <div className='mb-4 p-4 bg-green-50 border border-green-200 rounded-lg'>
+                  <div className='flex items-center space-x-2'>
+                    <span className='text-green-600'>✅</span>
+                    <span className='text-sm font-medium text-green-800'>
+                      선택된 브랜치: {selectedBranch}
+                    </span>
+                  </div>
+                </div>
+              )}
 
-            {/* Default Branch */}
-            <Input
-              id='defaultBranch'
-              label='Default Branch'
-              placeholder='main'
-              description='기본 작업 브랜치 (배포 기준 브랜치)'
-              value={form.defaultBranch}
-              onChange={(e) => handleChange('defaultBranch', e.target.value)}
-              error={errors.defaultBranch}
-              required
-            />
-          </div>
+              {/* Trigger Branches */}
+              <Input
+                id='triggerBranches'
+                label='Trigger Branches'
+                placeholder='main,develop,feature/*'
+                description='CI/CD를 트리거할 브랜치들 (쉼표로 구분, 와일드카드 지원)'
+                value={form.triggerBranches}
+                onChange={(e) => handleChange('triggerBranches', e.target.value)}
+                error={errors.triggerBranches}
+                required
+              />
+
+              {/* Default Branch (Read-only if selected from GitHub) */}
+              <Input
+                id='defaultBranch'
+                label='Default Branch'
+                placeholder='main'
+                description='기본 작업 브랜치 (GitHub에서 선택한 브랜치)'
+                value={form.defaultBranch}
+                onChange={(e) => handleChange('defaultBranch', e.target.value)}
+                error={errors.defaultBranch}
+                required
+                disabled={!!selectedBranch}
+              />
+            </div>
+          )}
 
           {/* Environment Configuration Section */}
           <div className='border-t pt-6'>

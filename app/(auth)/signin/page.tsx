@@ -71,8 +71,8 @@ export default function SignInPage() {
     const result = await signIn(formData);
 
     if (result.success) {
-      // 로그인 성공 시 메인 페이지로 리다이렉트
-      router.push('/');
+      // 로그인 성공 시 프로젝트 페이지로 리다이렉트
+      router.push('/projects');
     }
   };
 
@@ -207,17 +207,6 @@ export default function SignInPage() {
               >
                 Sign Up
               </Link>
-            </p>
-          </div>
-
-          {/* 테스트 계정 정보 (개발용) */}
-          <div className='mt-4 p-4 bg-gray-50 rounded-md'>
-            <p className='text-xs text-gray-500 text-center'>
-              <strong>테스트 계정:</strong>
-              <br />
-              이메일: test@example.com
-              <br />
-              비밀번호: password
             </p>
           </div>
         </Card>

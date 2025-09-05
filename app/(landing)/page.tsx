@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from './hooks/useAuth';
-import Landing from './(landing)/landing';
+import { useAuth } from '../hooks/useAuth';
+import Landing from './landing';
 
 export default function Home() {
   const router = useRouter();
