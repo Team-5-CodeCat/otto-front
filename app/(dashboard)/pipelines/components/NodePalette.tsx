@@ -1,34 +1,38 @@
 import React from 'react';
+import NodeVersionSelector from '../../../components/ui/NodeVersionSelector';
+import { useNodeVersion } from '../../../contexts/NodeVersionContext';
 
 interface NodePaletteProps {
   onAddNode: (nodeType: string) => void;
 }
 
-const nodeTemplates = [
-  {
-    type: 'build',
-    label: 'Build',
-    description: 'Build your application',
-    defaultImage: 'node:20',
-    defaultCommands: 'npm ci\nnpm run build',
-  },
-  {
-    type: 'test',
-    label: 'Test',
-    description: 'Run tests',
-    defaultImage: 'node:20',
-    defaultCommands: 'npm test',
-  },
-  {
-    type: 'deploy',
-    label: 'Deploy',
-    description: 'Deploy application',
-    defaultImage: 'ubuntu:22.04',
-    defaultCommands: 'deploy.sh',
-  },
-];
-
 const NodePalette: React.FC<NodePaletteProps> = ({ onAddNode }) => {
+  const { selectedVersion } = useNodeVersion();
+
+  const nodeTemplates = [
+    {
+      type: 'build',
+      label: 'Build',
+      description: 'Build your application',
+      defaultImage: `node:${selectedVersion}`,
+      defaultCommands: 'npm ci\nnpm run build',
+    },
+    {
+      type: 'test',
+      label: 'Test',
+      description: 'Run tests',
+      defaultImage: `node:${selectedVersion}`,
+      defaultCommands: 'npm test',
+    },
+    {
+      type: 'deploy',
+      label: 'Deploy',
+      description: 'Deploy application',
+      defaultImage: 'ubuntu:22.04',
+      defaultCommands: 'deploy.sh',
+    },
+  ];
+
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
     event.dataTransfer.setData('application/reactflow', nodeType);
     event.dataTransfer.effectAllowed = 'move';
@@ -40,6 +44,11 @@ const NodePalette: React.FC<NodePaletteProps> = ({ onAddNode }) => {
       <div className='p-4 border-b border-gray-200'>
         <h3 className='text-lg font-semibold text-gray-900'>Pipeline Builder</h3>
         <p className='text-xs text-gray-500 mt-1'>Drag to canvas to add nodes</p>
+      </div>
+
+      {/* Node.js 버전 선택기 */}
+      <div className='p-4 border-b border-gray-200'>
+        <NodeVersionSelector />
       </div>
 
       {/* 노드 팔레트 */}
