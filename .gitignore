@@ -42,4 +42,4 @@ next-env.d.ts
 
 .pnpm-store
 .vs_code
-.idea
+.idea.env.local

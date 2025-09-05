@@ -9,8 +9,11 @@ import {
   NodeChange,
 } from 'reactflow';
 import { yamlToNodes, yamlToEdges, nodesToYaml } from './utils';
+import { useNodeVersion } from '../../../contexts/NodeVersionContext';
 
 export const usePipeline = () => {
+  const { selectedVersion } = useNodeVersion();
+  
   // YAML 텍스트 상태 - 이것이 우리의 단일 진실 소스입니다
   const [yamlText, setYamlText] = useState(`- name: build
   image: node:20
@@ -48,6 +51,13 @@ export const usePipeline = () => {
     const newEdges = yamlToEdges(yamlText);
     setEdges(newEdges);
   }, [yamlText, setNodes, setEdges]);
+
+  // Node.js 버전이 변경될 때 YAML 텍스트의 node:20 부분을 업데이트
+  useEffect(() => {
+    setYamlText(prevYaml => {
+      return prevYaml.replace(/image: node:\d+/g, `image: node:${selectedVersion}`);
+    });
+  }, [selectedVersion]);
 
   // 노드 변경사항을 처리하는 함수 (위치 변경 시에는 YAML을 업데이트하지 않음)
   const handleNodesChange = useCallback((changes: NodeChange[]) => {
@@ -112,7 +122,7 @@ export const usePipeline = () => {
         },
         data: {
           name: nodeType,
-          image: nodeType === 'build' || nodeType === 'test' ? 'node:20' : 'ubuntu:22.04',
+          image: nodeType === 'build' || nodeType === 'test' ? `node:${selectedVersion}` : 'ubuntu:22.04',
           commands:
             nodeType === 'build'
               ? 'npm ci\nnpm run build'
@@ -135,7 +145,7 @@ export const usePipeline = () => {
         });
       }, 50);
     },
-    [nodes.length, edges, setNodes, setYamlText]
+    [nodes.length, edges, setNodes, setYamlText, selectedVersion]
   );
 
   // YAML 텍스트 변경 핸들러

@@ -21,7 +21,7 @@ pnpm install
 2. **환경변수 설정**
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env.dev.local
 # .env.local 파일에서 포트 및 API URL 설정
 ```
 
