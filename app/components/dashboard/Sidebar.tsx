@@ -3,13 +3,12 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import NodeVersionSelector from '@/app/components/ui/NodeVersionSelector';
-import { useNodeVersion } from '@/app/contexts/NodeVersionContext';
 import { useUIStore } from '@/app/lib/uiStore';
 import { Project, Pipeline } from './types';
 import DropdownSelect from './DropdownSelect';
 import ActionIcons from './ActionIcons';
-import { createNodeTemplates, actionIcons } from './constants';
+import PipelineBuilder from './PipelineBuilder';
+import { actionIcons } from './constants';
 
 // Sidebar Props 타입
 interface SidebarProps {
@@ -36,22 +35,12 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const pathname = usePathname(); // 현재 경로
   const router = useRouter();
-  const { selectedVersion } = useNodeVersion();
   
   // Zustand 스토어에서 Pipeline Builder 표시 상태 가져오기
   const { showPipelineBuilder } = useUIStore();
   
   // 파이프라인 페이지인지 확인
   const isPipelinePage = pathname === '/pipelines' || pathname?.startsWith('/pipelines/');
-
-  // 노드 템플릿 정의
-  const nodeTemplates = createNodeTemplates(selectedVersion);
-
-  // 드래그 시작 핸들러
-  const onDragStart = (event: React.DragEvent, nodeType: string) => {
-    event.dataTransfer.setData('application/reactflow', nodeType);
-    event.dataTransfer.effectAllowed = 'move';
-  };
 
   return (
     <aside className='h-screen w-64 bg-white border-r border-gray-200 flex flex-col'>
@@ -109,32 +98,11 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Pipeline Builder - 파이프라인 페이지에서만 표시 */}
       {isPipelinePage && showPipelineBuilder && (
-        <div className='h-80 min-h-0 border-t border-gray-200 bg-white'>
-
-          {/* Node.js 버전 선택기 */}
-          <div className='p-4 border-b border-gray-200'>
-            <NodeVersionSelector />
-          </div>
-
-          {/* 노드 팔레트 */}
-          <div className='flex-1 p-4 overflow-y-auto'>
-            <div className='space-y-3'>
-              {nodeTemplates.map((template) => (
-                <div
-                  key={template.type}
-                  draggable
-                  onDragStart={(event) => onDragStart(event, template.type)}
-                  className='w-full p-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-left transition-colors group cursor-grab active:cursor-grabbing select-none'
-                >
-                  <div className='font-medium text-gray-900 group-hover:text-blue-600'>
-                    {template.label}
-                  </div>
-                  <div className='text-sm text-gray-500 mt-1'>{template.description}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <PipelineBuilder 
+          className='flex-1 min-h-0 border-t border-gray-200'
+          showHeader={false}
+          showVersionSelector={true}
+        />
       )}
 
     </aside>
