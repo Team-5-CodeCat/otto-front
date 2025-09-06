@@ -8,14 +8,14 @@ import Sidebar from './Sidebar';
 import { Project, Pipeline } from './types';
 
 // 임시 프로젝트 데이터 (전역 상태로 관리)
-let mockProjects: Project[] = [
+const mockProjects: Project[] = [
   { id: '1', name: 'Frontend Project' },
   { id: '2', name: 'Backend API' },
   { id: '3', name: 'Mobile App' },
 ];
 
 // 임시 파이프라인 데이터 (전역 상태로 관리)
-let mockPipelines: Pipeline[] = [
+const mockPipelines: Pipeline[] = [
   { id: '1', name: 'Pipeline #1', projectId: '1' },
   { id: '2', name: 'Pipeline #2', projectId: '1' },
   { id: '3', name: 'Pipeline #3', projectId: '2' },
