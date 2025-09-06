@@ -1,36 +1,12 @@
 import { useCallback, useState, useEffect } from 'react';
-import { tokenManager } from '../lib/token-manager';
-import { getUserFromToken, isTokenExpired } from '../lib/jwt-utils';
+import { authApi, LoginRequest, SignUpRequest } from '../lib/auth-sdk';
+import { getUserFromToken } from '../lib/jwt-utils';
 
-// API 기본 설정
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+// 로그인 폼 데이터 타입 (SDK와 호환)
+export type SignInFormData = LoginRequest;
 
-// 로그인 폼 데이터 타입
-export interface SignInFormData {
-  email: string;
-  password: string;
-}
-
-// 회원가입 폼 데이터 타입
-export interface SignUpFormData {
-  email: string;
-  password: string;
-  username: string;
-}
-
-// 로그인 응답 타입 (백엔드 API 문서에 맞춤)
-export interface LoginResponse {
-  message: string;
-  accessToken: string;
-  refreshToken: string;
-  accessTokenExpiresIn: number;
-  refreshTokenExpiresIn: number;
-}
-
-// 회원가입 응답 타입 (백엔드 API 문서에 맞춤)
-export interface SignUpResponse {
-  message: string;
-}
+// 회원가입 폼 데이터 타입 (SDK와 호환)
+export type SignUpFormData = SignUpRequest;
 
 // 로그인 응답 타입 (프론트엔드용)
 export interface SignInResponse {
@@ -82,51 +58,75 @@ export const useAuth = () => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const tokenState = tokenManager.getTokenState();
-
-        // 액세스 토큰이 있고 만료되지 않았는지 확인
-        if (tokenState.accessToken && !isTokenExpired(tokenState.accessToken)) {
-          const userInfo = getUserFromToken(tokenState.accessToken);
-          if (userInfo) {
-            setAuthState(prev => ({
-              ...prev,
-              isAuthenticated: true,
-              isLoading: false,
-              user: {
-                id: userInfo.userID,
-                email: userInfo.email,
-                name: userInfo.email.split('@')[0] || '사용자',
-              },
-            }));
-            return;
+        // SDK를 사용한 인증 상태 확인
+        if (authApi.isAuthenticated() && !authApi.isTokenExpired()) {
+          const token = authApi.getStoredToken();
+          if (token) {
+            const userInfo = getUserFromToken(token);
+            if (userInfo) {
+              setAuthState(prev => ({
+                ...prev,
+                isAuthenticated: true,
+                isLoading: false,
+                user: {
+                  id: userInfo.userID,
+                  email: userInfo.email,
+                  name: userInfo.email.split('@')[0] || '사용자',
+                },
+              }));
+              return;
+            }
           }
         }
 
-        // 토큰이 만료되었거나 없으면 리프레시 시도
-        const isValid = await tokenManager.refreshTokensIfNeeded();
-        if (isValid) {
-          const newTokenState = tokenManager.getTokenState();
-          const userInfo = getUserFromToken(newTokenState.accessToken!);
-          if (userInfo) {
-            setAuthState(prev => ({
-              ...prev,
-              isAuthenticated: true,
-              isLoading: false,
-              user: {
-                id: userInfo.userID,
-                email: userInfo.email,
-                name: userInfo.email.split('@')[0] || '사용자',
-              },
-            }));
+        // 토큰이 만료되었지만 refresh token이 있는 경우에만 갱신 시도
+        const refreshToken = authApi.getStoredRefreshToken();
+        if (refreshToken) {
+          try {
+            console.log('토큰 갱신 시도 중...');
+            await authApi.refreshToken();
+            const token = authApi.getStoredToken();
+            if (token) {
+              console.log('새로운 토큰으로 사용자 정보 추출 시도...');
+              const userInfo = getUserFromToken(token);
+              if (userInfo) {
+                console.log('토큰 갱신 성공, 사용자 정보:', userInfo);
+                setAuthState(prev => ({
+                  ...prev,
+                  isAuthenticated: true,
+                  isLoading: false,
+                  user: {
+                    id: userInfo.userID,
+                    email: userInfo.email,
+                    name: userInfo.email.split('@')[0] || '사용자',
+                  },
+                }));
+                return;
+              } else {
+                console.warn('새로운 토큰에서 사용자 정보를 추출할 수 없습니다');
+              }
+            } else {
+              console.warn('토큰 갱신 후 새로운 토큰을 받지 못했습니다');
+            }
+          } catch (refreshError) {
+            // 리프레시 실패 시 로그아웃 상태로 설정
+            console.log('토큰 갱신 실패:', refreshError);
+            // 실패한 토큰들 제거
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('auth_token');
+              localStorage.removeItem('refresh_token');
+            }
           }
         } else {
-          setAuthState(prev => ({
-            ...prev,
-            isAuthenticated: false,
-            isLoading: false,
-            user: null,
-          }));
+          console.log('Refresh Token이 없어서 토큰 갱신을 시도하지 않습니다');
         }
+
+        setAuthState(prev => ({
+          ...prev,
+          isAuthenticated: false,
+          isLoading: false,
+          user: null,
+        }));
       } catch {
         setAuthState(prev => ({
           ...prev,
@@ -145,25 +145,8 @@ export const useAuth = () => {
     setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      // 백엔드 API를 사용한 실제 로그인
-      const response = await fetch(`${API_BASE_URL}/api/auth/sign_in`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-        credentials: 'include', // 쿠키 포함
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || '로그인에 실패했습니다.');
-      }
-
-      const data: LoginResponse = await response.json();
-
-      // 토큰 매니저에 토큰 저장
-      tokenManager.updateTokens(data);
+      // SDK를 사용한 로그인
+      const data = await authApi.signIn(formData);
 
       // JWT 토큰에서 사용자 정보 추출
       const userInfo = getUserFromToken(data.accessToken);
@@ -207,43 +190,14 @@ export const useAuth = () => {
     setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      // 백엔드 API를 사용한 실제 회원가입
-      const response = await fetch(`${API_BASE_URL}/api/auth/sign_up`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || '회원가입에 실패했습니다.');
-      }
-
-      const data: SignUpResponse = await response.json();
+      // SDK를 사용한 회원가입
+      const data = await authApi.signUp(formData);
 
       // 회원가입 성공 후 자동 로그인
-      const loginResponse = await fetch(`${API_BASE_URL}/api/auth/sign_in`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-        credentials: 'include',
+      const loginData = await authApi.signIn({
+        email: formData.email,
+        password: formData.password,
       });
-
-      if (!loginResponse.ok) {
-        throw new Error('회원가입 후 자동 로그인에 실패했습니다.');
-      }
-
-      const loginData: LoginResponse = await loginResponse.json();
-
-      // 토큰 매니저에 토큰 저장
-      tokenManager.updateTokens(loginData);
 
       // JWT 토큰에서 사용자 정보 추출
       const userInfo = getUserFromToken(loginData.accessToken);
@@ -283,9 +237,14 @@ export const useAuth = () => {
   }, []);
 
   // 로그아웃 함수 (메모이즈)
-  const signOut = useCallback(() => {
-    // 토큰 매니저에서 토큰 제거
-    tokenManager.clearTokens();
+  const signOut = useCallback(async () => {
+    try {
+      // SDK를 사용한 로그아웃 (백엔드에 로그아웃 요청)
+      await authApi.signOut();
+    } catch (error) {
+      console.error('로그아웃 요청 실패:', error);
+      // 에러가 발생해도 로컬 상태는 초기화
+    }
 
     // 인증 상태 초기화
     setAuthState({
@@ -299,52 +258,71 @@ export const useAuth = () => {
   // 토큰 검증 함수 (메모이즈)
   const validateToken = useCallback(async () => {
     try {
-      const tokenState = tokenManager.getTokenState();
-
-      // 액세스 토큰이 있고 만료되지 않았는지 확인
-      if (tokenState.accessToken && !isTokenExpired(tokenState.accessToken)) {
-        const userInfo = getUserFromToken(tokenState.accessToken);
-        if (userInfo) {
-          setAuthState((prev) => ({
-            ...prev,
-            isAuthenticated: true,
-            user: {
-              id: userInfo.userID,
-              email: userInfo.email,
-              name: userInfo.email.split('@')[0] || '사용자',
-            },
-          }));
-          return true;
+      // SDK를 사용한 토큰 검증
+      if (authApi.isAuthenticated() && !authApi.isTokenExpired()) {
+        const token = authApi.getStoredToken();
+        if (token) {
+          const userInfo = getUserFromToken(token);
+          if (userInfo) {
+            setAuthState((prev) => ({
+              ...prev,
+              isAuthenticated: true,
+              user: {
+                id: userInfo.userID,
+                email: userInfo.email,
+                name: userInfo.email.split('@')[0] || '사용자',
+              },
+            }));
+            return true;
+          }
         }
       }
 
-      // 토큰이 만료되었거나 없으면 리프레시 시도
-      const isValid = await tokenManager.refreshTokensIfNeeded();
-
-      if (isValid) {
-        const newTokenState = tokenManager.getTokenState();
-        const userInfo = getUserFromToken(newTokenState.accessToken!);
-        if (userInfo) {
-          setAuthState((prev) => ({
-            ...prev,
-            isAuthenticated: true,
-            user: {
-              id: userInfo.userID,
-              email: userInfo.email,
-              name: userInfo.email.split('@')[0] || '사용자',
-            },
-          }));
-          return true;
+      // refresh token이 있는 경우에만 갱신 시도
+      const refreshToken = authApi.getStoredRefreshToken();
+      if (refreshToken) {
+        try {
+          console.log('validateToken: 토큰 갱신 시도 중...');
+          await authApi.refreshToken();
+          const token = authApi.getStoredToken();
+          if (token) {
+            console.log('validateToken: 새로운 토큰으로 사용자 정보 추출 시도...');
+            const userInfo = getUserFromToken(token);
+            if (userInfo) {
+              console.log('validateToken: 토큰 갱신 성공, 사용자 정보:', userInfo);
+              setAuthState((prev) => ({
+                ...prev,
+                isAuthenticated: true,
+                user: {
+                  id: userInfo.userID,
+                  email: userInfo.email,
+                  name: userInfo.email.split('@')[0] || '사용자',
+                },
+              }));
+              return true;
+            } else {
+              console.warn('validateToken: 새로운 토큰에서 사용자 정보를 추출할 수 없습니다');
+            }
+          } else {
+            console.warn('validateToken: 토큰 갱신 후 새로운 토큰을 받지 못했습니다');
+          }
+        } catch (refreshError) {
+          console.log('validateToken: 토큰 갱신 실패:', refreshError);
+          // 실패한 토큰들 제거
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('refresh_token');
+          }
         }
       } else {
-        setAuthState((prev) => ({
-          ...prev,
-          isAuthenticated: false,
-          user: null,
-        }));
-        return false;
+        console.log('validateToken: Refresh Token이 없어서 토큰 갱신을 시도하지 않습니다');
       }
 
+      setAuthState((prev) => ({
+        ...prev,
+        isAuthenticated: false,
+        user: null,
+      }));
       return false;
     } catch {
       setAuthState((prev) => ({

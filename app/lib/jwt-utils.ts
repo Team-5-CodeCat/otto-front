@@ -4,7 +4,7 @@
 export interface JWTPayload {
     sub: string;        // 사용자 ID (userID)
     email: string;      // 사용자 이메일
-    type: 'access';     // 토큰 타입
+    type?: string;      // 토큰 타입 (optional로 변경)
     iat: number;        // 발급 시간
     exp: number;        // 만료 시간
 }
@@ -45,9 +45,19 @@ export const decodeJWT = (token: string): JWTPayload | null => {
 
         const payload = JSON.parse(jsonPayload) as JWTPayload;
 
-        // 토큰 타입 확인
-        if (payload.type !== 'access') {
-            throw new Error('Invalid token type');
+        // 디버깅을 위한 토큰 정보 로깅
+        console.log('JWT Payload:', {
+            sub: payload.sub,
+            email: payload.email,
+            type: payload.type,
+            iat: payload.iat,
+            exp: payload.exp
+        });
+
+        // 토큰 타입 확인 (type이 있는 경우에만)
+        if (payload.type && payload.type !== 'access') {
+            console.warn('토큰 타입이 access가 아닙니다:', payload.type);
+            // 타입이 다르더라도 계속 진행 (호환성을 위해)
         }
 
         return payload;
@@ -64,7 +74,7 @@ export const decodeJWT = (token: string): JWTPayload | null => {
  */
 export const getUserFromToken = (token: string): UserInfo | null => {
     const payload = decodeJWT(token);
-    if (payload && payload.type === 'access') {
+    if (payload && payload.sub && payload.email) {
         return {
             userID: payload.sub,
             email: payload.email

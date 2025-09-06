@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const response = await fetch('http://localhost:4000/api/v1/user', {
+    const response = await fetch('http://localhost:4004/api/v1/user', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
