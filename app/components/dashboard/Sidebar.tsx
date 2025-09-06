@@ -3,46 +3,39 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '@/app/hooks/useAuth';
 import NodeVersionSelector from '@/app/components/ui/NodeVersionSelector';
 import { useNodeVersion } from '@/app/contexts/NodeVersionContext';
 import { useUIStore } from '@/app/lib/uiStore';
+import { Project, Pipeline } from './types';
+import DropdownSelect from './DropdownSelect';
+import ActionIcons from './ActionIcons';
+import { createNodeTemplates, actionIcons } from './constants';
 
-// 사이드바 메뉴 항목 타입
-interface SidebarItem {
-  href: string; // 라우트 경로
-  icon?: React.ReactNode; // 아이콘 (옵션)
+// Sidebar Props 타입
+interface SidebarProps {
+  projects: Project[];
+  pipelines: Pipeline[];
+  selectedProject: Project | null;
+  selectedPipeline: Pipeline | null;
+  onProjectSelect: (project: Project) => void;
+  onPipelineSelect: (pipeline: Pipeline) => void;
+  onNewProjectClick: () => void;
+  onNewPipelineClick: () => void;
 }
 
-// 사이드바 메뉴 정의 (우선순위 기반)
-const items: SidebarItem[] = [
-  {
-    href: '/pipelines',
-    icon: '🔗', // Pipeline as Blocks (PaB)
-  },
-  {
-    href: '/deployments',
-    icon: '🚀', // 배포 기능
-  },
-  {
-    href: '/settings',
-    icon: '⚙️', // 사용자/워크스페이스 설정
-  },
-];
-
-// 링크 활성화 스타일 도우미 (그린 테마)
-const linkClasses = (active: boolean) =>
-  `flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-    active
-      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-  }`;
-
 // Sidebar 컴포넌트
-const Sidebar: React.FC = () => {
+const Sidebar: React.FC<SidebarProps> = ({
+  projects,
+  pipelines,
+  selectedProject,
+  selectedPipeline,
+  onProjectSelect,
+  onPipelineSelect,
+  onNewProjectClick,
+  onNewPipelineClick,
+}) => {
   const pathname = usePathname(); // 현재 경로
   const router = useRouter();
-  const { user, signOut } = useAuth();
   const { selectedVersion } = useNodeVersion();
   
   // Zustand 스토어에서 Pipeline Builder 표시 상태 가져오기
@@ -52,40 +45,12 @@ const Sidebar: React.FC = () => {
   const isPipelinePage = pathname === '/pipelines' || pathname?.startsWith('/pipelines/');
 
   // 노드 템플릿 정의
-  const nodeTemplates = [
-    {
-      type: 'build',
-      label: 'Build',
-      description: 'Build your application',
-      defaultImage: `node:${selectedVersion}`,
-      defaultCommands: 'npm ci\nnpm run build',
-    },
-    {
-      type: 'test',
-      label: 'Test',
-      description: 'Run tests',
-      defaultImage: `node:${selectedVersion}`,
-      defaultCommands: 'npm test',
-    },
-    {
-      type: 'deploy',
-      label: 'Deploy',
-      description: 'Deploy application',
-      defaultImage: 'ubuntu:22.04',
-      defaultCommands: 'deploy.sh',
-    },
-  ];
+  const nodeTemplates = createNodeTemplates(selectedVersion);
 
   // 드래그 시작 핸들러
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
     event.dataTransfer.setData('application/reactflow', nodeType);
     event.dataTransfer.effectAllowed = 'move';
-  };
-
-  // 로그아웃 핸들러
-  const handleSignOut = () => {
-    signOut();
-    router.push('/signin');
   };
 
   return (
@@ -98,36 +63,53 @@ const Sidebar: React.FC = () => {
         </Link>
       </div>
 
-      {/* 메뉴 리스트 - 가로 정렬 */}
-      <nav className='p-3 flex space-x-1 flex-shrink-0'>
-        {items.map((item) => {
-          const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
-          return (
-            <Link 
-              key={item.href} 
-              href={item.href} 
-              className={`flex items-center justify-center p-2 rounded-md text-sm font-medium transition-colors ${
-                isActive
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-              title={item.href.replace('/', '').charAt(0).toUpperCase() + item.href.slice(2)}
-            >
-              {/* 아이콘만 표시 */}
-              {item.icon ? <span className='text-lg'>{item.icon}</span> : null}
-            </Link>
-          );
-        })}
-      </nav>
+      {/* 프로젝트/파이프라인 선택 섹션 */}
+      <div className='p-4 border-t border-gray-200 bg-white'>
+        {/* 프로젝트 드롭다운 */}
+        <DropdownSelect
+          label='Project'
+          value={selectedProject?.id || ''}
+          onChange={(value) => {
+            const project = projects.find(p => p.id === value);
+            if (project) onProjectSelect(project);
+          }}
+          options={projects}
+          placeholder='Select a project'
+        />
+
+        {/* 파이프라인 드롭다운 */}
+        <DropdownSelect
+          label='Pipeline'
+          value={selectedPipeline?.id || ''}
+          onChange={(value) => {
+            if (value) {
+              const pipeline = pipelines.find(p => p.id === value);
+              if (pipeline) {
+                onPipelineSelect(pipeline);
+                router.push(`/pipelines/${pipeline.id}`);
+              }
+            }
+          }}
+          options={pipelines}
+          placeholder='Select a pipeline'
+          disabled={!selectedProject}
+        />
+
+        {/* 액션 아이콘들 */}
+        <ActionIcons icons={actionIcons} />
+
+        {/* 새 파이프라인 생성 버튼 */}
+        <button
+          onClick={onNewPipelineClick}
+          className='w-full mt-3 px-3 py-2 text-sm text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors font-medium'
+        >
+          + New Pipeline
+        </button>
+      </div>
 
       {/* Pipeline Builder - 파이프라인 페이지에서만 표시 */}
       {isPipelinePage && showPipelineBuilder && (
-        <div className='flex-1 min-h-0 border-t border-gray-200 bg-white'>
-          {/* 헤더 */}
-          <div className='p-4 border-b border-gray-200'>
-            <h3 className='text-lg font-semibold text-gray-900'>Pipeline Builder</h3>
-            <p className='text-xs text-gray-500 mt-1'>Drag to canvas to add nodes</p>
-          </div>
+        <div className='h-80 min-h-0 border-t border-gray-200 bg-white'>
 
           {/* Node.js 버전 선택기 */}
           <div className='p-4 border-b border-gray-200'>
@@ -155,29 +137,6 @@ const Sidebar: React.FC = () => {
         </div>
       )}
 
-      {/* 사용자 정보 및 로그아웃 영역 */}
-      <div className='p-3 border-t border-gray-200 flex-shrink-0'>
-        {user && (
-          <div className='space-y-2'>
-            {/* 사용자 정보 */}
-            <div className='px-3 py-2 bg-gray-50 rounded-md'>
-              <div className='text-xs text-gray-500'>로그인됨</div>
-              <div className='text-sm font-medium text-gray-900 truncate'>
-                {user.name || user.email}
-              </div>
-            </div>
-
-            {/* 로그아웃 버튼 */}
-            <button
-              onClick={handleSignOut}
-              className='w-full flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors'
-            >
-              <span className='mr-2'>🚪</span>
-              <span>로그아웃</span>
-            </button>
-          </div>
-        )}
-      </div>
     </aside>
   );
 };
