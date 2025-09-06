@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
-import { RotateCcw, Play, Plus, Eye, EyeOff } from 'lucide-react';
+import { RotateCcw, Play } from 'lucide-react';
 import { Node } from 'reactflow';
-
-interface EnvironmentVariable {
-  key: string;
-  value: string;
-  isVisible: boolean;
-}
+import YamlEditor from '../../../components/ui/YamlEditor';
+import EnvironmentTab from '../../../components/ui/EnvironmentTab';
+import { EnvironmentVariable } from '../../../components/ui/EnvironmentVariableList';
 
 interface RightPanelProps {
   yamlText: string;
@@ -22,17 +19,31 @@ const RightPanel: React.FC<RightPanelProps> = ({
   onUpdateNodeEnvironment,
 }) => {
   const [activeTab, setActiveTab] = useState<'yaml' | 'env'>('yaml');
+  const [activeEnvTab, setActiveEnvTab] = useState<'build' | 'test' | 'deploy'>('build');
   const [nodeEnvironments, setNodeEnvironments] = useState<Record<string, EnvironmentVariable[]>>(
     {}
   );
+  // 각 탭별로 독립적인 업로드된 파일 상태 관리
+  const [uploadedFiles, setUploadedFiles] = useState<Record<'build' | 'test' | 'deploy', File | null>>({
+    build: null,
+    test: null,
+    deploy: null,
+  });
 
-  const handleYamlChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    onYamlChange(event.target.value);
-  };
 
   const handleRefresh = () => {
     // YAML 내용을 빈 문자열로 초기화
     onYamlChange('');
+    
+    // 업로드된 파일들 초기화
+    setUploadedFiles({
+      build: null,
+      test: null,
+      deploy: null,
+    });
+    
+    // 환경 변수들 초기화
+    setNodeEnvironments({});
   };
 
   const handleRun = async () => {
@@ -117,6 +128,51 @@ const RightPanel: React.FC<RightPanelProps> = ({
     });
   };
 
+  // .env 파일 업로드 핸들러 (특정 노드 타입에만 적용)
+  const handleEnvFileUpload = (envVars: Record<string, string>, file: File) => {
+    const targetNodes = getAvailableNodes().filter(node => 
+      node.data.name === activeEnvTab
+    );
+    
+    if (targetNodes.length === 0) {
+      alert(`No ${activeEnvTab} nodes available. Please add a ${activeEnvTab} node first.`);
+      return;
+    }
+
+    // 현재 탭에 파일 저장
+    setUploadedFiles(prev => ({
+      ...prev,
+      [activeEnvTab]: file,
+    }));
+
+    // 해당 타입의 노드들에만 환경 변수 적용
+    targetNodes.forEach((node) => {
+      const envArray: EnvironmentVariable[] = Object.entries(envVars).map(([key, value]) => ({
+        key,
+        value,
+        isVisible: false, // 보안을 위해 기본적으로 숨김
+      }));
+
+      setNodeEnvironments((prev) => ({
+        ...prev,
+        [node.id]: envArray,
+      }));
+
+      // 노드의 환경 변수 업데이트
+      onUpdateNodeEnvironment(node.id, envVars);
+    });
+
+    alert(`Environment variables applied to ${targetNodes.length} ${activeEnvTab} node(s)`);
+  };
+
+  // 파일 제거 핸들러
+  const handleFileRemove = () => {
+    setUploadedFiles(prev => ({
+      ...prev,
+      [activeEnvTab]: null,
+    }));
+  };
+
   // 현재 캔버스에 있는 노드들 필터링
   const getAvailableNodes = () => {
     return nodes.filter(
@@ -124,6 +180,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
         node.type === 'jobNode' && ['build', 'test', 'deploy'].includes(node.data.name as string)
     );
   };
+
 
   return (
     <div className='w-64 min-w-64 bg-white border-l border-gray-200 flex flex-col md:w-72 lg:w-80 xl:w-96 2xl:w-[26rem]'>
@@ -173,95 +230,26 @@ const RightPanel: React.FC<RightPanelProps> = ({
       {/* 탭 컨텐츠 */}
       <div className='flex-1 overflow-hidden'>
         {activeTab === 'yaml' && (
-          <div className='h-full p-4'>
-            <textarea
-              value={yamlText}
-              onChange={handleYamlChange}
-              className='w-full h-full resize-none border border-gray-300 rounded-lg p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-              placeholder='YAML configuration will appear here...'
-            />
-          </div>
+          <YamlEditor
+            value={yamlText}
+            onChange={onYamlChange}
+          />
         )}
 
         {activeTab === 'env' && (
-          <div className='h-full flex flex-col'>
-            {getAvailableNodes().length === 0 ? (
-              <div className='flex-1 flex items-center justify-center p-4'>
-                <div className='text-center text-gray-500'>
-                  <p className='text-sm'>No nodes available</p>
-                  <p className='text-xs mt-1'>
-                    Add Build, Test, or Deploy nodes to manage environment variables
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className='flex-1 overflow-y-auto p-4 space-y-4'>
-                {getAvailableNodes().map((node) => (
-                  <div key={node.id} className='border border-gray-200 rounded-lg p-3'>
-                    {/* 노드 헤더 */}
-                    <div className='flex items-center justify-between mb-3'>
-                      <h4 className='font-medium text-gray-900 capitalize'>{node.data.name}</h4>
-                      <button
-                        onClick={() => addEnvironmentVariable(node.id)}
-                        className='flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 rounded transition-colors'
-                      >
-                        <Plus size={12} />
-                        추가
-                      </button>
-                    </div>
-
-                    {/* 환경 변수 목록 */}
-                    <div className='space-y-2'>
-                      {/* 헤더 */}
-                      <div className='grid grid-cols-2 gap-2 text-xs font-medium text-gray-500'>
-                        <div>Key</div>
-                        <div>Value</div>
-                      </div>
-
-                      {/* 환경 변수 행들 */}
-                      {(nodeEnvironments[node.id] || []).map((env, index) => (
-                        <div key={index} className='grid grid-cols-2 gap-2'>
-                          <input
-                            type='text'
-                            value={env.key}
-                            onChange={(e) =>
-                              updateEnvironmentVariable(node.id, index, 'key', e.target.value)
-                            }
-                            placeholder='Key'
-                            className='px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500'
-                          />
-                          <div className='relative'>
-                            <input
-                              type={env.isVisible ? 'text' : 'password'}
-                              value={env.value}
-                              onChange={(e) =>
-                                updateEnvironmentVariable(node.id, index, 'value', e.target.value)
-                              }
-                              placeholder='Value'
-                              className='w-full px-2 py-1 pr-8 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500'
-                            />
-                            <button
-                              onClick={() => toggleVisibility(node.id, index)}
-                              className='absolute right-1 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded'
-                            >
-                              {env.isVisible ? <EyeOff size={10} /> : <Eye size={10} />}
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-
-                      {/* 환경 변수가 없을 때 */}
-                      {(!nodeEnvironments[node.id] || nodeEnvironments[node.id]!.length === 0) && (
-                        <div className='text-xs text-gray-500 italic py-2'>
-                          No environment variables set
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <EnvironmentTab
+            activeEnvTab={activeEnvTab}
+            onTabChange={setActiveEnvTab}
+            uploadedFile={uploadedFiles[activeEnvTab]}
+            onFileUpload={handleEnvFileUpload}
+            onFileRemove={handleFileRemove}
+            nodes={nodes}
+            nodeEnvironments={nodeEnvironments}
+            onAddEnvironmentVariable={addEnvironmentVariable}
+            onUpdateEnvironmentVariable={updateEnvironmentVariable}
+            onToggleVisibility={toggleVisibility}
+            onRemoveEnvironmentVariable={removeEnvironmentVariable}
+          />
         )}
       </div>
     </div>
