@@ -1,22 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/hooks/useAuth';
 import { NodeVersionProvider } from '../../contexts/NodeVersionContext';
 import Sidebar from './Sidebar';
-
-// 프로젝트 데이터 타입
-interface Project {
-  id: string;
-  name: string;
-}
-
-// 파이프라인 데이터 타입
-interface Pipeline {
-  id: string;
-  name: string;
-  projectId: string;
-}
+import { Project, Pipeline } from './types';
 
 // 임시 프로젝트 데이터 (전역 상태로 관리)
 let mockProjects: Project[] = [
@@ -42,6 +31,7 @@ interface DashboardLayoutProps {
 // 대시보드 레이아웃 (좌: Sidebar, 우: Content)
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { isLoading } = useAuth();
+  const router = useRouter();
   
   // 새 프로젝트 생성 모달 상태
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
@@ -50,6 +40,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   
   // 새 파이프라인 생성 모달 상태
   const [isNewPipelineModalOpen, setIsNewPipelineModalOpen] = useState(false);
+  const [selectedPipeline, setSelectedPipeline] = useState<Pipeline | null>(null);
   const [newPipelineName, setNewPipelineName] = useState('');
   const [pipelines, setPipelines] = useState<Pipeline[]>(mockPipelines);
   const [selectedProject, setSelectedProject] = useState<Project | null>(projects[0] || null);
@@ -86,8 +77,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       // mockPipelines와 상태 모두 업데이트
       mockPipelines.push(newPipeline);
       setPipelines([...mockPipelines]);
+      setSelectedPipeline(newPipeline); // 새 파이프라인 선택
       setNewPipelineName('');
       setIsNewPipelineModalOpen(false);
+      
+      // /pipelines로 이동
+      router.push('/pipelines');
+      
       console.log('새 파이프라인 생성:', newPipeline);
     }
   };
@@ -108,6 +104,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       </div>
     );
   }
+  
 
   return (
     <NodeVersionProvider>
@@ -117,7 +114,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           projects={projects}
           pipelines={filteredPipelines}
           selectedProject={selectedProject}
+          selectedPipeline={selectedPipeline}
           onProjectSelect={setSelectedProject}
+          onPipelineSelect={setSelectedPipeline}
           onNewProjectClick={() => setIsNewProjectModalOpen(true)}
           onNewPipelineClick={() => setIsNewPipelineModalOpen(true)}
         />

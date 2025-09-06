@@ -137,8 +137,7 @@ const FlowCanvas: React.FC<FlowCanvasProps> = (props) => {
           zIndex: 50,
         }}
       >
-        {/* 왼쪽 패널 - 노드 팔레트 */}
-        <NodePalette onAddNode={props.onAddNode} />
+
 
         {/* 중앙 영역 - 플로우 캔버스 */}
         <div className='flex-1 min-w-0 flex flex-col relative'>
