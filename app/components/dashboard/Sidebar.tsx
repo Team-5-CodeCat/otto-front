@@ -10,7 +10,6 @@ import { useUIStore } from '@/app/lib/uiStore';
 
 // 사이드바 메뉴 항목 타입
 interface SidebarItem {
-  label: string; // UI 라벨 (영어)
   href: string; // 라우트 경로
   icon?: React.ReactNode; // 아이콘 (옵션)
 }
@@ -18,37 +17,14 @@ interface SidebarItem {
 // 사이드바 메뉴 정의 (우선순위 기반)
 const items: SidebarItem[] = [
   {
-    label: 'Projects',
-    href: '/projects',
-    icon: '📁', // 프로젝트 생성/목록
-  },
-  {
-    label: 'Pipelines',
     href: '/pipelines',
     icon: '🔗', // Pipeline as Blocks (PaB)
   },
   {
-    label: 'Builds',
-    href: '/builds',
-    icon: '🔨', // 빌드 기능
-  },
-  {
-    label: 'Tests',
-    href: '/tests',
-    icon: '🧪', // 테스트 기능
-  },
-  {
-    label: 'Deployments',
     href: '/deployments',
     icon: '🚀', // 배포 기능
   },
   {
-    label: 'Environments',
-    href: '/environments',
-    icon: '🌍', // 환경 설정 (언어/배포)
-  },
-  {
-    label: 'Settings',
     href: '/settings',
     icon: '⚙️', // 사용자/워크스페이스 설정
   },
@@ -122,15 +98,23 @@ const Sidebar: React.FC = () => {
         </Link>
       </div>
 
-      {/* 메뉴 리스트 */}
-      <nav className='p-3 space-y-1 flex-shrink-0'>
+      {/* 메뉴 리스트 - 가로 정렬 */}
+      <nav className='p-3 flex space-x-1 flex-shrink-0'>
         {items.map((item) => {
           const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
           return (
-            <Link key={item.href} href={item.href} className={linkClasses(!!isActive)}>
-              {/* 아이콘이 있으면 왼쪽에 배치 */}
-              {item.icon ? <span className='mr-2'>{item.icon}</span> : null}
-              <span>{item.label}</span>
+            <Link 
+              key={item.href} 
+              href={item.href} 
+              className={`flex items-center justify-center p-2 rounded-md text-sm font-medium transition-colors ${
+                isActive
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+              title={item.href.replace('/', '').charAt(0).toUpperCase() + item.href.slice(2)}
+            >
+              {/* 아이콘만 표시 */}
+              {item.icon ? <span className='text-lg'>{item.icon}</span> : null}
             </Link>
           );
         })}
