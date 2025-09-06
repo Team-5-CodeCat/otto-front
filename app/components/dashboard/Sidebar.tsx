@@ -18,7 +18,6 @@ interface SidebarProps {
   selectedPipeline: Pipeline | null;
   onProjectSelect: (project: Project) => void;
   onPipelineSelect: (pipeline: Pipeline) => void;
-  onNewProjectClick: () => void;
   onNewPipelineClick: () => void;
 }
 
@@ -30,7 +29,6 @@ const Sidebar: React.FC<SidebarProps> = ({
   selectedPipeline,
   onProjectSelect,
   onPipelineSelect,
-  onNewProjectClick,
   onNewPipelineClick,
 }) => {
   const pathname = usePathname(); // 현재 경로

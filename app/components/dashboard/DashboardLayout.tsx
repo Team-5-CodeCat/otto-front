@@ -117,7 +117,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           selectedPipeline={selectedPipeline}
           onProjectSelect={setSelectedProject}
           onPipelineSelect={setSelectedPipeline}
-          onNewProjectClick={() => setIsNewProjectModalOpen(true)}
           onNewPipelineClick={() => setIsNewPipelineModalOpen(true)}
         />
 
