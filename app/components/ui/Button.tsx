@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 // Button 컴포넌트의 props 타입 정의
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -14,7 +15,7 @@ const Button: React.FC<ButtonProps> = ({
   size = 'md',
   isLoading = false,
   children,
-  className = '',
+  className,
   disabled,
   ...props
 }) => {
@@ -37,14 +38,11 @@ const Button: React.FC<ButtonProps> = ({
     lg: 'h-12 px-8 text-lg',
   };
 
-  // 최종 클래스 조합
-  const buttonClasses = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
-
   // disabled 상태를 명시적으로 boolean으로 변환
   const isDisabled = Boolean(disabled || isLoading);
 
   return (
-    <button className={buttonClasses} disabled={isDisabled} {...props}>
+    <button className={cn(baseClasses, variantClasses[variant], sizeClasses[size], className)} disabled={isDisabled} {...props}>
       {isLoading && (
         <svg
           className='mr-2 h-4 w-4 animate-spin'

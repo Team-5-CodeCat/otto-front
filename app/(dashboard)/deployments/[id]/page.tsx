@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 // UI 컴포넌트
 import { Card, Button } from '@/app/components/ui';
@@ -220,7 +221,7 @@ export default function DeploymentDetailPage() {
           <div className='flex items-center justify-between'>
             <div className='flex items-center space-x-3'>
               <span
-                className={`px-3 py-1 text-sm font-medium rounded-full ${statusStyles[deployment.status]}`}
+                className={cn('px-3 py-1 text-sm font-medium rounded-full', statusStyles[deployment.status])}
               >
                 {deployment.status === 'pending' && '대기 중'}
                 {deployment.status === 'deploying' && '배포 중'}
@@ -229,7 +230,7 @@ export default function DeploymentDetailPage() {
                 {deployment.status === 'rolled_back' && '롤백됨'}
               </span>
               <span
-                className={`px-2 py-1 text-xs rounded ${environmentColors[deployment.environment]}`}
+                className={cn('px-2 py-1 text-xs rounded', environmentColors[deployment.environment])}
               >
                 {deployment.environment === 'development' && '개발'}
                 {deployment.environment === 'staging' && '스테이징'}
