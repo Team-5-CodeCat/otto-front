@@ -123,8 +123,7 @@ export default function SignUpPage() {
     });
 
     if (result.success) {
-      // 회원가입 성공 시 프로젝트 페이지로 리다이렉트
-      router.push('/projects');
+      router.push('/signin');
     }
   };
 
