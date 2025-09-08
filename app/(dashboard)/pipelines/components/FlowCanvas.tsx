@@ -38,6 +38,17 @@ interface FlowCanvasProps {
   onAddNode: (nodeType: string, position?: { x: number; y: number }) => void;
   onYamlChange: (value: string) => void;
   onUpdateNodeEnvironment: (nodeId: string, environment: Record<string, string>) => void;
+  // ✅ SDK 기반 함수들 추가
+  onSavePipeline?: (
+    name: string,
+    projectID?: string
+  ) => Promise<{ success: boolean; pipelineId?: string }>;
+  onLoadPipeline?: (pipelineID: string) => Promise<void>;
+  availablePipelines?: Array<{
+    pipelineID: string;
+    name: string;
+    version: number;
+  }>;
 }
 
 // FlowCanvas 내부 컴포넌트
@@ -52,6 +63,10 @@ const FlowCanvasInner: React.FC<FlowCanvasProps> = ({
   onAddNode,
   onYamlChange: _onYamlChange,
   onUpdateNodeEnvironment: _onUpdateNodeEnvironment,
+  // ✅ SDK 기반 함수들 받기
+  onSavePipeline: _onSavePipeline,
+  onLoadPipeline: _onLoadPipeline,
+  availablePipelines: _availablePipelines,
 }) => {
   const reactFlowInstance = useReactFlow();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -137,8 +152,6 @@ const FlowCanvas: React.FC<FlowCanvasProps> = (props) => {
           zIndex: 50,
         }}
       >
-
-
         {/* 중앙 영역 - 플로우 캔버스 */}
         <div className='flex-1 min-w-0 flex flex-col relative'>
           <div className='flex-1 bg-gray-50 h-full'>
@@ -154,6 +167,10 @@ const FlowCanvas: React.FC<FlowCanvasProps> = (props) => {
           onYamlChange={props.onYamlChange}
           nodes={props.nodes}
           onUpdateNodeEnvironment={props.onUpdateNodeEnvironment}
+          // ✅ SDK 기반 함수들 전달 (조건부)
+          {...(props.onSavePipeline && { onSavePipeline: props.onSavePipeline })}
+          {...(props.onLoadPipeline && { onLoadPipeline: props.onLoadPipeline })}
+          {...(props.availablePipelines && { availablePipelines: props.availablePipelines })}
         />
       </div>
     </>

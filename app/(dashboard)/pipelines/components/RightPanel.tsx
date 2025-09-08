@@ -1,17 +1,26 @@
 import React, { useState } from 'react';
-import { RotateCcw, Play } from 'lucide-react';
+import { RotateCcw, Play, Save, FolderOpen } from 'lucide-react';
 import { Node } from 'reactflow';
 import YamlEditor from '../../../components/ui/YamlEditor';
 import EnvironmentTab from '../../../components/ui/EnvironmentTab';
 import { EnvironmentVariable } from '../../../components/ui/EnvironmentVariableList';
-import { userMyInfo } from '@team-5-codecat/otto-sdk/lib/functional/user';
-import makeFetch from '@/app/lib/make-fetch';
 
 interface RightPanelProps {
   yamlText: string;
   onYamlChange: (value: string) => void;
   nodes: Node[];
   onUpdateNodeEnvironment: (nodeId: string, environment: Record<string, string>) => void;
+  // ✅ SDK 기반 함수들 추가
+  onSavePipeline?: (
+    name: string,
+    projectID?: string
+  ) => Promise<{ success: boolean; pipelineId?: string }>;
+  onLoadPipeline?: (pipelineID: string) => Promise<void>;
+  availablePipelines?: Array<{
+    pipelineID: string;
+    name: string;
+    version: number;
+  }>;
 }
 
 const RightPanel: React.FC<RightPanelProps> = ({
@@ -19,12 +28,21 @@ const RightPanel: React.FC<RightPanelProps> = ({
   onYamlChange,
   nodes,
   onUpdateNodeEnvironment,
+  onSavePipeline,
+  onLoadPipeline,
+  availablePipelines = [],
 }) => {
   const [activeTab, setActiveTab] = useState<'yaml' | 'env'>('yaml');
   const [activeEnvTab, setActiveEnvTab] = useState<'build' | 'test' | 'deploy'>('build');
   const [nodeEnvironments, setNodeEnvironments] = useState<Record<string, EnvironmentVariable[]>>(
     {}
   );
+
+  // ✅ 저장/불러오기 모달 상태
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showLoadModal, setShowLoadModal] = useState(false);
+  const [pipelineName, setPipelineName] = useState('');
+
   // 각 탭별로 독립적인 업로드된 파일 상태 관리
   const [uploadedFiles, setUploadedFiles] = useState<
     Record<'build' | 'test' | 'deploy', File | null>
@@ -47,6 +65,47 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
     // 환경 변수들 초기화
     setNodeEnvironments({});
+  };
+
+  // ✅ SDK를 통한 저장 함수
+  const handleSave = () => {
+    if (!yamlText.trim()) {
+      alert('YAML 내용이 비어있습니다.');
+      return;
+    }
+    setShowSaveModal(true);
+  };
+
+  const handleSaveConfirm = async () => {
+    if (!pipelineName.trim() || !onSavePipeline) return;
+
+    const result = await onSavePipeline(pipelineName);
+    if (result.success) {
+      setShowSaveModal(false);
+      setPipelineName('');
+    }
+  };
+
+  // ✅ SDK를 통한 불러오기 함수
+  const handleLoad = () => {
+    if (availablePipelines.length === 0) {
+      alert('불러올 파이프라인이 없습니다.');
+      return;
+    }
+    setShowLoadModal(true);
+  };
+
+  const handleLoadConfirm = async (pipelineID: string) => {
+    if (onLoadPipeline) {
+      await onLoadPipeline(pipelineID);
+      setShowLoadModal(false);
+    }
+  };
+
+  // ✅ 파이프라인 실행 (테스트용)
+  const handleRun = async () => {
+    console.log('파이프라인 실행:', yamlText);
+    alert('파이프라인 실행 기능은 준비 중입니다.');
   };
 
   // 노드별 환경 변수 추가
@@ -181,7 +240,34 @@ const RightPanel: React.FC<RightPanelProps> = ({
           >
             <RotateCcw size={16} className='text-gray-600' />
           </button>
-          <button className='p-2 hover:bg-gray-100 rounded-lg transition-colors'>
+
+          {/* ✅ 저장 버튼 */}
+          {onSavePipeline && (
+            <button
+              onClick={handleSave}
+              className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
+              title='파이프라인 저장'
+            >
+              <Save size={16} className='text-gray-600' />
+            </button>
+          )}
+
+          {/* ✅ 불러오기 버튼 */}
+          {onLoadPipeline && (
+            <button
+              onClick={handleLoad}
+              className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
+              title='파이프라인 불러오기'
+            >
+              <FolderOpen size={16} className='text-gray-600' />
+            </button>
+          )}
+
+          <button
+            onClick={handleRun}
+            className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
+            title='파이프라인 실행'
+          >
             <Play size={16} className='text-gray-600' />
           </button>
         </div>
@@ -231,6 +317,76 @@ const RightPanel: React.FC<RightPanelProps> = ({
           />
         )}
       </div>
+
+      {/* ✅ 저장 모달 */}
+      {showSaveModal && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+          <div className='bg-white p-6 rounded-lg shadow-lg w-96'>
+            <h3 className='text-lg font-semibold mb-4'>파이프라인 저장</h3>
+            <input
+              type='text'
+              value={pipelineName}
+              onChange={(e) => setPipelineName(e.target.value)}
+              className='w-full p-2 border border-gray-300 rounded-lg mb-4'
+              placeholder='파이프라인 이름을 입력하세요'
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && pipelineName.trim()) {
+                  handleSaveConfirm();
+                }
+              }}
+            />
+            <div className='flex justify-end space-x-3'>
+              <button
+                onClick={() => setShowSaveModal(false)}
+                className='px-4 py-2 text-gray-600 hover:text-gray-800'
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSaveConfirm}
+                disabled={!pipelineName.trim()}
+                className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50'
+              >
+                저장
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ 불러오기 모달 */}
+      {showLoadModal && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+          <div className='bg-white p-6 rounded-lg shadow-lg w-96'>
+            <h3 className='text-lg font-semibold mb-4'>파이프라인 불러오기</h3>
+            <div className='max-h-64 overflow-y-auto'>
+              {availablePipelines.length === 0 ? (
+                <p className='text-gray-500 text-center py-4'>저장된 파이프라인이 없습니다.</p>
+              ) : (
+                availablePipelines.map((pipeline) => (
+                  <div
+                    key={pipeline.pipelineID}
+                    className='p-3 border border-gray-200 rounded-lg mb-2 cursor-pointer hover:bg-gray-50'
+                    onClick={() => handleLoadConfirm(pipeline.pipelineID)}
+                  >
+                    <h4 className='font-medium'>{pipeline.name}</h4>
+                    <p className='text-sm text-gray-600'>버전: {pipeline.version}</p>
+                    <p className='text-xs text-gray-500'>ID: {pipeline.pipelineID}</p>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className='flex justify-end mt-4'>
+              <button
+                onClick={() => setShowLoadModal(false)}
+                className='px-4 py-2 text-gray-600 hover:text-gray-800'
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
