@@ -10,6 +10,14 @@ import ActionIcons from './ActionIcons';
 import PipelineBuilder from './PipelineBuilder';
 import { actionIcons } from './constants';
 
+// Job 인터페이스
+interface Job {
+  id: string;
+  name: string;
+  status: 'completed' | 'running' | 'pending' | 'failed';
+  duration: string;
+}
+
 // Sidebar Props 타입
 interface SidebarProps {
   projects: Project[];
@@ -19,6 +27,10 @@ interface SidebarProps {
   onProjectSelect: (project: Project) => void;
   onPipelineSelect: (pipeline: Pipeline) => void;
   onNewPipelineClick: () => void;
+  showJobs?: boolean;
+  jobs?: Job[];
+  selectedJob?: string;
+  onJobSelect?: (jobId: string) => void;
 }
 
 // Sidebar 컴포넌트
@@ -30,13 +42,17 @@ const Sidebar: React.FC<SidebarProps> = ({
   onProjectSelect,
   onPipelineSelect,
   onNewPipelineClick,
+  showJobs = false,
+  jobs = [],
+  selectedJob,
+  onJobSelect,
 }) => {
   const pathname = usePathname(); // 현재 경로
   const router = useRouter();
-  
+
   // Zustand 스토어에서 Pipeline Builder 표시 상태 가져오기
   const { showPipelineBuilder } = useUIStore();
-  
+
   // 파이프라인 페이지인지 확인
   const isPipelinePage = pathname === '/pipelines' || pathname?.startsWith('/pipelines/');
 
@@ -57,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           label='Project'
           value={selectedProject?.id || ''}
           onChange={(value) => {
-            const project = projects.find(p => p.id === value);
+            const project = projects.find((p) => p.id === value);
             if (project) onProjectSelect(project);
           }}
           options={projects}
@@ -70,7 +86,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           value={selectedPipeline?.id || ''}
           onChange={(value) => {
             if (value) {
-              const pipeline = pipelines.find(p => p.id === value);
+              const pipeline = pipelines.find((p) => p.id === value);
               if (pipeline) {
                 onPipelineSelect(pipeline);
                 router.push(`/pipelines/${pipeline.id}`);
@@ -94,15 +110,45 @@ const Sidebar: React.FC<SidebarProps> = ({
         </button>
       </div>
 
+
       {/* Pipeline Builder - 파이프라인 페이지에서만 표시 */}
       {isPipelinePage && showPipelineBuilder && (
-        <PipelineBuilder 
+        <PipelineBuilder
           className='flex-1 min-h-0 border-t border-gray-200'
           showHeader={false}
           showVersionSelector={true}
         />
       )}
 
+      {/* Jobs 목록 - showJobs가 true일 때만 표시 */}
+      {showJobs && jobs.length > 0 && (
+        <div className='flex-1 min-h-0 border-t border-gray-200 p-4'>
+          <h3 className='font-semibold text-gray-900 mb-4'>Jobs</h3>
+          <div className='space-y-2'>
+            {jobs.map(job => (
+              <div 
+                key={job.id}
+                className={`flex items-center space-x-3 px-3 py-3 rounded-lg cursor-pointer transition-all hover:bg-gray-50 ${
+                  selectedJob === job.id 
+                    ? 'bg-blue-50 border border-blue-200 text-blue-700' 
+                    : 'text-gray-700'
+                }`}
+                onClick={() => onJobSelect && onJobSelect(job.id)}
+              >
+                <div className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                  job.status === 'completed' ? 'bg-green-500' : 
+                  job.status === 'running' ? 'bg-blue-500' : 
+                  job.status === 'failed' ? 'bg-red-500' : 'bg-gray-400'
+                }`} />
+                <div className='flex-1 min-w-0'>
+                  <span className='text-sm font-medium block truncate'>{job.name}</span>
+                  <span className='text-xs text-gray-500'>{job.duration}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </aside>
   );
 };

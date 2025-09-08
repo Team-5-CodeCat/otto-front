@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/app/hooks/useAuth';
 import { NodeVersionProvider } from '../../contexts/NodeVersionContext';
 import Sidebar from './Sidebar';
@@ -32,6 +32,7 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { isLoading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   
   // 새 프로젝트 생성 모달 상태
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
@@ -44,6 +45,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [newPipelineName, setNewPipelineName] = useState('');
   const [pipelines, setPipelines] = useState<Pipeline[]>(mockPipelines);
   const [selectedProject, setSelectedProject] = useState<Project | null>(projects[0] || null);
+
+  // Build detail page에서 사용할 state
+  const [selectedJob, setSelectedJob] = useState<string>('deploy');
+  
+  // 현재 페이지가 build detail 페이지인지 확인
+  const isBuildDetailPage = pathname?.startsWith('/builds/') && pathname !== '/builds';
+  
+  // Mock build jobs data for build detail page
+  const mockJobs = [
+    { id: 'test', name: 'test', status: 'completed' as const, duration: '2m 30s' },
+    { id: 'deploy', name: 'deploy', status: 'running' as const, duration: '11s' },
+    { id: 'lint', name: 'lint', status: 'pending' as const, duration: '0s' }
+  ];
 
   // 새 프로젝트 생성 핸들러
   const handleCreateProject = () => {
@@ -118,6 +132,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           onProjectSelect={setSelectedProject}
           onPipelineSelect={setSelectedPipeline}
           onNewPipelineClick={() => setIsNewPipelineModalOpen(true)}
+          showJobs={isBuildDetailPage}
+          jobs={isBuildDetailPage ? mockJobs : []}
+          selectedJob={selectedJob}
+          onJobSelect={setSelectedJob}
         />
 
         {/* 메인 콘텐츠 영역 */}

@@ -3,7 +3,7 @@ import { tokenManager } from '../lib/token-manager';
 import { getUserFromToken, isTokenExpired } from '../lib/jwt-utils';
 
 // API 기본 설정
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
 
 // 로그인 폼 데이터 타입
 export interface SignInFormData {
