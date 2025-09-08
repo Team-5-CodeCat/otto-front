@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 interface Option {
   label: string; // 표시 라벨 (영문)
@@ -17,13 +18,12 @@ const Select: React.FC<SelectProps> = ({
   description,
   error,
   options,
-  className = '',
+  className,
   id,
   ...props
 }) => {
   const base =
     'w-full h-10 rounded-md border border-gray-300 bg-transparent px-3 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50';
-  const errorCls = error ? 'border-red-500 focus:ring-red-500' : '';
 
   return (
     <div className='w-full'>
@@ -33,7 +33,11 @@ const Select: React.FC<SelectProps> = ({
         </label>
       )}
       {description && <p className='text-xs text-gray-500 mb-2'>{description}</p>}
-      <select id={id} className={`${base} ${errorCls} ${className}`} {...props}>
+      <select id={id} className={cn(
+        base,
+        error && 'border-red-500 focus:ring-red-500',
+        className
+      )} {...props}>
         <option value='' disabled hidden>
           Select an option
         </option>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 // Input 컴포넌트의 props 타입 정의
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -18,22 +19,13 @@ const Input: React.FC<InputProps> = ({
   description,
   leftIcon,
   rightIcon,
-  className = '',
+  className,
   id,
   ...props
 }) => {
   // 기본 스타일 클래스
   const baseClasses =
     'flex h-10 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50';
-
-  // 에러 상태일 때의 스타일
-  const errorClasses = error ? 'border-red-500 focus:ring-red-500' : '';
-
-  // 아이콘이 있을 때의 패딩 조정
-  const paddingClasses = leftIcon ? 'pl-10' : rightIcon ? 'pr-10' : '';
-
-  // 최종 클래스 조합
-  const inputClasses = `${baseClasses} ${errorClasses} ${paddingClasses} ${className}`;
 
   return (
     <div className='w-full'>
@@ -57,7 +49,13 @@ const Input: React.FC<InputProps> = ({
         )}
 
         {/* 입력 필드 */}
-        <input id={id} className={inputClasses} {...props} />
+        <input id={id} className={cn(
+          baseClasses,
+          error && 'border-red-500 focus:ring-red-500',
+          leftIcon && 'pl-10',
+          rightIcon && 'pr-10',
+          className
+        )} {...props} />
 
         {/* 오른쪽 아이콘 */}
         {rightIcon && (

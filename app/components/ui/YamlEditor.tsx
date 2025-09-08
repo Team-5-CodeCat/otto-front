@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 interface YamlEditorProps {
   value: string;
@@ -13,14 +14,14 @@ export const YamlEditor: React.FC<YamlEditorProps> = ({
   value,
   onChange,
   placeholder = 'YAML configuration will appear here...',
-  className = ''
+  className
 }) => {
   const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     onChange(event.target.value);
   };
 
   return (
-    <div className={`h-full p-4 ${className}`}>
+    <div className={cn('h-full p-4', className)}>
       <textarea
         value={value}
         onChange={handleChange}

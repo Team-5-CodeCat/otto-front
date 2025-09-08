@@ -30,6 +30,9 @@ export const decodeJWT = (token: string): JWTPayload | null => {
 
         // Base64URL 디코딩
         const base64Url = parts[1];
+        if (!base64Url) {
+            throw new Error('Invalid JWT payload');
+        }
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
 
         // 패딩 추가
