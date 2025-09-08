@@ -103,7 +103,7 @@ export default function DeploymentsPage() {
       }
 
       // 새 배포 생성
-      const newDeployment = createDeployment({
+      const _newDeployment = createDeployment({
         buildId: latestSuccessBuild.id,
         projectId: selectedProject,
         projectName: project.name,

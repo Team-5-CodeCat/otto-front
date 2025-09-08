@@ -29,7 +29,7 @@ export const EnvFileUploader: React.FC<EnvFileUploaderProps> = ({
     const envVars: Record<string, string> = {};
     const lines = content.split('\n');
 
-    lines.forEach((line, index) => {
+    lines.forEach((line, _index) => {
       // 빈 줄이나 주석 줄 무시
       const trimmedLine = line.trim();
       if (!trimmedLine || trimmedLine.startsWith('#')) {

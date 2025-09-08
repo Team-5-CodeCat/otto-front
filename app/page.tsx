@@ -7,7 +7,7 @@ import { useAuth } from './hooks/useAuth';
 import Landing from './(landing)/landing';
 
 export default function Home() {
-  const router = useRouter();
+  const _router = useRouter();
   const { validateToken } = useAuth();
   const didRunRef = useRef(false);
 
@@ -18,7 +18,7 @@ export default function Home() {
 
     const checkAuth = async () => {
       try {
-        const isAuthenticated = await validateToken();
+        const _isAuthenticated = await validateToken();
         // 인증된 사용자가 루트 페이지에 접근하면 프로젝트로 리다이렉트
         // 하지만 즉시 리다이렉트하지 않고 사용자가 선택할 수 있도록 함
       } catch {

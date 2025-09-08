@@ -14,7 +14,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import JobNode from './JobNode';
 import CustomEdge from './CustomEdge';
-import NodePalette from './NodePalette';
+// import NodePalette from './NodePalette';
 import RightPanel from './RightPanel';
 
 // 노드 타입 정의
@@ -44,14 +44,14 @@ interface FlowCanvasProps {
 const FlowCanvasInner: React.FC<FlowCanvasProps> = ({
   nodes,
   edges,
-  yamlText,
+  yamlText: _yamlText,
   onNodesChange,
   onEdgesChange,
   onConnect,
   onEdgeDelete,
   onAddNode,
-  onYamlChange,
-  onUpdateNodeEnvironment,
+  onYamlChange: _onYamlChange,
+  onUpdateNodeEnvironment: _onUpdateNodeEnvironment,
 }) => {
   const reactFlowInstance = useReactFlow();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
