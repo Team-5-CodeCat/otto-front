@@ -180,8 +180,11 @@ jobs:
             # Setup NPM authentication - now with fixed permissions
             echo "Setting up NPM authentication..."
 
-            # Remove old .npmrc and create fresh
+            # Remove old .npmrc files (both home and project)
             rm -f ~/.npmrc
+            rm -f .npmrc
+
+            # Create fresh .npmrc in home directory
             touch ~/.npmrc
             chmod 644 ~/.npmrc
 
@@ -208,10 +211,34 @@ jobs:
             fi
             echo "pnpm version: $(pnpm --version)"
 
+            # Check and install PM2 if not exists
+            if ! command -v pm2 &> /dev/null; then
+              echo "PM2 not found, installing..."
+              npm install -g pm2 || {
+                echo "ERROR: Failed to install PM2"
+                exit 1
+              }
+            fi
+            echo "PM2 version: $(pm2 --version)"
+
+            # Create temporary build directory
+            echo "Creating temporary build directory..."
+            rm -rf ~/otto-build-temp
+            cp -r ~/otto-front ~/otto-build-temp || {
+              echo "ERROR: Failed to create temporary build directory"
+              exit 1
+            }
+
+            # Build in temporary directory
+            echo "Building application in temporary directory..."
+            cd ~/otto-build-temp
+
             # Install dependencies
             echo "Installing dependencies..."
             pnpm install --frozen-lockfile || {
               echo "ERROR: pnpm install failed"
+              cd ~/otto-front
+              rm -rf ~/otto-build-temp
               exit 1
             }
 
@@ -225,6 +252,8 @@ jobs:
               echo "NODE_ENV=production"
             } > .env.production || {
               echo "ERROR: Failed to create .env.production"
+              cd ~/otto-front
+              rm -rf ~/otto-build-temp
               exit 1
             }
 
@@ -234,26 +263,48 @@ jobs:
             echo "Building application..."
             pnpm build || {
               echo "ERROR: Build failed"
+              cd ~/otto-front
+              rm -rf ~/otto-build-temp
               exit 1
             }
 
-            # Check and install PM2 if not exists
-            if ! command -v pm2 &> /dev/null; then
-              echo "PM2 not found, installing..."
-              npm install -g pm2 || {
-                echo "ERROR: Failed to install PM2"
-                exit 1
-              }
-            fi
-            echo "PM2 version: $(pm2 --version)"
+            # Build successful, swap the artifacts
+            echo "Build successful, swapping artifacts..."
 
-            # Deploy with PM2 (zero-downtime deployment)
+            # Backup current build
+            rm -rf ~/otto-front/.next.old
+            if [ -d ~/otto-front/.next ]; then
+              mv ~/otto-front/.next ~/otto-front/.next.old
+            fi
+
+            # Move new build
+            mv ~/otto-build-temp/.next ~/otto-front/.next || {
+              echo "ERROR: Failed to move new build"
+              # Restore old build if move failed
+              if [ -d ~/otto-front/.next.old ]; then
+                mv ~/otto-front/.next.old ~/otto-front/.next
+              fi
+              rm -rf ~/otto-build-temp
+              exit 1
+            }
+
+            # Copy new env file
+            cp ~/otto-build-temp/.env.production ~/otto-front/.env.production
+
+            # Navigate back to main directory
+            cd ~/otto-front
+
+            # Clean up temporary directory
+            echo "Cleaning up temporary build directory..."
+            rm -rf ~/otto-build-temp
+
+            # Deploy with PM2 (minimal downtime)
             echo "Deploying application with PM2..."
 
             # Check if process exists
             if pm2 show otto-front &>/dev/null; then
-              echo "Existing process found, performing zero-downtime reload..."
-              # Reload for zero-downtime deployment
+              echo "Existing process found, performing reload..."
+              # Reload for minimal downtime
               pm2 reload otto-front --update-env || {
                 echo "Reload failed, trying restart..."
                 pm2 restart otto-front || {
@@ -261,6 +312,12 @@ jobs:
                   pm2 delete otto-front
                   pm2 start npm --name "otto-front" -- start || {
                     echo "ERROR: Failed to start application with PM2"
+                    # Restore old build
+                    if [ -d ~/otto-front/.next.old ]; then
+                      rm -rf ~/otto-front/.next
+                      mv ~/otto-front/.next.old ~/otto-front/.next
+                      pm2 start npm --name "otto-front" -- start
+                    fi
                     exit 1
                   }
                 }
@@ -286,8 +343,20 @@ jobs:
             if ! pm2 show otto-front | grep -q "online"; then
               echo "ERROR: Application is not running!"
               pm2 logs otto-front --lines 50
+              
+              # Try to restore old version
+              if [ -d ~/otto-front/.next.old ]; then
+                echo "Attempting to restore previous version..."
+                rm -rf ~/otto-front/.next
+                mv ~/otto-front/.next.old ~/otto-front/.next
+                pm2 restart otto-front
+              fi
+              
               exit 1
             fi
+
+            # Cleanup old build if everything is successful
+            rm -rf ~/otto-front/.next.old
 
             echo "Deployment completed successfully!"
             pm2 status
