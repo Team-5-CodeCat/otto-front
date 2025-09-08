@@ -143,7 +143,9 @@ export default function ProjectDetailPage() {
       <div className='p-6'>
         <div className='text-center py-12'>
           <h1 className='text-2xl font-bold text-gray-900 mb-2'>Project Not Found</h1>
-          <p className='text-gray-600 mb-4'>The project you're looking for doesn't exist.</p>
+          <p className='text-gray-600 mb-4'>
+            The project you&apos;re looking for doesn&apos;t exist.
+          </p>
           <Link href='/projects' className='text-blue-600 hover:text-blue-500'>
             Back to Projects
           </Link>
@@ -312,7 +314,8 @@ export default function ProjectDetailPage() {
           <div className='bg-white rounded-lg p-6 max-w-md w-full mx-4'>
             <h3 className='text-lg font-medium text-gray-900 mb-4'>Delete Project</h3>
             <p className='text-sm text-gray-600 mb-6'>
-              Are you sure you want to delete "{project.name}"? This action cannot be undone.
+              Are you sure you want to delete &quot;{project.name}&quot;? This action cannot be
+              undone.
             </p>
             <div className='flex justify-end space-x-3'>
               <Button

@@ -12,10 +12,10 @@ const BackgroundFlow: React.FC = () => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 640);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    
+
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
@@ -161,8 +161,8 @@ const BackgroundFlow: React.FC = () => {
       target: '2',
       type: 'smoothstep',
       animated: true,
-      style: { 
-        stroke: '#10b981', 
+      style: {
+        stroke: '#10b981',
         strokeWidth: 2,
         strokeDasharray: '5 5',
       },
@@ -179,8 +179,8 @@ const BackgroundFlow: React.FC = () => {
       target: '3',
       type: 'smoothstep',
       animated: true,
-      style: { 
-        stroke: '#10b981', 
+      style: {
+        stroke: '#10b981',
         strokeWidth: 2,
         strokeDasharray: '5 5',
       },
@@ -201,8 +201,8 @@ const BackgroundFlow: React.FC = () => {
       target: '2',
       type: 'smoothstep',
       animated: true,
-      style: { 
-        stroke: '#10b981', 
+      style: {
+        stroke: '#10b981',
         strokeWidth: 2,
         strokeDasharray: '5 5',
       },
@@ -219,8 +219,8 @@ const BackgroundFlow: React.FC = () => {
       target: '3',
       type: 'smoothstep',
       animated: true,
-      style: { 
-        stroke: '#10b981', 
+      style: {
+        stroke: '#10b981',
         strokeWidth: 2,
         strokeDasharray: '5 5',
       },
@@ -238,33 +238,33 @@ const BackgroundFlow: React.FC = () => {
 
   return (
     <div className={cn('w-full flex justify-center items-center', isMobile ? 'h-72' : 'h-52')}>
-        <ReactFlowProvider>
-          <div className={cn('w-full h-full mx-auto', isMobile ? 'max-w-md' : 'max-w-4xl')}>
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              fitView
-              fitViewOptions={{
-                padding: isMobile ? 0.15 : 0.05,
-                includeHiddenNodes: false,
-                minZoom: isMobile ? 0.7 : 1,
-                maxZoom: isMobile ? 0.7 : 1,
-              }}
-              nodesDraggable={false}
-              nodesConnectable={false}
-              elementsSelectable={false}
-              panOnDrag={false}
-              zoomOnScroll={false}
-              zoomOnPinch={false}
-              zoomOnDoubleClick={false}
-              preventScrolling={false}
-              attributionPosition='bottom-left'
-              proOptions={{ hideAttribution: true }}
-            >
-              <Background color='transparent' gap={0} />
-            </ReactFlow>
-          </div>
-        </ReactFlowProvider>
+      <ReactFlowProvider>
+        <div className={cn('w-full h-full mx-auto', isMobile ? 'max-w-md' : 'max-w-4xl')}>
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            fitView
+            fitViewOptions={{
+              padding: isMobile ? 0.15 : 0.05,
+              includeHiddenNodes: false,
+              minZoom: isMobile ? 0.7 : 1,
+              maxZoom: isMobile ? 0.7 : 1,
+            }}
+            nodesDraggable={false}
+            nodesConnectable={false}
+            elementsSelectable={false}
+            panOnDrag={false}
+            zoomOnScroll={false}
+            zoomOnPinch={false}
+            zoomOnDoubleClick={false}
+            preventScrolling={false}
+            attributionPosition='bottom-left'
+            proOptions={{ hideAttribution: true }}
+          >
+            <Background color='transparent' gap={0} />
+          </ReactFlow>
+        </div>
+      </ReactFlowProvider>
     </div>
   );
 };
