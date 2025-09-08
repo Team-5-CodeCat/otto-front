@@ -8,7 +8,8 @@
     "start": "dotenv -e .env.dev.local -- next start"
   },
   "dependencies": {
-    "@Team-5-CodeCat/otto-sdk": "^0.3.3",
+    "@Team-5-CodeCat/otto-sdk": "^0.4.0",
+    "@nestia/fetcher": "^8.0.7",
     "@radix-ui/themes": "^3.2.1",
     "eslint-plugin-react-hooks": "^5.2.0",
     "lucide-react": "^0.542.0",

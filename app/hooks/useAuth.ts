@@ -1,42 +1,27 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signIn as sdkSignIn, signUp as sdkSignUp, signOut as sdkSignOut, validateSession } from '@/app/lib/auth-sdk';
-
-// 사용자 타입
-interface User {
-  id: string;
-  email: string;
-  name: string;
-}
+import { authSignIn } from '@team-5-codecat/otto-sdk/lib/functional/auth/sign_in';
+import makeFetch from '@/app/lib/make-fetch';
+import { userMyInfo } from '@team-5-codecat/otto-sdk/lib/functional/user';
+import { authSignInByRefresh } from '@team-5-codecat/otto-sdk/lib/functional/auth/sign_in/refresh';
+import { authSignUp } from '@team-5-codecat/otto-sdk/lib/functional/auth/sign_up';
+import { authSignOut } from '@team-5-codecat/otto-sdk/lib/functional/auth/sign_out';
 
 // 인증 상태 타입
 interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
-  user: User | null;
+  user: userMyInfo.Output | null;
   error: string | null;
-}
-
-// 로그인 폼 데이터 타입
-export interface SignInFormData {
-  email: string;
-  password: string;
-}
-
-// 회원가입 폼 데이터 타입
-export interface SignUpFormData {
-  email: string;
-  password: string;
-  username: string;
 }
 
 // 로그인 응답 타입 (프론트엔드용)
 export interface SignInResponse {
   success: boolean;
   message?: string;
-  user?: User;
+  user?: userMyInfo.Output | null;
 }
 
 // 초기 인증 상태 - 세션 기반으로 확인
@@ -56,8 +41,8 @@ export function useAuth() {
   // 세션 검증
   const checkSession = useCallback(async (): Promise<boolean> => {
     try {
-      const isValid = await validateSession();
-      return isValid;
+      await authSignInByRefresh(makeFetch());
+      return true;
     } catch (error) {
       console.error('세션 검증 실패:', error);
       return false;
@@ -67,20 +52,17 @@ export function useAuth() {
   // 인증 상태 초기화 (세션 기반)
   useEffect(() => {
     const initializeAuth = async () => {
-      setAuthState(prev => ({ ...prev, isLoading: true }));
+      setAuthState((prev) => ({ ...prev, isLoading: true }));
 
       const isSessionValid = await checkSession();
 
+      const user = await userMyInfo(makeFetch());
       if (isSessionValid) {
         // 세션이 유효한 경우 - 실제로는 사용자 정보 API를 호출해야 함
         setAuthState({
           isAuthenticated: true,
           isLoading: false,
-          user: {
-            id: 'session-user',
-            email: 'user@example.com', // 실제로는 세션에서 가져와야 함
-            name: '사용자',
-          },
+          user: user,
           error: null,
         });
       } else {
@@ -98,92 +80,94 @@ export function useAuth() {
   }, [checkSession]);
 
   // 로그인
-  const signIn = useCallback(async (formData: SignInFormData): Promise<SignInResponse> => {
-    try {
-      setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+  const signIn = useCallback(
+    async (formData: authSignIn.Body): Promise<SignInResponse> => {
+      try {
+        setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-      const response = await sdkSignIn({
-        email: formData.email,
-        password: formData.password
-      });
+        const response = await authSignIn(makeFetch(), {
+          email: formData.email,
+          password: formData.password,
+        });
 
-      // 세션 기반이므로 httpOnly 쿠키로 자동 관리됨
-      // 사용자 정보는 응답에서 가져오거나 별도 API 호출
-      const user = {
-        id: 'session-user', // 실제로는 응답에서 파싱
-        email: formData.email,
-        name: '사용자', // 실제로는 응답에서 파싱
-      };
+        // 세션 기반이므로 httpOnly 쿠키로 자동 관리됨
+        // 사용자 정보는 응답에서 가져오거나 별도 API 호출
+        const user = await userMyInfo(makeFetch());
 
-      setAuthState({
-        isAuthenticated: true,
-        isLoading: false,
-        user,
-        error: null,
-      });
+        setAuthState({
+          isAuthenticated: true,
+          isLoading: false,
+          user,
+          error: null,
+        });
 
-      // 프로젝트 페이지로 리다이렉트
-      router.push('/projects');
+        // 프로젝트 페이지로 리다이렉트
+        router.push('/projects');
 
-      return {
-        success: true,
-        message: response.message,
-        user,
-      };
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : '로그인 중 알 수 없는 오류가 발생했습니다.';
+        return {
+          success: true,
+          message: response.message,
+          user,
+        };
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : '로그인 중 알 수 없는 오류가 발생했습니다.';
 
-      setAuthState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: errorMessage,
-      }));
+        setAuthState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: errorMessage,
+        }));
 
-      return {
-        success: false,
-        message: errorMessage,
-      };
-    }
-  }, [router]);
+        return {
+          success: false,
+          message: errorMessage,
+        };
+      }
+    },
+    [router]
+  );
 
   // 회원가입
-  const signUp = useCallback(async (formData: SignUpFormData): Promise<SignInResponse> => {
-    try {
-      setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+  const signUp = useCallback(
+    async (formData: authSignUp.Body): Promise<SignInResponse> => {
+      try {
+        setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-      const response = await sdkSignUp({
-        email: formData.email,
-        password: formData.password,
-        username: formData.username,
-      });
+        const response = await authSignUp(makeFetch(), {
+          email: formData.email,
+          password: formData.password,
+          username: formData.username,
+        });
 
-      console.log('회원가입 성공:', response.message);
+        console.log('회원가입 성공:', response.message);
+        return {
+          success: true,
+          message: response.message,
+        };
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : '회원가입 중 알 수 없는 오류가 발생했습니다.';
 
-      // 회원가입 후 자동 로그인
-      return await signIn({
-        email: formData.email,
-        password: formData.password,
-      });
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : '회원가입 중 알 수 없는 오류가 발생했습니다.';
+        setAuthState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: errorMessage,
+        }));
 
-      setAuthState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: errorMessage,
-      }));
-
-      return {
-        success: false,
-        message: errorMessage,
-      };
-    }
-  }, [signIn]);
+        return {
+          success: false,
+          message: errorMessage,
+        };
+      }
+    },
+    [signIn]
+  );
 
   // 로그아웃 (세션 기반)
   const signOut = useCallback(async (): Promise<void> => {
     try {
-      await sdkSignOut(); // httpOnly 쿠키 자동 제거
+      await authSignOut(makeFetch());
     } catch (error) {
       console.error('로그아웃 API 호출 실패:', error);
       // API 호출 실패해도 로컬 상태는 초기화
