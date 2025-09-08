@@ -247,17 +247,32 @@ jobs:
             fi
             echo "PM2 version: $(pm2 --version)"
 
-            # Stop existing PM2 process if running
-            echo "Stopping existing PM2 processes..."
-            pm2 stop otto-front 2>/dev/null || true
-            pm2 delete otto-front 2>/dev/null || true
+            # Deploy with PM2 (zero-downtime deployment)
+            echo "Deploying application with PM2..."
 
-            # Start the application with PM2
-            echo "Starting application with PM2..."
-            pm2 start npm --name "otto-front" -- start || {
-              echo "ERROR: Failed to start application with PM2"
-              exit 1
-            }
+            # Check if process exists
+            if pm2 show otto-front &>/dev/null; then
+              echo "Existing process found, performing zero-downtime reload..."
+              # Reload for zero-downtime deployment
+              pm2 reload otto-front --update-env || {
+                echo "Reload failed, trying restart..."
+                pm2 restart otto-front || {
+                  echo "Restart failed, starting fresh..."
+                  pm2 delete otto-front
+                  pm2 start npm --name "otto-front" -- start || {
+                    echo "ERROR: Failed to start application with PM2"
+                    exit 1
+                  }
+                }
+              }
+            else
+              echo "No existing process found, starting application..."
+              # First time deployment
+              pm2 start npm --name "otto-front" -- start || {
+                echo "ERROR: Failed to start application with PM2"
+                exit 1
+              }
+            fi
 
             # Save PM2 process list
             echo "Saving PM2 process list..."
