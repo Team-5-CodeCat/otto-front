@@ -1,0 +1,155 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Setup NPM authentication for GitHub Packages
+        run: |
+          echo "@Team-5-CodeCat:registry=https://npm.pkg.github.com" > ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.OTTO_SDK_PACKAGE_TOKEN }}" >> ~/.npmrc
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run linting
+        run: npx eslint .
+
+      - name: Run type checking
+        run: npx tsc --noEmit
+
+      - name: Create .env.production
+        run: |
+          echo "NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}" > .env.production
+          echo "NEXT_PUBLIC_GITHUB_APP_NAME=${{ secrets.NEXT_PUBLIC_GITHUB_APP_NAME }}" >> .env.production
+          echo "PORT=${{ secrets.PORT }}" >> .env.production
+          echo "BACKEND_PORT=${{ secrets.BACKEND_PORT }}" >> .env.production
+
+      - name: Build application
+        run: pnpm build
+
+      - name: Upload build artifacts
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextjs-build
+          path: |
+            .next
+            public
+            package.json
+            pnpm-lock.yaml
+          retention-days: 7
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'pnpm'
+
+      - name: Setup NPM authentication for GitHub Packages
+        run: |
+          echo "@Team-5-CodeCat:registry=https://npm.pkg.github.com" > ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.OTTO_SDK_PACKAGE_TOKEN }}" >> ~/.npmrc
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create .env.production
+        run: |
+          echo "NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}" > .env.production
+          echo "NEXT_PUBLIC_GITHUB_APP_NAME=${{ secrets.NEXT_PUBLIC_GITHUB_APP_NAME }}" >> .env.production
+          echo "PORT=${{ secrets.PORT }}" >> .env.production
+          echo "BACKEND_PORT=${{ secrets.BACKEND_PORT }}" >> .env.production
+
+      - name: Build application
+        run: pnpm build
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT }}
+          script: |
+            # Navigate to project directory
+            cd ~/otto-front
+
+            # Pull latest changes
+            sudo git pull origin main
+
+            # Setup NPM authentication for GitHub Packages
+            echo "@Team-5-CodeCat:registry=https://npm.pkg.github.com" | sudo tee ~/.npmrc > /dev/null
+            echo "//npm.pkg.github.com/:_authToken=${{ secrets.OTTO_SDK_PACKAGE_TOKEN }}" | sudo tee -a ~/.npmrc > /dev/null
+
+            # Install dependencies
+            sudo pnpm install --frozen-lockfile
+
+            # Create .env.production file
+            sudo tee .env.production > /dev/null << EOF
+            NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+            NEXT_PUBLIC_GITHUB_APP_NAME=${{ secrets.NEXT_PUBLIC_GITHUB_APP_NAME }}
+            PORT=${{ secrets.PORT }}
+            BACKEND_PORT=${{ secrets.BACKEND_PORT }}
+            NODE_ENV=production
+            EOF
+
+            # Build the application
+            sudo pnpm build
+
+            # Check and install PM2 if not exists
+            if ! command -v pm2 &> /dev/null; then
+              echo "PM2 not found, installing..."
+              sudo npm install -g pm2
+            fi
+
+            # Stop existing PM2 process if running
+            sudo pm2 stop otto-front || true
+
+            # Start or restart the application with PM2
+            sudo pm2 start npm --name "otto-front" -- start
+
+            # Save PM2 process list
+            sudo pm2 save
+
+            # Optional: Setup PM2 to start on system boot
+            sudo pm2 startup systemd -u $USER --hp /home/$USER || true
