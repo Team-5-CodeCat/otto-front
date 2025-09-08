@@ -109,7 +109,6 @@ const RightPanel: React.FC<RightPanelProps> = ({
     console.log('파이프라인 실행:', yamlText);
     alert('파이프라인 실행 기능은 준비 중입니다.');
   };
-
   // 노드별 환경 변수 추가
   const addEnvironmentVariable = (nodeId: string) => {
     setNodeEnvironments((prev) => ({
@@ -242,7 +241,6 @@ const RightPanel: React.FC<RightPanelProps> = ({
           >
             <RotateCcw size={16} className='text-gray-600' />
           </button>
-
           {/* ✅ 저장 버튼 */}
           {onSavePipeline && (
             <button

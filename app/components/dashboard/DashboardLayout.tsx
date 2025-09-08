@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/app/hooks/useAuth';
+import { useAuth } from '@/app/contexts/AuthContext';
 import { NodeVersionProvider } from '../../contexts/NodeVersionContext';
 import Sidebar from './Sidebar';
 import { Project, Pipeline } from './types';
@@ -32,7 +32,6 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { isLoading } = useAuth();
   const router = useRouter();
-
   // 새 프로젝트 생성 모달 상태
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
