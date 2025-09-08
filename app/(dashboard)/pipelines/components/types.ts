@@ -1,4 +1,5 @@
 // 파이프라인 관련 타입 정의
+import type { Node, Edge, NodeChange, Connection } from 'reactflow';
 
 export interface JobNodeData {
   name: string;
@@ -16,45 +17,17 @@ export interface JobYaml {
   dependencies?: string[]; // 의존성 job 이름들
 }
 
-// React Flow 노드와 엣지 타입 (간단한 정의)
-export interface FlowNode {
-  id: string;
-  type?: string;
-  position: { x: number; y: number };
-  data?: Record<string, unknown>;
-  [key: string]: unknown;
-}
-
-export interface FlowEdge {
-  id: string;
-  source: string;
-  target: string;
-  [key: string]: unknown;
-}
-
-export interface NodeChange {
-  type: string;
-  [key: string]: unknown;
-}
-
-export interface ConnectionParams {
-  source: string;
-  sourceHandle?: string;
-  target: string;
-  targetHandle?: string;
-}
-
 // 파이프라인 상태 타입
 export interface PipelineState {
   yamlText: string;
-  nodes: FlowNode[];
-  edges: FlowEdge[];
+  nodes: Node<JobNodeData>[];
+  edges: Edge[];
 }
 
 // 파이프라인 액션 타입
 export interface PipelineActions {
-  handleNodesChange: (changes: NodeChange[]) => FlowNode[];
-  onConnect: (params: ConnectionParams) => void;
+  handleNodesChange: (changes: NodeChange[]) => Node[];
+  onConnect: (params: Connection) => void;
   handleEdgeDelete: (edgeId: string) => void;
   handleAddNode: (nodeType: string, position?: { x: number; y: number }) => void;
   handleYamlChange: (value: string) => void;

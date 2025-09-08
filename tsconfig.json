@@ -36,8 +36,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@/components/*": ["./components/*"],
-      "@/lib/*": ["./lib/*"],
+      "@/components/*": ["./app/components/*"],
+      "@/lib/*": ["./app/lib/*"],
       "@/utils/*": ["./utils/*"],
       "@/types/*": ["./types/*"],
       "@/styles/*": ["./styles/*"],

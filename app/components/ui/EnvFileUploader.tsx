@@ -2,6 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { Upload, File, X, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface EnvFileUploaderProps {
   onFileUpload: (envVars: Record<string, string>, file: File) => void;
@@ -14,7 +15,7 @@ export const EnvFileUploader: React.FC<EnvFileUploaderProps> = ({
   onFileUpload,
   onFileRemove,
   uploadedFile: propUploadedFile,
-  className = ''
+  className
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -28,7 +29,7 @@ export const EnvFileUploader: React.FC<EnvFileUploaderProps> = ({
     const envVars: Record<string, string> = {};
     const lines = content.split('\n');
 
-    lines.forEach((line, index) => {
+    lines.forEach((line, _index) => {
       // 빈 줄이나 주석 줄 무시
       const trimmedLine = line.trim();
       if (!trimmedLine || trimmedLine.startsWith('#')) {
@@ -128,7 +129,7 @@ export const EnvFileUploader: React.FC<EnvFileUploaderProps> = ({
   };
 
   return (
-    <div className={`${className}`}>
+    <div className={cn(className)}>
       <input
         ref={fileInputRef}
         type="file"
@@ -139,11 +140,12 @@ export const EnvFileUploader: React.FC<EnvFileUploaderProps> = ({
 
       {!uploadedFile ? (
         <div
-          className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors cursor-pointer ${
+          className={cn(
+            'border-2 border-dashed rounded-lg p-4 text-center transition-colors cursor-pointer',
             isDragOver
               ? 'border-blue-400 bg-blue-50'
               : 'border-gray-300 hover:border-gray-400'
-          }`}
+          )}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
@@ -152,10 +154,10 @@ export const EnvFileUploader: React.FC<EnvFileUploaderProps> = ({
           <div className="flex flex-col items-center space-y-2">
             <Upload 
               size={24} 
-              className={`${isDragOver ? 'text-blue-500' : 'text-gray-400'}`} 
+              className={cn(isDragOver ? 'text-blue-500' : 'text-gray-400')} 
             />
             <div className="text-sm">
-              <p className={`font-medium ${isDragOver ? 'text-blue-600' : 'text-gray-600'}`}>
+              <p className={cn('font-medium', isDragOver ? 'text-blue-600' : 'text-gray-600')}>
                 {isDragOver ? 'Drop .env file here' : 'Upload .env file'}
               </p>
               <p className="text-xs text-gray-500 mt-1">

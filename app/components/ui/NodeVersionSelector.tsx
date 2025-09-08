@@ -1,27 +1,28 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useNodeVersion, NodeVersion } from '../../contexts/NodeVersionContext';
+import { useNodeVersion, type NodeVersion } from '../../contexts/NodeVersionContext';
+import { cn } from '@/lib/utils';
 
 interface NodeVersionSelectorProps {
   className?: string;
 }
 
 export const NodeVersionSelector: React.FC<NodeVersionSelectorProps> = ({
-  className = ''
+  className
 }) => {
   const { selectedVersion, setSelectedVersion, availableVersions } = useNodeVersion();
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleVersionSelect = (version: NodeVersion) => {
-    setSelectedVersion(version);
+  const handleVersionSelect = (version: string) => {
+    setSelectedVersion(version as NodeVersion);
     setIsOpen(false);
   };
 
   const currentVersionInfo = availableVersions.find(v => v.version === selectedVersion);
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={cn('relative', className)}>
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
         Node.js 버전
       </label>
@@ -44,9 +45,10 @@ export const NodeVersionSelector: React.FC<NodeVersionSelectorProps> = ({
               )}
             </div>
             <svg
-              className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                isOpen ? 'rotate-180' : ''
-              }`}
+              className={cn(
+                'w-5 h-5 text-gray-400 transition-transform duration-200',
+                isOpen && 'rotate-180'
+              )}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -68,11 +70,12 @@ export const NodeVersionSelector: React.FC<NodeVersionSelectorProps> = ({
                 key={versionInfo.version}
                 type="button"
                 onClick={() => handleVersionSelect(versionInfo.version)}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                className={cn(
+                  'w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700',
                   selectedVersion === versionInfo.version
                     ? 'bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
                     : 'text-gray-900 dark:text-gray-100'
-                }`}
+                )}
               >
                 <div className="flex items-center justify-between">
                   <span>{versionInfo.label}</span>

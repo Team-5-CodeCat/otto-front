@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
-import { BaseEdge, EdgeProps, getStraightPath, EdgeLabelRenderer } from 'reactflow';
+import { EdgeProps, getStraightPath, EdgeLabelRenderer } from 'reactflow';
 import { X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface CustomEdgeProps extends EdgeProps {
   onDelete?: (edgeId: string) => void;
@@ -12,8 +13,6 @@ const CustomEdge: React.FC<CustomEdgeProps> = ({
   sourceY,
   targetX,
   targetY,
-  sourcePosition,
-  targetPosition,
   style = {},
   markerEnd,
   selected,
@@ -63,7 +62,7 @@ const CustomEdge: React.FC<CustomEdgeProps> = ({
         strokeLinecap='round'
         {...(markerEnd && { markerEnd })}
         style={animationStyle}
-        className={`animated-edge ${selected ? 'selected' : ''}`}
+        className={cn('animated-edge', selected && 'selected')}
       />
 
       {/* 간선이 선택되었을 때 삭제 버튼 표시 */}
