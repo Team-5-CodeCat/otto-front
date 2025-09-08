@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "dotenv -e .env.dev.local -- next dev --turbopack",
     "build": "next build --turbopack",
-    "start": "dotenv -e .env.dev.local -- next start"
+    "start": "dotenv -e .env.dev.local -- next start",
+    "start:production": "dotenv -e .env.production -- next start"
   },
   "dependencies": {
     "@radix-ui/themes": "^3.2.1",
