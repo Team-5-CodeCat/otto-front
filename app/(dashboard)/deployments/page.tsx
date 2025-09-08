@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 // UI 컴포넌트
 import { Card, Button, Select } from '@/app/components/ui';
@@ -251,7 +252,7 @@ export default function DeploymentsPage() {
                   <div className='flex items-center justify-between'>
                     <div className='flex items-center space-x-2'>
                       <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${environmentColors[env.type]}`}
+                        className={cn('px-2 py-1 text-xs font-medium rounded-full', environmentColors[env.type])}
                       >
                         {env.name}
                       </span>
@@ -273,7 +274,7 @@ export default function DeploymentsPage() {
                     <div className='space-y-2'>
                       <div className='flex items-center space-x-2'>
                         <span
-                          className={`px-2 py-1 text-xs rounded ${statusStyles[env.lastDeployment.status]}`}
+                          className={cn('px-2 py-1 text-xs rounded', statusStyles[env.lastDeployment.status])}
                         >
                           {env.lastDeployment.status}
                         </span>
@@ -364,12 +365,12 @@ export default function DeploymentsPage() {
                 <div className='flex items-center justify-between'>
                   <div className='flex items-center space-x-3'>
                     <span
-                      className={`px-2 py-1 text-sm font-medium rounded-full ${statusStyles[deployment.status]}`}
+                      className={cn('px-2 py-1 text-sm font-medium rounded-full', statusStyles[deployment.status])}
                     >
                       {deployment.status.replace('_', ' ')}
                     </span>
                     <span
-                      className={`px-2 py-1 text-xs rounded ${environmentColors[deployment.environment]}`}
+                      className={cn('px-2 py-1 text-xs rounded', environmentColors[deployment.environment])}
                     >
                       {deployment.environment}
                     </span>

@@ -14,7 +14,7 @@
     "strictNullChecks": true,
 
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
@@ -36,8 +36,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@/components/*": ["./components/*"],
-      "@/lib/*": ["./lib/*"],
+      "@/components/*": ["./app/components/*"],
+      "@/lib/*": ["./app/lib/*"],
       "@/utils/*": ["./utils/*"],
       "@/types/*": ["./types/*"],
       "@/styles/*": ["./styles/*"],
