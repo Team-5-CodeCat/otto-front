@@ -124,7 +124,7 @@ export default function SignUpPage() {
       });
 
       if (!result.success) {
-        console.error('[ERROR] 회원가입 실패:', result.message);
+        console.error('회원가입 실패:', result.message);
       }
       // 성공 시 useAuth에서 자동으로 로그인 후 리다이렉트 처리
     } catch (error) {
