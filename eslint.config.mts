@@ -3,12 +3,39 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import pluginReact from 'eslint-plugin-react';
 import pluginReactHooks from 'eslint-plugin-react-hooks';
-import json from '@eslint/json';
-import markdown from '@eslint/markdown';
-import css from '@eslint/css';
+
+const flatReactConfig = pluginReact.configs.flat?.recommended || pluginReact.configs.recommended;
 
 export default [
+<<<<<<< HEAD
   // JavaScript/TypeScript 파일 설정
+=======
+  // 무시할 파일들
+  {
+    ignores: [
+      '.next/**',
+      'out/**',
+      'build/**',
+      'dist/**',
+      'node_modules/**',
+      '*.config.js',
+      '*.config.mjs',
+      'package.json',
+      'pnpm-lock.yaml',
+      'tsconfig.json',
+      '.devcontainer/devcontainer.json',
+      '**/*.css',
+    ],
+  },
+
+  // 기본 JavaScript 권장 설정
+  js.configs.recommended,
+
+  // TypeScript 권장 설정
+  ...tseslint.configs.recommended,
+
+  // 전역 설정
+>>>>>>> 8e24367 (fix: ci-cd (3))
   {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     languageOptions: {
@@ -38,7 +65,10 @@ export default [
       ...pluginReactHooks.configs.recommended.rules,
       'react/react-in-jsx-scope': 'off', // Next.js에서는 불필요
       'react/prop-types': 'off', // TypeScript 사용 시 불필요
+<<<<<<< HEAD
       'react/no-unescaped-entities': 'off', // 따옴표 등 특수문자 허용
+=======
+>>>>>>> 8e24367 (fix: ci-cd (3))
     },
     settings: {
       react: {
@@ -62,5 +92,9 @@ export default [
       '@typescript-eslint/no-empty-interface': 'off',
     },
   },
+<<<<<<< HEAD
 ];
 ];
+=======
+];
+>>>>>>> 8e24367 (fix: ci-cd (3))

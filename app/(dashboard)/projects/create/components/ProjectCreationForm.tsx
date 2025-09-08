@@ -89,7 +89,7 @@ export function ProjectCreationForm() {
 
   const connection = useMemo(() => makeFetch(), []);
 
-  const stepLabels = ['기본 정보', 'GitHub 연동', '레포지토리 선택', '생성 확인'];
+  const stepLabels = ['Basic Info', 'GitHub Integration', 'Repository Selection', 'Create Review'];
   const stepMap = {
     basic: 1,
     github: 2,
@@ -107,7 +107,7 @@ export function ProjectCreationForm() {
       !githubSelection.repositoryName ||
       !githubSelection.branch
     ) {
-      projectState.setSubmitError('필요한 정보가 누락되었습니다.');
+      projectState.setSubmitError('Required information is missing.');
       return;
     }
 
@@ -234,10 +234,10 @@ export function ProjectCreationForm() {
 
   return (
     <div className='min-h-screen bg-gray-50'>
-      {/* 스텝 인디케이터 */}
+      {/* Step indicator */}
       <StepIndicator currentStep={currentStep} stepLabels={stepLabels} />
 
-      {/* 메인 컨텐츠 */}
+      {/* Main content */}
       <div className='py-12 px-6'>{renderCurrentStep()}</div>
     </div>
   );

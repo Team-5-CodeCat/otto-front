@@ -58,9 +58,9 @@ export default function SignUpPage() {
     switch (field) {
       case 'username':
         if (!value.trim()) {
-          error = '사용자명을 입력해주세요.';
+          error = 'Please enter a username.';
         } else if (value.trim().length < 2) {
-          error = '사용자명은 최소 2자 이상이어야 합니다.';
+          error = 'Username must be at least 2 characters long.';
         }
         break;
       case 'email':
@@ -71,9 +71,9 @@ export default function SignUpPage() {
         break;
       case 'confirmPassword':
         if (!value) {
-          error = '비밀번호 확인을 입력해주세요.';
+          error = 'Please confirm your password.';
         } else if (value !== formData.password) {
-          error = '비밀번호가 일치하지 않습니다.';
+          error = 'Passwords do not match.';
         }
         break;
     }
@@ -92,18 +92,18 @@ export default function SignUpPage() {
     validateField('confirmPassword', formData.confirmPassword);
 
     // 에러 수집
-    if (!formData.username.trim()) errors.username = '사용자명을 입력해주세요.';
-    if (!formData.email) errors.email = '이메일을 입력해주세요.';
-    if (!formData.password) errors.password = '비밀번호를 입력해주세요.';
-    if (!formData.confirmPassword) errors.confirmPassword = '비밀번호 확인을 입력해주세요.';
+    if (!formData.username.trim()) errors.username = 'Please enter a username.';
+    if (!formData.email) errors.email = 'Please enter an email address.';
+    if (!formData.password) errors.password = 'Please enter a password.';
+    if (!formData.confirmPassword) errors.confirmPassword = 'Please confirm your password.';
 
     // 추가 검증
     if (formData.username.trim().length < 2)
-      errors.username = '사용자명은 최소 2자 이상이어야 합니다.';
+      errors.username = 'Username must be at least 2 characters long.';
     if (validateEmail(formData.email)) errors.email = validateEmail(formData.email)!;
     if (validatePassword(formData.password)) errors.password = validatePassword(formData.password)!;
     if (formData.confirmPassword !== formData.password)
-      errors.confirmPassword = '비밀번호가 일치하지 않습니다.';
+      errors.confirmPassword = 'Passwords do not match.';
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -127,11 +127,11 @@ export default function SignUpPage() {
       });
 
       if (!result.success) {
-        console.error('회원가입 실패:', result.message);
+        console.error('Sign up failed:', result.message);
       }
       // 성공 시 useAuth의 signUp에서 자동으로 로그인 페이지로 리다이렉트 처리
     } catch (error) {
-      console.error('회원가입 오류:', error);
+      console.error('Sign up error:', error);
     }
   };
 
@@ -155,7 +155,7 @@ export default function SignUpPage() {
                 id='username'
                 type='text'
                 label='Username'
-                placeholder='사용자명'
+                placeholder='username'
                 value={formData.username}
                 onChange={(e) => handleInputChange('username', e.target.value)}
                 error={formErrors.username}
