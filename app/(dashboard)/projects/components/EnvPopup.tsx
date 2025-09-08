@@ -35,8 +35,10 @@ const EnvPopup: React.FC<EnvPopupProps> = ({ isOpen, onClose, onSave }) => {
 
   const updateEnvVar = (index: number, field: 'key' | 'value', value: string) => {
     const newEnvVars = [...envVars];
-    newEnvVars[index][field] = value;
-    setEnvVars(newEnvVars);
+    if (newEnvVars[index]) {
+      newEnvVars[index][field] = value;
+      setEnvVars(newEnvVars);
+    }
   };
 
   const toggleValueVisibility = (index: number) => {

@@ -1,9 +1,23 @@
-import { useCallback, useState, useEffect } from 'react';
-import { tokenManager } from '../lib/token-manager';
-import { getUserFromToken, isTokenExpired } from '../lib/jwt-utils';
+'use client';
 
-// API 기본 설정
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { signIn as sdkSignIn, signUp as sdkSignUp, signOut as sdkSignOut, validateSession } from '@/app/lib/auth-sdk';
+
+// 사용자 타입
+interface User {
+  id: string;
+  email: string;
+  name: string;
+}
+
+// 인증 상태 타입
+interface AuthState {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  user: User | null;
+  error: string | null;
+}
 
 // 로그인 폼 데이터 타입
 export interface SignInFormData {
@@ -18,178 +32,108 @@ export interface SignUpFormData {
   username: string;
 }
 
-// 로그인 응답 타입 (백엔드 API 문서에 맞춤)
-export interface LoginResponse {
-  message: string;
-  accessToken: string;
-  refreshToken: string;
-  accessTokenExpiresIn: number;
-  refreshTokenExpiresIn: number;
-}
-
-// 회원가입 응답 타입 (백엔드 API 문서에 맞춤)
-export interface SignUpResponse {
-  message: string;
-}
-
 // 로그인 응답 타입 (프론트엔드용)
 export interface SignInResponse {
   success: boolean;
   message?: string;
-  user?: {
-    id: string;
-    email: string;
-    name?: string;
-  };
+  user?: User;
 }
 
-// 인증 상태 타입
-export interface AuthState {
-  isAuthenticated: boolean;
-  user: SignInResponse['user'] | null;
-  isLoading: boolean;
-  error: string | null;
-}
-
-// 초기 인증 상태를 확인하는 함수
+// 초기 인증 상태 - 세션 기반으로 확인
 const getInitialAuthState = (): AuthState => {
-  // 서버사이드와 클라이언트사이드 모두 로딩 상태로 시작하여 hydration mismatch 방지
-  if (typeof window === 'undefined') {
-    return {
-      isAuthenticated: false,
-      user: null,
-      isLoading: true,
-      error: null,
-    };
-  }
-
-  // 클라이언트사이드에서도 초기에는 로딩 상태로 시작
-  // useEffect에서 실제 인증 상태를 확인한 후 업데이트
   return {
     isAuthenticated: false,
+    isLoading: true, // 세션 검증 중
     user: null,
-    isLoading: true,
     error: null,
   };
 };
 
-// useAuth 커스텀 훅
-export const useAuth = () => {
-  // 인증 상태 관리
+export function useAuth() {
+  const router = useRouter();
   const [authState, setAuthState] = useState<AuthState>(getInitialAuthState);
 
-  // 컴포넌트 마운트 시 인증 상태 확인
+  // 세션 검증
+  const checkSession = useCallback(async (): Promise<boolean> => {
+    try {
+      const isValid = await validateSession();
+      return isValid;
+    } catch (error) {
+      console.error('세션 검증 실패:', error);
+      return false;
+    }
+  }, []);
+
+  // 인증 상태 초기화 (세션 기반)
   useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        const tokenState = tokenManager.getTokenState();
+    const initializeAuth = async () => {
+      setAuthState(prev => ({ ...prev, isLoading: true }));
 
-        // 액세스 토큰이 있고 만료되지 않았는지 확인
-        if (tokenState.accessToken && !isTokenExpired(tokenState.accessToken)) {
-          const userInfo = getUserFromToken(tokenState.accessToken);
-          if (userInfo) {
-            setAuthState(prev => ({
-              ...prev,
-              isAuthenticated: true,
-              isLoading: false,
-              user: {
-                id: userInfo.userID,
-                email: userInfo.email,
-                name: userInfo.email.split('@')[0] || '사용자',
-              },
-            }));
-            return;
-          }
-        }
+      const isSessionValid = await checkSession();
 
-        // 토큰이 만료되었거나 없으면 리프레시 시도
-        const isValid = await tokenManager.refreshTokensIfNeeded();
-        if (isValid) {
-          const newTokenState = tokenManager.getTokenState();
-          const userInfo = getUserFromToken(newTokenState.accessToken!);
-          if (userInfo) {
-            setAuthState(prev => ({
-              ...prev,
-              isAuthenticated: true,
-              isLoading: false,
-              user: {
-                id: userInfo.userID,
-                email: userInfo.email,
-                name: userInfo.email.split('@')[0] || '사용자',
-              },
-            }));
-          }
-        } else {
-          setAuthState(prev => ({
-            ...prev,
-            isAuthenticated: false,
-            isLoading: false,
-            user: null,
-          }));
-        }
-      } catch {
-        setAuthState(prev => ({
-          ...prev,
+      if (isSessionValid) {
+        // 세션이 유효한 경우 - 실제로는 사용자 정보 API를 호출해야 함
+        setAuthState({
+          isAuthenticated: true,
+          isLoading: false,
+          user: {
+            id: 'session-user',
+            email: 'user@example.com', // 실제로는 세션에서 가져와야 함
+            name: '사용자',
+          },
+          error: null,
+        });
+      } else {
+        // 세션이 유효하지 않은 경우
+        setAuthState({
           isAuthenticated: false,
           isLoading: false,
           user: null,
-        }));
+          error: null,
+        });
       }
     };
 
-    checkAuthStatus();
-  }, []);
+    initializeAuth();
+  }, [checkSession]);
 
-  // 로그인 함수 (메모이즈)
+  // 로그인
   const signIn = useCallback(async (formData: SignInFormData): Promise<SignInResponse> => {
-    setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
-
     try {
-      // 백엔드 API를 사용한 실제 로그인
-      const response = await fetch(`${API_BASE_URL}/api/auth/sign_in`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-        credentials: 'include', // 쿠키 포함
+      setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+
+      const response = await sdkSignIn({
+        email: formData.email,
+        password: formData.password
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || '로그인에 실패했습니다.');
-      }
-
-      const data: LoginResponse = await response.json();
-
-      // 토큰 매니저에 토큰 저장
-      tokenManager.updateTokens(data);
-
-      // JWT 토큰에서 사용자 정보 추출
-      const userInfo = getUserFromToken(data.accessToken);
+      // 세션 기반이므로 httpOnly 쿠키로 자동 관리됨
+      // 사용자 정보는 응답에서 가져오거나 별도 API 호출
       const user = {
-        id: userInfo?.userID || '1',
-        email: userInfo?.email || formData.email,
-        name: userInfo?.email?.split('@')[0] || formData.email.split('@')[0] || '사용자',
+        id: 'session-user', // 실제로는 응답에서 파싱
+        email: formData.email,
+        name: '사용자', // 실제로는 응답에서 파싱
       };
 
-      // 인증 상태 업데이트
       setAuthState({
         isAuthenticated: true,
-        user: user,
         isLoading: false,
+        user,
         error: null,
       });
 
+      // 프로젝트 페이지로 리다이렉트
+      router.push('/projects');
+
       return {
         success: true,
-        message: data.message,
-        user: user,
+        message: response.message,
+        user,
       };
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '로그인 중 오류가 발생했습니다.';
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '로그인 중 알 수 없는 오류가 발생했습니다.';
 
-      setAuthState((prev) => ({
+      setAuthState(prev => ({
         ...prev,
         isLoading: false,
         error: errorMessage,
@@ -200,76 +144,30 @@ export const useAuth = () => {
         message: errorMessage,
       };
     }
-  }, []);
+  }, [router]);
 
-  // 회원가입 함수 (메모이즈)
+  // 회원가입
   const signUp = useCallback(async (formData: SignUpFormData): Promise<SignInResponse> => {
-    setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
-
     try {
-      // 백엔드 API를 사용한 실제 회원가입
-      const response = await fetch(`${API_BASE_URL}/api/auth/sign_up`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+      setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+
+      const response = await sdkSignUp({
+        email: formData.email,
+        password: formData.password,
+        username: formData.username,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || '회원가입에 실패했습니다.');
-      }
+      console.log('회원가입 성공:', response.message);
 
-      const data: SignUpResponse = await response.json();
-
-      // 회원가입 성공 후 자동 로그인
-      const loginResponse = await fetch(`${API_BASE_URL}/api/auth/sign_in`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-        credentials: 'include',
+      // 회원가입 후 자동 로그인
+      return await signIn({
+        email: formData.email,
+        password: formData.password,
       });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '회원가입 중 알 수 없는 오류가 발생했습니다.';
 
-      if (!loginResponse.ok) {
-        throw new Error('회원가입 후 자동 로그인에 실패했습니다.');
-      }
-
-      const loginData: LoginResponse = await loginResponse.json();
-
-      // 토큰 매니저에 토큰 저장
-      tokenManager.updateTokens(loginData);
-
-      // JWT 토큰에서 사용자 정보 추출
-      const userInfo = getUserFromToken(loginData.accessToken);
-      const user = {
-        id: userInfo?.userID || '1',
-        email: userInfo?.email || formData.email,
-        name: formData.username,
-      };
-
-      // 인증 상태 업데이트
-      setAuthState({
-        isAuthenticated: true,
-        user: user,
-        isLoading: false,
-        error: null,
-      });
-
-      return {
-        success: true,
-        message: data.message,
-        user: user,
-      };
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '회원가입 중 오류가 발생했습니다.';
-
-      setAuthState((prev) => ({
+      setAuthState(prev => ({
         ...prev,
         isLoading: false,
         error: errorMessage,
@@ -280,81 +178,37 @@ export const useAuth = () => {
         message: errorMessage,
       };
     }
-  }, []);
+  }, [signIn]);
 
-  // 로그아웃 함수 (메모이즈)
-  const signOut = useCallback(() => {
-    // 토큰 매니저에서 토큰 제거
-    tokenManager.clearTokens();
-
-    // 인증 상태 초기화
-    setAuthState({
-      isAuthenticated: false,
-      user: null,
-      isLoading: false,
-      error: null,
-    });
-  }, []);
-
-  // 토큰 검증 함수 (메모이즈)
-  const validateToken = useCallback(async () => {
+  // 로그아웃 (세션 기반)
+  const signOut = useCallback(async (): Promise<void> => {
     try {
-      const tokenState = tokenManager.getTokenState();
-
-      // 액세스 토큰이 있고 만료되지 않았는지 확인
-      if (tokenState.accessToken && !isTokenExpired(tokenState.accessToken)) {
-        const userInfo = getUserFromToken(tokenState.accessToken);
-        if (userInfo) {
-          setAuthState((prev) => ({
-            ...prev,
-            isAuthenticated: true,
-            user: {
-              id: userInfo.userID,
-              email: userInfo.email,
-              name: userInfo.email.split('@')[0] || '사용자',
-            },
-          }));
-          return true;
-        }
-      }
-
-      // 토큰이 만료되었거나 없으면 리프레시 시도
-      const isValid = await tokenManager.refreshTokensIfNeeded();
-
-      if (isValid) {
-        const newTokenState = tokenManager.getTokenState();
-        const userInfo = getUserFromToken(newTokenState.accessToken!);
-        if (userInfo) {
-          setAuthState((prev) => ({
-            ...prev,
-            isAuthenticated: true,
-            user: {
-              id: userInfo.userID,
-              email: userInfo.email,
-              name: userInfo.email.split('@')[0] || '사용자',
-            },
-          }));
-          return true;
-        }
-      } else {
-        setAuthState((prev) => ({
-          ...prev,
-          isAuthenticated: false,
-          user: null,
-        }));
-        return false;
-      }
-
-      return false;
-    } catch {
-      setAuthState((prev) => ({
-        ...prev,
+      await sdkSignOut(); // httpOnly 쿠키 자동 제거
+    } catch (error) {
+      console.error('로그아웃 API 호출 실패:', error);
+      // API 호출 실패해도 로컬 상태는 초기화
+    } finally {
+      setAuthState({
         isAuthenticated: false,
+        isLoading: false,
         user: null,
-      }));
-      return false;
+        error: null,
+      });
+
+      // 로그인 페이지로 리다이렉트
+      router.push('/signin');
     }
-  }, []);
+  }, [router]);
+
+  // 세션 검증 (토큰 검증 대신)
+  const validateToken = useCallback(async (): Promise<boolean> => {
+    return await checkSession();
+  }, [checkSession]);
+
+  // 세션 갱신 (토큰 갱신 대신)
+  const refreshToken = useCallback(async (): Promise<boolean> => {
+    return await checkSession();
+  }, [checkSession]);
 
   return {
     ...authState,
@@ -362,5 +216,6 @@ export const useAuth = () => {
     signUp,
     signOut,
     validateToken,
+    refreshToken,
   };
-};
+}
