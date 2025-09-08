@@ -48,10 +48,10 @@ echo "   - Frontend: $FRONTEND_PORT"
 echo "   - Backend API: $BACKEND_PORT"
 echo ""
 
-# .env.local 파일 생성
-echo "📝 .env.local 파일을 생성합니다..."
+# .env.dev.local 파일 생성
+echo "📝 .env.dev.local 파일을 생성합니다..."
 
-cat > .env.local << EOF
+cat > .env.dev.local << EOF
 # $DEV_NAME Frontend Environment Configuration
 # 이 파일은 otto-front 개발환경을 위해 자동 생성되었습니다
 
@@ -83,7 +83,7 @@ NODE_ENV=development
 # 브라우저: http://localhost:$FRONTEND_PORT
 EOF
 
-echo "✅ .env.local 파일 생성 완료"
+echo "✅ .env.dev.local 파일 생성 완료"
 
 echo ""
 echo "🎉 Frontend 개발환경 설정이 완료되었습니다!"
@@ -103,4 +103,4 @@ echo "  - 터미널 링크를 클릭하지 말고 URL을 복사하여 브라우�
 echo ""
 echo "📚 관련 문서:"
 echo "  - README.md: 상세한 SSH 포트 포워딩 설정 방법"
-echo "  - .env.local: 생성된 환경변수 설정 확인"
+echo "  - .env.dev.local: 생성된 환경변수 설정 확인"
