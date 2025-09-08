@@ -110,14 +110,14 @@ jobs:
             git pull origin main
 
             # Setup NPM authentication for GitHub Packages
-            echo "@Team-5-CodeCat:registry=https://npm.pkg.github.com" | sudo tee ~/.npmrc > /dev/null
-            echo "//npm.pkg.github.com/:_authToken=${{ secrets.OTTO_SDK_PACKAGE_TOKEN }}" | sudo tee -a ~/.npmrc > /dev/null
+            echo "@Team-5-CodeCat:registry=https://npm.pkg.github.com" > ~/.npmrc
+            echo "//npm.pkg.github.com/:_authToken=${{ secrets.OTTO_SDK_PACKAGE_TOKEN }}" >> ~/.npmrc
 
             # Install dependencies
             pnpm install --frozen-lockfile
 
             # Create .env.production file
-            sudo tee .env.production > /dev/null << EOF
+            cat > .env.production << EOF
             NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
             NEXT_PUBLIC_GITHUB_APP_NAME=${{ secrets.NEXT_PUBLIC_GITHUB_APP_NAME }}
             PORT=${{ secrets.PORT }}
@@ -135,13 +135,13 @@ jobs:
             fi
 
             # Stop existing PM2 process if running
-            sudo pm2 stop otto-front || true
+            pm2 stop otto-front || true
 
             # Start or restart the application with PM2
-            sudo pm2 start npm --name "otto-front" -- start
+            pm2 start npm --name "otto-front" -- start
 
             # Save PM2 process list
-            sudo pm2 save
+            pm2 save
 
             # Optional: Setup PM2 to start on system boot
-            sudo pm2 startup systemd -u $USER --hp /home/$USER || true
+            pm2 startup systemd -u $USER --hp /home/$USER || true
