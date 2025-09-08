@@ -6,9 +6,8 @@ import pluginReactHooks from 'eslint-plugin-react-hooks';
 import json from '@eslint/json';
 import markdown from '@eslint/markdown';
 import css from '@eslint/css';
-import { defineConfig } from 'eslint/config';
 
-export default defineConfig([
+export default [
   // JavaScript/TypeScript 파일 설정
   {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -111,4 +110,4 @@ export default defineConfig([
       '**/*.css',
     ],
   },
-]);
+];
