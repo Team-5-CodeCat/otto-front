@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 // UI 컴포넌트들
@@ -9,14 +8,15 @@ import Button from '@/app/components/ui/Button';
 import Input from '@/app/components/ui/Input';
 import Card from '@/app/components/ui/Card';
 
+// 인증 훅
+import { useAuth } from '@/app/hooks/useAuth';
+
 // 유틸리티
 import { validateEmail, validatePassword } from '@/app/utils/validation';
-import { useAuth } from '@/app/hooks/useAuth';
 
 // Sign Up 페이지 컴포넌트
 export default function SignUpPage() {
-  const router = useRouter();
-  const { signUp, isLoading: authLoading, error: authError } = useAuth();
+  const { signUp, isLoading, error } = useAuth();
 
   // 폼 상태 관리
   const [formData, setFormData] = useState({
@@ -115,15 +115,20 @@ export default function SignUpPage() {
       return;
     }
 
-    // 회원가입 시도
-    const result = await signUp({
-      email: formData.email,
-      password: formData.password,
-      username: formData.username,
-    });
-
-    if (result.success) {
-      router.push('/signin');
+    // SDK를 통한 실제 회원가입 처리
+    try {
+      const result = await signUp({
+        email: formData.email,
+        password: formData.password,
+        username: formData.username,
+      });
+      
+      if (!result.success) {
+        console.error('회원가입 실패:', result.message);
+      }
+      // 성공 시 useAuth에서 자동으로 로그인 후 리다이렉트 처리
+    } catch (error) {
+      console.error('회원가입 오류:', error);
     }
   };
 
@@ -295,7 +300,7 @@ export default function SignUpPage() {
             />
 
             {/* 인증 에러 메시지 */}
-            {authError && (
+            {error && (
               <div className='bg-red-50 border border-red-200 rounded-md p-4'>
                 <div className='flex'>
                   <div className='flex-shrink-0'>
@@ -314,15 +319,15 @@ export default function SignUpPage() {
                     </svg>
                   </div>
                   <div className='ml-3'>
-                    <p className='text-sm text-red-800'>{authError}</p>
+                    <p className='text-sm text-red-800'>{error}</p>
                   </div>
                 </div>
               </div>
             )}
 
             {/* 회원가입 버튼 */}
-            <Button type='submit' className='w-full' isLoading={authLoading} disabled={authLoading}>
-              {authLoading ? 'Signing up...' : 'Sign Up'}
+            <Button type='submit' className='w-full' isLoading={isLoading} disabled={isLoading}>
+              {isLoading ? 'Signing up...' : 'Sign Up'}
             </Button>
           </form>
 

@@ -1,249 +1,314 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-// UI components (shadcn-like wrappers)
+// UI components
 import { Card, Button, Input, Textarea, Select } from '@/app/components/ui';
 
-// 프로젝트 스토어
-import { createProject } from '@/app/lib/projectStore';
+// Otto SDK
+import { functional, type IConnection } from '@Team-5-CodeCat/otto-sdk';
 
-// 프로젝트 폼 타입 개선
+// 프로젝트 스토어 (폴백용)
+import { createProject as createLocalProject } from '@/app/lib/projectStore';
+
+// 프로젝트 폼 타입
 interface ProjectForm {
   name: string;
   description: string;
-  repo: string;
-  triggerBranches: string; // 웹훅 트리거 대상 브랜치들 (쉼표로 구분)
-  defaultBranch: string; // 기본 작업 브랜치
   language: string;
   deploy: string;
 }
 
-export default function ProjectCreatePage() {
+// 환경 변수 타입
+interface EnvVar {
+  key: string;
+  value: string;
+  masked: boolean;
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return '알 수 없는 오류가 발생했습니다.';
+}
+
+export default function NewProjectPage() {
   const router = useRouter();
 
   // 폼 상태
-  const [form, setForm] = useState<ProjectForm>({
+  const [formData, setFormData] = useState<ProjectForm>({
     name: '',
     description: '',
-    repo: '',
-    triggerBranches: 'main,develop', // 기본값: main, develop
-    defaultBranch: 'main', // 기본값: main
-    language: '',
-    deploy: '',
+    language: 'Node.js',
+    deploy: 'S3',
   });
 
-  // 에러 상태
+  // 환경 변수 상태
+  const [envVars, setEnvVars] = useState<EnvVar[]>([]);
+
+  // 에러 및 제출 상태
   const [errors, setErrors] = useState<Partial<Record<keyof ProjectForm, string>>>({});
+  const [submitError, setSubmitError] = useState<string>('');
   const [isSubmitting, setSubmitting] = useState(false);
 
-  // 간단 검증 로직 (필수값 확인)
-  const validate = (data: ProjectForm) => {
-    const next: Partial<Record<keyof ProjectForm, string>> = {};
-    if (!data.name.trim()) next.name = '프로젝트 이름을 입력하세요.';
-    if (!data.repo.trim()) next.repo = 'GitHub 레포지토리를 입력하세요.';
-    if (!data.triggerBranches.trim()) next.triggerBranches = '트리거 브랜치를 입력하세요.';
-    if (!data.defaultBranch.trim()) next.defaultBranch = '기본 브랜치를 입력하세요.';
-    if (!data.language) next.language = '언어 환경을 선택하세요.';
-    if (!data.deploy) next.deploy = '배포 환경을 선택하세요.';
-    return next;
+  // SDK 연결 설정
+  const connection = useMemo<IConnection>(() => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    return {
+      host: `${baseUrl}/api/v1`,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      options: {
+        credentials: 'include',
+      },
+    };
+  }, []);
+
+  // 폼 입력 핸들러
+  const handleInputChange = (field: keyof ProjectForm, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
-  const handleChange = (field: keyof ProjectForm, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+  // 환경 변수 관리 함수들
+  const addEnvVar = () => {
+    setEnvVars(prev => [...prev, { key: '', value: '', masked: false }]);
   };
 
+  const removeEnvVar = (index: number) => {
+    setEnvVars(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateEnvVar = (index: number, field: keyof EnvVar, value: string | boolean) => {
+    setEnvVars(prev => prev.map((envVar, i) => 
+      i === index ? { ...envVar, [field]: value } : envVar
+    ));
+  };
+
+  // 폼 검증
+  const validateForm = (): boolean => {
+    const newErrors: Partial<Record<keyof ProjectForm, string>> = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = '프로젝트 이름을 입력해주세요.';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // 폼 제출 핸들러
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const nextErrors = validate(form);
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    
+    if (!validateForm()) {
+      return;
+    }
 
     setSubmitting(true);
+    setSubmitError('');
+
     try {
-      // 로컬 스토어에 프로젝트 생성 (실제로는 백엔드 API 호출)
-      const newProject = createProject({
-        name: form.name,
-        description: form.description,
-        repo: form.repo,
-        triggerBranches: form.triggerBranches,
-        defaultBranch: form.defaultBranch,
-        language: form.language,
-        deploy: form.deploy,
+      console.log('프로젝트 생성 시작:', formData);
+      
+      // SDK를 사용하여 프로젝트 생성
+      const result = await functional.projects.createProject.projectCreateProject(connection, {
+        name: formData.name,
+        webhookUrl: `https://api.otto.com/webhook/projects/${formData.name}`,
       });
 
-      // 로딩 시뮬레이션
-      await new Promise((r) => setTimeout(r, 800));
+      console.log('프로젝트 생성 성공:', result);
 
-      // 생성된 프로젝트 상세 페이지로 이동
-      router.push(`/projects/${newProject.id}`);
+      // 로컬 스토어에도 저장 (폴백)
+      const localProject = {
+        name: formData.name,
+        description: formData.description,
+        repo: '',
+        triggerBranches: 'main',
+        defaultBranch: 'main',
+        language: formData.language,
+        deploy: formData.deploy,
+      };
+
+      createLocalProject(localProject);
+
+      // 성공 시 프로젝트 목록 페이지로 이동
+      router.push('/projects');
+
+    } catch (error) {
+      console.error('프로젝트 생성 실패:', error);
+      setSubmitError(getErrorMessage(error));
     } finally {
       setSubmitting(false);
     }
   };
 
-  // 셀렉트 옵션
-  const languageOptions = [
-    { label: 'Node.js', value: 'node' },
-    { label: 'Python', value: 'python' },
-    { label: 'Java', value: 'java' },
-    { label: 'Go', value: 'go' },
-  ];
-
-  const deployOptions = [
-    { label: 'AWS EC2', value: 'ec2' },
-    { label: 'Docker Container', value: 'docker' },
-    { label: 'AWS Lambda', value: 'lambda' },
-  ];
-
   return (
-    <div className='p-6'>
-      {/* 상단 헤더 */}
-      <div className='mb-6 flex items-center justify-between'>
-        <div>
-          <h1 className='text-2xl font-bold text-gray-900'>Create Project</h1>
-          <p className='text-sm text-gray-600 mt-1'>
-            GitHub App will automatically configure webhooks
-          </p>
+    <div className="p-6 max-w-4xl mx-auto">
+      <div className="mb-6">
+        <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
+          <Link href="/projects" className="hover:text-blue-600">
+            프로젝트
+          </Link>
+          <span>/</span>
+          <span>새 프로젝트</span>
         </div>
-        <Link href='/projects' className='text-sm text-blue-600 hover:text-blue-500'>
-          Back to Projects
-        </Link>
+        <h1 className="text-2xl font-bold">새 프로젝트 만들기</h1>
+        <p className="text-gray-600 mt-2">
+          새로운 CI/CD 프로젝트를 생성하세요.
+        </p>
       </div>
 
-      {/* 폼 카드 */}
-      <Card>
-        <form onSubmit={handleSubmit} className='space-y-6'>
-          {/* Project Name */}
-          <Input
-            id='name'
-            label='Project Name'
-            placeholder='e.g. acme-ci'
-            description='프로젝트를 식별하기 위한 고유 이름'
-            value={form.name}
-            onChange={(e) => handleChange('name', e.target.value)}
-            error={errors.name}
-            required
-          />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* 프로젝트 기본 정보 */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4">프로젝트 정보</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                프로젝트 이름 *
+              </label>
+              <Input
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                placeholder="my-awesome-project"
+                className={errors.name ? 'border-red-500' : ''}
+              />
+              {errors.name && (
+                <p className="text-sm text-red-600 mt-1">{errors.name}</p>
+              )}
+            </div>
 
-          {/* Description */}
-          <Textarea
-            id='description'
-            label='Description'
-            description='프로젝트 목적이나 세부 사항을 간단히 기록'
-            placeholder='Short description of the project'
-            value={form.description}
-            onChange={(e) => handleChange('description', e.target.value)}
-          />
-
-          {/* GitHub Repository */}
-          <Input
-            id='repo'
-            label='GitHub Repository'
-            placeholder='owner/repo'
-            description='GitHub 앱이 설치된 레포지토리 (앱 설치 후 자동으로 웹훅 설정됨)'
-            value={form.repo}
-            onChange={(e) => handleChange('repo', e.target.value)}
-            error={errors.repo}
-            required
-          />
-
-          {/* Branch Configuration Section */}
-          <div className='border-t pt-6'>
-            <h3 className='text-lg font-medium text-gray-900 mb-4'>Branch Configuration</h3>
-
-            {/* Trigger Branches */}
-            <Input
-              id='triggerBranches'
-              label='Trigger Branches'
-              placeholder='main,develop,feature/*'
-              description='CI/CD를 트리거할 브랜치들 (쉼표로 구분, 와일드카드 지원)'
-              value={form.triggerBranches}
-              onChange={(e) => handleChange('triggerBranches', e.target.value)}
-              error={errors.triggerBranches}
-              required
-            />
-
-            {/* Default Branch */}
-            <Input
-              id='defaultBranch'
-              label='Default Branch'
-              placeholder='main'
-              description='기본 작업 브랜치 (배포 기준 브랜치)'
-              value={form.defaultBranch}
-              onChange={(e) => handleChange('defaultBranch', e.target.value)}
-              error={errors.defaultBranch}
-              required
-            />
-          </div>
-
-          {/* Environment Configuration Section */}
-          <div className='border-t pt-6'>
-            <h3 className='text-lg font-medium text-gray-900 mb-4'>Environment Configuration</h3>
-
-            {/* Language Environment */}
-            <Select
-              id='language'
-              label='Language Environment'
-              description='기본 언어/런타임 환경'
-              value={form.language}
-              onChange={(e) => handleChange('language', e.target.value)}
-              options={languageOptions}
-              error={errors.language}
-              required
-            />
-
-            {/* Deployment Environment */}
-            <Select
-              id='deploy'
-              label='Deployment Environment'
-              description='배포 대상 환경'
-              value={form.deploy}
-              onChange={(e) => handleChange('deploy', e.target.value)}
-              options={deployOptions}
-              error={errors.deploy}
-              required
-            />
-          </div>
-
-          {/* GitHub App Webhook Info */}
-          <div className='bg-blue-50 border border-blue-200 rounded-md p-4'>
-            <div className='flex items-start'>
-              <div className='flex-shrink-0'>
-                <svg
-                  className='h-5 w-5 text-blue-400'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-                  />
-                </svg>
-              </div>
-              <div className='ml-3'>
-                <h4 className='text-sm font-medium text-blue-800'>Automatic Webhook Setup</h4>
-                <p className='text-sm text-blue-700 mt-1'>
-                  GitHub App이 레포지토리에 설치되면 push, pull_request 등의 웹훅이 자동으로
-                  설정됩니다. 위에서 설정한 브랜치 조건에 따라 파이프라인이 트리거됩니다.
-                </p>
-              </div>
+            <div>
+              <Select
+                label="언어/프레임워크"
+                value={formData.language}
+                onChange={(e) => handleInputChange('language', e.target.value)}
+                options={[
+                  { label: 'Node.js', value: 'Node.js' },
+                  { label: 'React', value: 'React' },
+                  { label: 'Vue.js', value: 'Vue.js' },
+                  { label: 'Python', value: 'Python' },
+                  { label: 'Java', value: 'Java' },
+                  { label: 'Go', value: 'Go' },
+                ]}
+              />
             </div>
           </div>
 
-          {/* Submit */}
-          <div className='pt-2'>
-            <Button type='submit' disabled={isSubmitting} isLoading={isSubmitting}>
-              Create Project
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              설명
+            </label>
+            <Textarea
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              placeholder="프로젝트에 대한 간단한 설명을 입력하세요..."
+              rows={3}
+            />
+          </div>
+        </Card>
+
+        {/* 배포 설정 */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4">배포 설정</h2>
+          
+          <Select
+            label="배포 대상"
+            value={formData.deploy}
+            onChange={(e) => handleInputChange('deploy', e.target.value)}
+            options={[
+              { label: 'Amazon S3', value: 'S3' },
+              { label: 'Vercel', value: 'Vercel' },
+              { label: 'Netlify', value: 'Netlify' },
+              { label: 'GitHub Pages', value: 'GitHub Pages' },
+              { label: 'Docker', value: 'Docker' },
+            ]}
+          />
+        </Card>
+
+        {/* 환경 변수 */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4">환경 변수</h2>
+          
+          <div className="space-y-3">
+            {envVars.map((envVar, index) => (
+              <div key={index} className="flex gap-2 items-start">
+                <Input
+                  value={envVar.key}
+                  onChange={(e) => updateEnvVar(index, 'key', e.target.value)}
+                  placeholder="환경 변수 이름"
+                  className="flex-1"
+                />
+                <Input
+                  value={envVar.value}
+                  onChange={(e) => updateEnvVar(index, 'value', e.target.value)}
+                  placeholder="값"
+                  type={envVar.masked ? 'password' : 'text'}
+                  className="flex-1"
+                />
+                <label className="flex items-center gap-1 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={envVar.masked}
+                    onChange={(e) => updateEnvVar(index, 'masked', e.target.checked)}
+                  />
+                  마스킹
+                </label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeEnvVar(index)}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  삭제
+                </Button>
+              </div>
+            ))}
+            
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addEnvVar}
+              className="w-full"
+            >
+              환경 변수 추가
             </Button>
           </div>
-        </form>
-      </Card>
+        </Card>
+
+        {/* 제출 버튼 */}
+        <div className="flex gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.back()}
+          >
+            취소
+          </Button>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="bg-blue-600 text-white hover:bg-blue-700"
+          >
+            {isSubmitting ? '생성 중...' : '프로젝트 생성'}
+          </Button>
+        </div>
+
+        {submitError && (
+          <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
+            {submitError}
+          </div>
+        )}
+      </form>
     </div>
   );
 }

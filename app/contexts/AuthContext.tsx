@@ -1,16 +1,14 @@
 'use client';
 
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-  ReactNode,
-} from 'react';
-import { authApi, ApiError, User } from '@/app/lib/auth-api';
-import { tokenManager, TokenState } from '@/app/lib/token-manager';
-import { getUserFromToken } from '@/app/lib/jwt-utils';
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useAuth as useAuthHook, SignInFormData, SignUpFormData, SignInResponse } from '@/app/hooks/useAuth';
+
+// 사용자 타입
+interface User {
+  id: string;
+  email: string;
+  name: string;
+}
 
 // 인증 상태 타입
 export interface AuthState {
@@ -18,251 +16,95 @@ export interface AuthState {
   user: User | null;
   isLoading: boolean;
   error: string | null;
-  tokenState: TokenState;
 }
 
-// 인증 컨텍스트 타입
+// 인증 컨텍스트 타입 - useAuth의 모든 기능을 포함
 export interface AuthContextType extends AuthState {
+  signIn: (formData: SignInFormData) => Promise<SignInResponse>;
+  signUp: (formData: SignUpFormData) => Promise<SignInResponse>;
+  signOut: () => Promise<void>;
+  validateToken: () => Promise<boolean>;
+  refreshToken: () => Promise<boolean>;
+  // 레거시 호환성을 위한 별칭
   login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   refreshTokens: () => Promise<boolean>;
   clearError: () => void;
 }
 
-// 초기 상태
-const initialAuthState: AuthState = {
+// 기본 컨텍스트 값
+const defaultContextValue: AuthContextType = {
   isAuthenticated: false,
   user: null,
   isLoading: false,
   error: null,
-  tokenState: {
-    accessToken: null,
-    refreshToken: null,
-    accessTokenExpiresAt: null,
-    refreshTokenExpiresAt: null,
-  },
+  signIn: async () => ({ success: false }),
+  signUp: async () => ({ success: false }),
+  signOut: async () => {},
+  validateToken: async () => false,
+  refreshToken: async () => false,
+  login: async () => ({ success: false, message: '' }),
+  logout: () => {},
+  refreshTokens: async () => false,
+  clearError: () => {},
 };
 
-// 컨텍스트 생성
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// 인증 컨텍스트 생성
+const AuthContext = createContext<AuthContextType>(defaultContextValue);
 
 // AuthProvider Props 타입
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-// AuthProvider 컴포넌트
+// 인증 프로바이더 컴포넌트
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [authState, setAuthState] = useState<AuthState>(initialAuthState);
+  // useAuth 훅을 통해 모든 인증 기능 가져오기
+  const authHook = useAuthHook();
 
-  // 에러 초기화
-  const clearError = useCallback(() => {
-    setAuthState((prev) => ({ ...prev, error: null }));
-  }, []);
-
-  // 토큰 상태 업데이트
-  const updateTokenState = useCallback(() => {
-    const tokenState = tokenManager.getTokenState();
-    setAuthState((prev) => ({ ...prev, tokenState }));
-  }, []);
-
-  // 로그인 함수
-  const login = useCallback(
-    async (email: string, password: string) => {
-      setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-      try {
-        const response = await authApi.login({ email, password });
-
-        // 토큰 상태 업데이트
-        tokenManager.updateTokens(response);
-        updateTokenState();
-
-        // JWT 토큰에서 실제 사용자 정보 추출
-        const userInfo = getUserFromToken(response.accessToken);
-        if (!userInfo) {
-          throw new Error('토큰에서 사용자 정보를 추출할 수 없습니다.');
-        }
-
-        const user: User = {
-          userID: userInfo.userID,
-          email: userInfo.email,
-          name: userInfo.email.split('@')[0] || '사용자',
-          memberRole: 'MEMBER',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-
-        setAuthState((prev) => ({
-          ...prev,
-          isAuthenticated: true,
-          user,
-          isLoading: false,
-          error: null,
-        }));
-
-        return { success: true, message: response.message || '로그인 성공' };
-      } catch (error) {
-        const errorMessage =
-          error instanceof ApiError ? error.message : '로그인 중 오류가 발생했습니다.';
-
-        setAuthState((prev) => ({
-          ...prev,
-          isAuthenticated: false,
-          user: null,
-          isLoading: false,
-          error: errorMessage,
-        }));
-
-        return { success: false, message: errorMessage };
-      }
-    },
-    [updateTokenState]
-  );
-
-  // 로그아웃 함수
-  const logout = useCallback(() => {
-    tokenManager.clearTokens();
-    setAuthState((prev) => ({
-      ...prev,
-      isAuthenticated: false,
-      user: null,
-      error: null,
-      tokenState: {
-        accessToken: null,
-        refreshToken: null,
-        accessTokenExpiresAt: null,
-        refreshTokenExpiresAt: null,
-      },
-    }));
-  }, []);
-
-  // 토큰 리프레시 함수
-  const refreshTokens = useCallback(async (): Promise<boolean> => {
-    try {
-      const success = await tokenManager.refreshTokensIfNeeded();
-      updateTokenState();
-
-      if (!success) {
-        // 리프레시 실패 시 로그아웃
-        logout();
-      }
-
-      return success;
-    } catch (error) {
-      console.error('토큰 리프레시 오류:', error);
-      logout();
-      return false;
-    }
-  }, [updateTokenState, logout]);
-
-  // 초기 인증 상태 확인
-  useEffect(() => {
-    const initializeAuth = async () => {
-      setAuthState((prev) => ({ ...prev, isLoading: true }));
-
-      try {
-        // 토큰 상태 업데이트
-        updateTokenState();
-
-        // 토큰이 있으면 유효성 확인 및 리프레시
-        const accessToken = tokenManager.getAccessToken();
-        if (accessToken) {
-          const isTokenValid = await tokenManager.refreshTokensIfNeeded();
-
-          if (isTokenValid) {
-            // JWT 토큰에서 실제 사용자 정보 추출
-            const userInfo = getUserFromToken(accessToken);
-            if (userInfo) {
-              const user: User = {
-                userID: userInfo.userID,
-                email: userInfo.email,
-                name: userInfo.email.split('@')[0] || '사용자',
-                memberRole: 'MEMBER',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              };
-
-              setAuthState((prev) => ({
-                ...prev,
-                isAuthenticated: true,
-                user,
-                isLoading: false,
-                error: null,
-              }));
-            } else {
-              setAuthState((prev) => ({
-                ...prev,
-                isAuthenticated: false,
-                user: null,
-                isLoading: false,
-                error: null,
-              }));
-            }
-          } else {
-            setAuthState((prev) => ({
-              ...prev,
-              isAuthenticated: false,
-              user: null,
-              isLoading: false,
-              error: null,
-            }));
-          }
-        } else {
-          setAuthState((prev) => ({
-            ...prev,
-            isAuthenticated: false,
-            user: null,
-            isLoading: false,
-            error: null,
-          }));
-        }
-      } catch (error) {
-        console.error('인증 초기화 오류:', error);
-        setAuthState((prev) => ({
-          ...prev,
-          isAuthenticated: false,
-          user: null,
-          isLoading: false,
-          error: null,
-        }));
-      }
+  // 레거시 호환성을 위한 별칭 함수들
+  const login = async (email: string, password: string) => {
+    const result = await authHook.signIn({ email, password });
+    return {
+      success: result.success,
+      message: result.message || '',
     };
+  };
 
-    initializeAuth();
-  }, [updateTokenState]);
+  const logout = () => {
+    authHook.signOut();
+  };
 
-  // 토큰 만료 시 자동 리프레시 (5분마다 체크)
-  useEffect(() => {
-    const interval = setInterval(
-      async () => {
-        if (authState.isAuthenticated) {
-          await refreshTokens();
-        }
-      },
-      5 * 60 * 1000
-    ); // 5분
+  const refreshTokens = async (): Promise<boolean> => {
+    return await authHook.refreshToken();
+  };
 
-    return () => clearInterval(interval);
-  }, [authState.isAuthenticated, refreshTokens]);
+  const clearError = () => {
+    // 에러 클리어 기능은 useAuth에서 자동으로 처리됨
+    console.log('Error cleared (handled automatically by useAuth)');
+  };
 
-  // 컨텍스트 값
+  // 컨텍스트 값 구성
   const contextValue: AuthContextType = {
-    ...authState,
+    ...authHook,
     login,
     logout,
     refreshTokens,
     clearError,
   };
 
-  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={contextValue}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-// useAuth 훅
+// useAuth 훅 (컨텍스트 접근용)
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-
-  if (context === undefined) {
+  
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
 
@@ -271,14 +113,14 @@ export const useAuth = (): AuthContextType => {
 
 // 인증 상태만 필요한 경우를 위한 훅
 export const useAuthState = (): AuthState => {
-  const { isAuthenticated, user, isLoading, error, tokenState } = useAuth();
-  return { isAuthenticated, user, isLoading, error, tokenState };
+  const { isAuthenticated, user, isLoading, error } = useAuth();
+  return { isAuthenticated, user, isLoading, error };
 };
 
 // 인증 액션만 필요한 경우를 위한 훅
 export const useAuthActions = () => {
-  const { login, logout, refreshTokens, clearError } = useAuth();
-  return { login, logout, refreshTokens, clearError };
+  const { signIn, signUp, signOut, validateToken, refreshToken } = useAuth();
+  return { signIn, signUp, signOut, validateToken, refreshToken };
 };
 
 export default AuthContext;

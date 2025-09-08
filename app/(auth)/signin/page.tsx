@@ -1,20 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Button from '@/app/components/ui/Button';
 import Input from '@/app/components/ui/Input';
 import Card from '@/app/components/ui/Card';
 
-// 커스텀 훅과 유틸리티
+// 인증 훅
 import { useAuth } from '@/app/hooks/useAuth';
+
+// 유틸리티
 import { validateSignInForm } from '@/app/utils/validation';
 
 // Sign In 페이지 컴포넌트
 export default function SignInPage() {
-  const router = useRouter();
-  const { signIn, isLoading, error: authError } = useAuth();
+  const { signIn, isLoading, error } = useAuth();
 
   // 폼 상태 관리
   const [formData, setFormData] = useState({
@@ -32,13 +32,7 @@ export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   // 컴포넌트 마운트 시 인증 상태 확인
-  useEffect(() => {
-    // TODO: 이미 로그인된 사용자인지 확인하고 리다이렉트
-    // const token = localStorage.getItem('authToken');
-    // if (token) {
-    //   router.push('/dashboard');
-    // }
-  }, [router]);
+  // 이미 로그인된 사용자는 자동으로 리다이렉트됨 (useAuth에서 처리)
 
   // 입력 필드 변경 핸들러
   const handleInputChange = (field: 'email' | 'password', value: string) => {
@@ -67,12 +61,16 @@ export default function SignInPage() {
       return;
     }
 
-    // 로그인 시도
-    const result = await signIn(formData);
-
-    if (result.success) {
-      // 로그인 성공 시 프로젝트 페이지로 리다이렉트
-      router.push('/projects');
+    // SDK를 통한 실제 로그인 처리
+    try {
+      const result = await signIn(formData);
+      
+      if (!result.success) {
+        console.error('로그인 실패:', result.message);
+      }
+      // 성공 시 useAuth에서 자동으로 리다이렉트 처리
+    } catch (error) {
+      console.error('로그인 오류:', error);
     }
   };
 
@@ -166,7 +164,7 @@ export default function SignInPage() {
             />
 
             {/* 인증 에러 메시지 */}
-            {authError && (
+            {error && (
               <div className='bg-red-50 border border-red-200 rounded-md p-4'>
                 <div className='flex'>
                   <div className='flex-shrink-0'>
@@ -185,7 +183,7 @@ export default function SignInPage() {
                     </svg>
                   </div>
                   <div className='ml-3'>
-                    <p className='text-sm text-red-800'>{authError}</p>
+                    <p className='text-sm text-red-800'>{error}</p>
                   </div>
                 </div>
               </div>
