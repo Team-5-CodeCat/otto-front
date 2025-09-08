@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { useAuth } from '@/app/hooks/useAuth';
+import React, { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/app/contexts/AuthContext';
 import { NodeVersionProvider } from '../../contexts/NodeVersionContext';
 import Sidebar from './Sidebar';
 import { Project, Pipeline } from './types';
@@ -32,13 +32,11 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { isLoading } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
-  
   // 새 프로젝트 생성 모달 상태
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [projects, setProjects] = useState<Project[]>(mockProjects);
-  
+
   // 새 파이프라인 생성 모달 상태
   const [isNewPipelineModalOpen, setIsNewPipelineModalOpen] = useState(false);
   const [selectedPipeline, setSelectedPipeline] = useState<Pipeline | null>(null);
@@ -46,65 +44,58 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [pipelines, setPipelines] = useState<Pipeline[]>(mockPipelines);
   const [selectedProject, setSelectedProject] = useState<Project | null>(projects[0] || null);
 
-  // Build detail page에서 사용할 state
-  const [selectedJob, setSelectedJob] = useState<string>('deploy');
-  
-  // 현재 페이지가 build detail 페이지인지 확인
-  const isBuildDetailPage = pathname?.startsWith('/builds/') && pathname !== '/builds';
-  
-  // Mock build jobs data for build detail page
-  const mockJobs = [
-    { id: 'test', name: 'test', status: 'completed' as const, duration: '2m 30s' },
-    { id: 'deploy', name: 'deploy', status: 'running' as const, duration: '11s' },
-    { id: 'lint', name: 'lint', status: 'pending' as const, duration: '0s' }
-  ];
-
   // 새 프로젝트 생성 핸들러
-  const handleCreateProject = () => {
+  const handleCreateProject = useCallback(() => {
     if (newProjectName.trim()) {
       // TODO: 백엔드와 연결하여 실제 프로젝트 생성
       const newProject: Project = {
         id: `project-${Date.now()}`,
-        name: newProjectName.trim()
+        name: newProjectName.trim(),
       };
-      
-      // mockProjects와 상태 모두 업데이트
-      mockProjects.push(newProject);
-      setProjects([...mockProjects]);
-      setSelectedProject(newProject); // 새 프로젝트를 선택된 프로젝트로 설정
+
+      // 불변성을 유지하면서 상태 업데이트
+      setProjects((prev) => [...prev, newProject]);
+      setSelectedProject(newProject);
       setNewProjectName('');
       setIsNewProjectModalOpen(false);
-      console.log('새 프로젝트 생성:', newProject);
     }
-  };
+  }, [newProjectName]);
 
   // 새 파이프라인 생성 핸들러
-  const handleCreatePipeline = () => {
+  const handleCreatePipeline = useCallback(() => {
     if (newPipelineName.trim() && selectedProject) {
       // TODO: 백엔드와 연결하여 실제 파이프라인 생성
       const newPipeline: Pipeline = {
         id: `pipeline-${Date.now()}`,
         name: newPipelineName.trim(),
-        projectId: selectedProject.id
+        projectId: selectedProject.id,
       };
-      
-      // mockPipelines와 상태 모두 업데이트
-      mockPipelines.push(newPipeline);
-      setPipelines([...mockPipelines]);
-      setSelectedPipeline(newPipeline); // 새 파이프라인 선택
+
+      // 불변성을 유지하면서 상태 업데이트
+      setPipelines((prev) => [...prev, newPipeline]);
+      setSelectedPipeline(newPipeline);
       setNewPipelineName('');
       setIsNewPipelineModalOpen(false);
-      
-      // /pipelines로 이동
+
+      // 파이프라인 페이지로 이동
       router.push('/pipelines');
-      
-      console.log('새 파이프라인 생성:', newPipeline);
     }
-  };
+  }, [newPipelineName, selectedProject, router]);
+
+  // 모달 닫기 핸들러들
+  const handleCloseProjectModal = useCallback(() => {
+    setIsNewProjectModalOpen(false);
+    setNewProjectName('');
+  }, []);
+
+  const handleClosePipelineModal = useCallback(() => {
+    setIsNewPipelineModalOpen(false);
+    setNewPipelineName('');
+  }, []);
 
   // 선택된 프로젝트의 파이프라인들 필터링
-  const filteredPipelines = selectedProject 
-    ? pipelines.filter(pipeline => pipeline.projectId === selectedProject.id)
+  const filteredPipelines = selectedProject
+    ? pipelines.filter((pipeline) => pipeline.projectId === selectedProject.id)
     : [];
 
   // 인증 상태 로딩 중일 때 로딩 화면 표시
@@ -118,13 +109,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       </div>
     );
   }
-  
 
   return (
     <NodeVersionProvider>
       <div className='min-h-screen bg-gray-50 flex'>
         {/* 고정 사이드바 */}
-        <Sidebar 
+        <Sidebar
           projects={projects}
           pipelines={filteredPipelines}
           selectedProject={selectedProject}
@@ -132,10 +122,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           onProjectSelect={setSelectedProject}
           onPipelineSelect={setSelectedPipeline}
           onNewPipelineClick={() => setIsNewPipelineModalOpen(true)}
-          showJobs={isBuildDetailPage}
-          jobs={isBuildDetailPage ? mockJobs : []}
-          selectedJob={selectedJob}
-          onJobSelect={setSelectedJob}
         />
 
         {/* 메인 콘텐츠 영역 */}
@@ -147,17 +133,23 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
       {/* 새 프로젝트 생성 모달 */}
       {isNewProjectModalOpen && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center' style={{ zIndex: 9999 }}>
+        <div
+          className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center'
+          style={{ zIndex: 9999 }}
+        >
           <div className='bg-white rounded-lg p-6 w-96'>
             <h3 className='text-lg font-medium text-gray-900 mb-4'>새 프로젝트 생성</h3>
             <div className='mb-4'>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
-                프로젝트 이름
-              </label>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>프로젝트 이름</label>
               <input
                 type='text'
                 value={newProjectName}
                 onChange={(e) => setNewProjectName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newProjectName.trim()) {
+                    handleCreateProject();
+                  }
+                }}
                 className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500'
                 placeholder='프로젝트 이름을 입력하세요'
                 autoFocus
@@ -165,17 +157,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             </div>
             <div className='flex justify-end space-x-3'>
               <button
-                onClick={() => {
-                  setIsNewProjectModalOpen(false);
-                  setNewProjectName('');
-                }}
+                onClick={handleCloseProjectModal}
                 className='px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200'
               >
                 취소
               </button>
               <button
                 onClick={handleCreateProject}
-                className='px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700'
+                disabled={!newProjectName.trim()}
+                className='px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed'
               >
                 생성
               </button>
@@ -186,7 +176,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
       {/* 새 파이프라인 생성 모달 */}
       {isNewPipelineModalOpen && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center' style={{ zIndex: 9999 }}>
+        <div
+          className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center'
+          style={{ zIndex: 9999 }}
+        >
           <div className='bg-white rounded-lg p-6 w-96'>
             <h3 className='text-lg font-medium text-gray-900 mb-4'>새 파이프라인 생성</h3>
             <div className='mb-4'>
@@ -197,32 +190,32 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 type='text'
                 value={newPipelineName}
                 onChange={(e) => setNewPipelineName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && selectedProject && newPipelineName.trim()) {
+                    handleCreatePipeline();
+                  }
+                }}
                 className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500'
                 placeholder='파이프라인 이름을 입력하세요'
                 autoFocus
               />
             </div>
             <div className='mb-4'>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
-                프로젝트
-              </label>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>프로젝트</label>
               <div className='px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm text-gray-700'>
                 {selectedProject?.name || '프로젝트를 선택해주세요'}
               </div>
             </div>
             <div className='flex justify-end space-x-3'>
               <button
-                onClick={() => {
-                  setIsNewPipelineModalOpen(false);
-                  setNewPipelineName('');
-                }}
+                onClick={handleClosePipelineModal}
                 className='px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200'
               >
                 취소
               </button>
               <button
                 onClick={handleCreatePipeline}
-                disabled={!selectedProject}
+                disabled={!selectedProject || !newPipelineName.trim()}
                 className='px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed'
               >
                 생성

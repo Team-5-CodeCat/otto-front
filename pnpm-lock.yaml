@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@Team-5-CodeCat/otto-sdk':
-        specifier: ^0.3.3
-        version: '@team-5-codecat/otto-sdk@0.3.3(@types/node@20.19.13)(typescript@5.9.2)'
+        specifier: ^0.4.0
+        version: '@team-5-codecat/otto-sdk@0.4.0(@types/node@20.19.13)(typescript@5.9.2)'
       '@nestia/fetcher':
         specifier: ^8.0.7
         version: 8.0.7
@@ -1299,8 +1299,8 @@ packages:
   '@tailwindcss/postcss@4.1.13':
     resolution: {integrity: sha512-HLgx6YSFKJT7rJqh9oJs/TkBFhxuMOfUKSBEPYwV+t78POOBsdQ7crhZLzwcH3T0UyUuOzU/GK5pk5eKr3wCiQ==}
 
-  '@team-5-codecat/otto-sdk@0.3.3':
-    resolution: {integrity: sha512-Ib5nlgYLZ8npiw/o1wd7XknyuvUpfH5En3jgrm8lGAmycemcfP2NOKF6zAaLIEuzChzYfkYu0KHzbx0TN7j3hg==, tarball: https://npm.pkg.github.com/download/@Team-5-CodeCat/otto-sdk/0.3.3/3c1c0033050d965cf62c46ec54d010d6006b2af0}
+  '@team-5-codecat/otto-sdk@0.4.0':
+    resolution: {integrity: sha512-7eevZWEuYGyj937/3b4Nqj0GD97JIm2n9MDqiXUkFZUjRriH9xpIW+m7HPhae1T+qADYn2jKqk1r5MPCpfdisA==, tarball: https://npm.pkg.github.com/download/@Team-5-CodeCat/otto-sdk/0.4.0/f4671de74dc8fea815601a200383bb0f47787454}
 
   '@tybys/wasm-util@0.10.0':
     resolution: {integrity: sha512-VyyPYFlOMNylG45GoAe0xDoLwWuowvf92F9kySqzYh8vmYm7D2u4iUJKa1tOUpS70Ku13ASrOkS4ScXFsTaCNQ==}
@@ -4630,7 +4630,7 @@ snapshots:
       postcss: 8.5.6
       tailwindcss: 4.1.13
 
-  '@team-5-codecat/otto-sdk@0.3.3(@types/node@20.19.13)(typescript@5.9.2)':
+  '@team-5-codecat/otto-sdk@0.4.0(@types/node@20.19.13)(typescript@5.9.2)':
     dependencies:
       '@nestia/fetcher': 7.4.0
       typia: 9.7.2(@types/node@20.19.13)(typescript@5.9.2)
