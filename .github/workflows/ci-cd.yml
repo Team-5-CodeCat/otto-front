@@ -107,14 +107,14 @@ jobs:
             cd ~/otto-front
 
             # Pull latest changes
-            sudo git pull origin main
+            git pull origin main
 
             # Setup NPM authentication for GitHub Packages
             echo "@Team-5-CodeCat:registry=https://npm.pkg.github.com" | sudo tee ~/.npmrc > /dev/null
             echo "//npm.pkg.github.com/:_authToken=${{ secrets.OTTO_SDK_PACKAGE_TOKEN }}" | sudo tee -a ~/.npmrc > /dev/null
 
             # Install dependencies
-            sudo pnpm install --frozen-lockfile
+            pnpm install --frozen-lockfile
 
             # Create .env.production file
             sudo tee .env.production > /dev/null << EOF
@@ -126,12 +126,12 @@ jobs:
             EOF
 
             # Build the application
-            sudo pnpm build
+            pnpm build
 
             # Check and install PM2 if not exists
             if ! command -v pm2 &> /dev/null; then
               echo "PM2 not found, installing..."
-              sudo npm install -g pm2
+              npm install -g pm2
             fi
 
             # Stop existing PM2 process if running

@@ -62,6 +62,7 @@ export default [
       ...pluginReactHooks.configs.recommended.rules,
       'react/react-in-jsx-scope': 'off', // Next.js에서는 불필요
       'react/prop-types': 'off', // TypeScript 사용 시 불필요
+      'react/no-unescaped-entities': 'off', // 따옴표 등 특수문자 허용
     },
     settings: {
       react: {
