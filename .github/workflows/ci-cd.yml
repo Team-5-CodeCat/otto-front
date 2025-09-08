@@ -134,11 +134,32 @@ jobs:
             fi
             echo "Node.js version: $(node --version)"
 
-            # Fix git permissions if needed
-            if [ -d ~/otto-front/.git ]; then
-              echo "Fixing git permissions..."
+            # Fix ALL permission issues at once
+            echo "Fixing file permissions..."
+
+            # Fix .npmrc permissions if it exists
+            if [ -f ~/.npmrc ]; then
+              echo "Found existing ~/.npmrc, checking ownership..."
+              ls -la ~/.npmrc
+              
+              # If owned by root or has wrong permissions, fix it
+              if [ ! -w ~/.npmrc ]; then
+                echo "Fixing .npmrc permissions..."
+                sudo chown $USER:$USER ~/.npmrc || {
+                  echo "Could not change ownership, removing file..."
+                  sudo rm -f ~/.npmrc || {
+                    echo "ERROR: Cannot fix or remove .npmrc"
+                    exit 1
+                  }
+                }
+              fi
+            fi
+
+            # Fix otto-front directory permissions
+            if [ -d ~/otto-front ]; then
+              echo "Fixing otto-front directory permissions..."
               sudo chown -R $USER:$USER ~/otto-front || {
-                echo "ERROR: Failed to fix git permissions"
+                echo "ERROR: Failed to fix otto-front permissions"
                 exit 1
               }
             fi
@@ -156,16 +177,26 @@ jobs:
               exit 1
             }
 
-            # Setup NPM authentication for GitHub Packages
+            # Setup NPM authentication - now with fixed permissions
             echo "Setting up NPM authentication..."
+
+            # Remove old .npmrc and create fresh
+            rm -f ~/.npmrc
+            touch ~/.npmrc
+            chmod 644 ~/.npmrc
+
+            # Write configuration
             echo "@Team-5-CodeCat:registry=https://npm.pkg.github.com" > ~/.npmrc || {
-              echo "ERROR: Failed to create .npmrc"
+              echo "ERROR: Failed to write to .npmrc"
               exit 1
             }
             echo "//npm.pkg.github.com/:_authToken=${{ secrets.OTTO_SDK_PACKAGE_TOKEN }}" >> ~/.npmrc || {
               echo "ERROR: Failed to add auth token to .npmrc"
               exit 1
             }
+
+            echo ".npmrc created successfully"
+            ls -la ~/.npmrc
 
             # Check and install pnpm if not exists
             if ! command -v pnpm &> /dev/null; then
