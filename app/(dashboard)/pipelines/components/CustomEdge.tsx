@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { BaseEdge, EdgeProps, getStraightPath, EdgeLabelRenderer } from 'reactflow';
+import { EdgeProps, getStraightPath, EdgeLabelRenderer } from 'reactflow';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -13,8 +13,6 @@ const CustomEdge: React.FC<CustomEdgeProps> = ({
   sourceY,
   targetX,
   targetY,
-  sourcePosition,
-  targetPosition,
   style = {},
   markerEnd,
   selected,

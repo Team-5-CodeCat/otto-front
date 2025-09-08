@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useNodeVersion } from '../../contexts/NodeVersionContext';
+import { useNodeVersion, type NodeVersion } from '../../contexts/NodeVersionContext';
 import { cn } from '@/lib/utils';
 
 interface NodeVersionSelectorProps {
@@ -15,7 +15,7 @@ export const NodeVersionSelector: React.FC<NodeVersionSelectorProps> = ({
   const [isOpen, setIsOpen] = useState(false);
 
   const handleVersionSelect = (version: string) => {
-    setSelectedVersion(version as any);
+    setSelectedVersion(version as NodeVersion);
     setIsOpen(false);
   };
 

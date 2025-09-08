@@ -5,7 +5,7 @@ interface NodePaletteProps {
   onAddNode: (nodeType: string) => void;
 }
 
-const NodePalette: React.FC<NodePaletteProps> = ({ onAddNode }) => {
+const NodePalette: React.FC<NodePaletteProps> = ({ onAddNode: _onAddNode }) => {
   return (
     <div className='w-48 min-w-48 md:w-52 lg:w-56 xl:w-60 2xl:w-64'>
       <PipelineBuilder 

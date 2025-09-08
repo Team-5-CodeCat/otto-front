@@ -26,7 +26,7 @@ export const EnvironmentVariableList: React.FC<EnvironmentVariableListProps> = (
   onAddVariable,
   onUpdateVariable,
   onToggleVisibility,
-  onRemoveVariable,
+  onRemoveVariable: _onRemoveVariable,
 }) => {
   return (
     <div className='border border-gray-200 rounded-lg p-3'>
