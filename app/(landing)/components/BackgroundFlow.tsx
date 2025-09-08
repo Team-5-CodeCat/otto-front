@@ -238,7 +238,7 @@ const BackgroundFlow: React.FC = () => {
 
   return (
     <>
-      <style jsx global>{`
+      <style>{`
         .react-flow__renderer {
           cursor: default !important;
         }

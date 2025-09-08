@@ -22,6 +22,7 @@ export default [
       'tsconfig.json',
       '.devcontainer/devcontainer.json',
       '**/*.css',
+      'next-env.d.ts',
     ],
   },
 
