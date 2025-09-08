@@ -55,24 +55,28 @@ export function useAuth() {
       setAuthState((prev) => ({ ...prev, isLoading: true }));
 
       const isSessionValid = await checkSession();
-
-      const user = await userMyInfo(makeFetch());
-      if (isSessionValid) {
-        // 세션이 유효한 경우 - 실제로는 사용자 정보 API를 호출해야 함
-        setAuthState({
-          isAuthenticated: true,
-          isLoading: false,
-          user: user,
-          error: null,
-        });
-      } else {
-        // 세션이 유효하지 않은 경우
-        setAuthState({
-          isAuthenticated: false,
-          isLoading: false,
-          user: null,
-          error: null,
-        });
+      try {
+        const user = await userMyInfo(makeFetch());
+        if (isSessionValid) {
+          // 세션이 유효한 경우 - 실제로는 사용자 정보 API를 호출해야 함
+          setAuthState({
+            isAuthenticated: true,
+            isLoading: false,
+            user: user,
+            error: null,
+          });
+        } else {
+          // 세션이 유효하지 않은 경우
+          setAuthState({
+            isAuthenticated: false,
+            isLoading: false,
+            user: null,
+            error: null,
+          });
+        }
+      } catch (error) {
+        setAuthState((prev) => ({ ...prev, isLoading: false }));
+        console.error('인증 상태 초기화 실패:', error);
       }
     };
 
