@@ -4,7 +4,7 @@ import { Node } from 'reactflow';
 import YamlEditor from '../../../components/ui/YamlEditor';
 import EnvironmentTab from '../../../components/ui/EnvironmentTab';
 import { EnvironmentVariable } from '../../../components/ui/EnvironmentVariableList';
-import { userMyInfo } from '@team-5-codecat/otto-sdk/lib/functional/user';
+import { userMyInfo } from '@Team-5-CodeCat/otto-sdk/lib/functional/user';
 import makeFetch from '@/app/lib/make-fetch';
 
 interface RightPanelProps {
