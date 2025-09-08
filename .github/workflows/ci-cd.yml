@@ -25,6 +25,7 @@ jobs:
 
       - name: Setup NPM authentication for GitHub Packages
         run: |
+          set -e  # Exit on error
           echo "@Team-5-CodeCat:registry=https://npm.pkg.github.com" > ~/.npmrc
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.OTTO_SDK_PACKAGE_TOKEN }}" >> ~/.npmrc
 
@@ -39,6 +40,7 @@ jobs:
 
       - name: Create .env.production
         run: |
+          set -e  # Exit on error
           echo "NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}" > .env.production
           echo "NEXT_PUBLIC_GITHUB_APP_NAME=${{ secrets.NEXT_PUBLIC_GITHUB_APP_NAME }}" >> .env.production
           echo "PORT=${{ secrets.PORT }}" >> .env.production
@@ -79,6 +81,7 @@ jobs:
 
       - name: Setup NPM authentication for GitHub Packages
         run: |
+          set -e  # Exit on error
           echo "@Team-5-CodeCat:registry=https://npm.pkg.github.com" > ~/.npmrc
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.OTTO_SDK_PACKAGE_TOKEN }}" >> ~/.npmrc
 
@@ -87,6 +90,7 @@ jobs:
 
       - name: Create .env.production
         run: |
+          set -e  # Exit on error
           echo "NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}" > .env.production
           echo "NEXT_PUBLIC_GITHUB_APP_NAME=${{ secrets.NEXT_PUBLIC_GITHUB_APP_NAME }}" >> .env.production
           echo "PORT=${{ secrets.PORT }}" >> .env.production
@@ -103,21 +107,89 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_SSH_PORT }}
           script: |
+            # Exit immediately if any command fails
+            set -euo pipefail
+
+            # Enable error reporting
+            trap 'echo "Error occurred at line $LINENO with exit code $?"' ERR
+
+            echo "Starting deployment..."
+
+            # Ensure Node.js is available
+            export NVM_DIR="$HOME/.nvm"
+            if [ -s "$NVM_DIR/nvm.sh" ]; then
+              . "$NVM_DIR/nvm.sh"
+            fi
+            if [ -s "$NVM_DIR/bash_completion" ]; then
+              . "$NVM_DIR/bash_completion"
+            fi
+
+            # Add system paths
+            export PATH="/usr/local/bin:/usr/bin:$PATH"
+
+            # Verify Node.js is available
+            if ! command -v node &> /dev/null; then
+              echo "ERROR: Node.js is not installed!"
+              exit 1
+            fi
+            echo "Node.js version: $(node --version)"
+
+            # Fix git permissions if needed
+            if [ -d ~/otto-front/.git ]; then
+              echo "Fixing git permissions..."
+              sudo chown -R $USER:$USER ~/otto-front || {
+                echo "ERROR: Failed to fix git permissions"
+                exit 1
+              }
+            fi
+
             # Navigate to project directory
-            cd ~/otto-front
+            cd ~/otto-front || {
+              echo "ERROR: Project directory ~/otto-front does not exist"
+              exit 1
+            }
 
             # Pull latest changes
-            git pull origin main
+            echo "Pulling latest changes..."
+            git pull origin main || {
+              echo "ERROR: Git pull failed"
+              exit 1
+            }
 
             # Setup NPM authentication for GitHub Packages
-            echo "@Team-5-CodeCat:registry=https://npm.pkg.github.com" > ~/.npmrc
-            echo "//npm.pkg.github.com/:_authToken=${{ secrets.OTTO_SDK_PACKAGE_TOKEN }}" >> ~/.npmrc
+            echo "Setting up NPM authentication..."
+            echo "@Team-5-CodeCat:registry=https://npm.pkg.github.com" > ~/.npmrc || {
+              echo "ERROR: Failed to create .npmrc"
+              exit 1
+            }
+            echo "//npm.pkg.github.com/:_authToken=${{ secrets.OTTO_SDK_PACKAGE_TOKEN }}" >> ~/.npmrc || {
+              echo "ERROR: Failed to add auth token to .npmrc"
+              exit 1
+            }
+
+            # Check and install pnpm if not exists
+            if ! command -v pnpm &> /dev/null; then
+              echo "pnpm not found, installing..."
+              npm install -g pnpm || {
+                echo "ERROR: Failed to install pnpm"
+                exit 1
+              }
+            fi
+            echo "pnpm version: $(pnpm --version)"
 
             # Install dependencies
-            pnpm install --frozen-lockfile
+            echo "Installing dependencies..."
+            pnpm install --frozen-lockfile || {
+              echo "ERROR: pnpm install failed"
+              exit 1
+            }
 
             # Create .env.production file
-            cat > .env.production << EOF
+            echo "Creating .env.production..."
+            cat > .env.production << 'EOF' || {
+              echo "ERROR: Failed to create .env.production"
+              exit 1
+            }
             NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
             NEXT_PUBLIC_GITHUB_APP_NAME=${{ secrets.NEXT_PUBLIC_GITHUB_APP_NAME }}
             PORT=${{ secrets.PORT }}
@@ -126,22 +198,48 @@ jobs:
             EOF
 
             # Build the application
-            pnpm build
+            echo "Building application..."
+            pnpm build || {
+              echo "ERROR: Build failed"
+              exit 1
+            }
 
             # Check and install PM2 if not exists
             if ! command -v pm2 &> /dev/null; then
               echo "PM2 not found, installing..."
-              npm install -g pm2
+              npm install -g pm2 || {
+                echo "ERROR: Failed to install PM2"
+                exit 1
+              }
             fi
+            echo "PM2 version: $(pm2 --version)"
 
             # Stop existing PM2 process if running
-            pm2 stop otto-front || true
+            echo "Stopping existing PM2 processes..."
+            pm2 stop otto-front 2>/dev/null || true
+            pm2 delete otto-front 2>/dev/null || true
 
-            # Start or restart the application with PM2
-            pm2 start npm --name "otto-front" -- start
+            # Start the application with PM2
+            echo "Starting application with PM2..."
+            pm2 start npm --name "otto-front" -- start || {
+              echo "ERROR: Failed to start application with PM2"
+              exit 1
+            }
 
             # Save PM2 process list
-            pm2 save
+            echo "Saving PM2 process list..."
+            pm2 save || {
+              echo "ERROR: Failed to save PM2 process list"
+              exit 1
+            }
 
-            # Optional: Setup PM2 to start on system boot
-            pm2 startup systemd -u $USER --hp /home/$USER || true
+            # Verify the app is running
+            sleep 3
+            if ! pm2 show otto-front | grep -q "online"; then
+              echo "ERROR: Application is not running!"
+              pm2 logs otto-front --lines 50
+              exit 1
+            fi
+
+            echo "Deployment completed successfully!"
+            pm2 status
