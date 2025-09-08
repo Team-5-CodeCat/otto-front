@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type NodeVersion = '20' | '21' | '22' | '23' | '24';
+export type NodeVersion = '20' | '22' | '24';
 
 interface NodeVersionContextType {
   selectedVersion: NodeVersion;
