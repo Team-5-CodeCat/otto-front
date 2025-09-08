@@ -237,16 +237,7 @@ const BackgroundFlow: React.FC = () => {
   const edges = isMobile ? mobileEdges : desktopEdges;
 
   return (
-    <>
-      <style jsx global>{`
-        .react-flow__renderer {
-          cursor: default !important;
-        }
-        .react-flow__pane {
-          cursor: default !important;
-        }
-      `}</style>
-      <div className={cn('w-full flex justify-center items-center', isMobile ? 'h-72' : 'h-52')}>
+    <div className={cn('w-full flex justify-center items-center', isMobile ? 'h-72' : 'h-52')}>
         <ReactFlowProvider>
           <div className={cn('w-full h-full mx-auto', isMobile ? 'max-w-md' : 'max-w-4xl')}>
             <ReactFlow
@@ -274,8 +265,7 @@ const BackgroundFlow: React.FC = () => {
             </ReactFlow>
           </div>
         </ReactFlowProvider>
-      </div>
-    </>
+    </div>
   );
 };
 
