@@ -1,5 +1,5 @@
 // 파이프라인 관련 타입 정의
-import type { Node, Edge, NodeChange, Connection } from 'reactflow';
+import type { Node, Edge, Connection } from 'reactflow';
 
 export interface JobNodeData {
   name: string;
