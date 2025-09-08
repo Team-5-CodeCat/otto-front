@@ -67,9 +67,13 @@ export default [
       'react/react-in-jsx-scope': 'off', // Next.js에서는 불필요
       'react/prop-types': 'off', // TypeScript 사용 시 불필요
 <<<<<<< HEAD
+<<<<<<< HEAD
       'react/no-unescaped-entities': 'off', // 따옴표 등 특수문자 허용
 =======
 >>>>>>> 8e24367 (fix: ci-cd (3))
+=======
+      'react/no-unescaped-entities': 'off', // 따옴표 등 특수문자 허용
+>>>>>>> cc81707 (fix: ci-cd (4))
     },
     settings: {
       react: {
@@ -94,8 +98,12 @@ export default [
     },
   },
 <<<<<<< HEAD
+<<<<<<< HEAD
 ];
 ];
 =======
 ];
 >>>>>>> 8e24367 (fix: ci-cd (3))
+=======
+];
+>>>>>>> cc81707 (fix: ci-cd (4))
