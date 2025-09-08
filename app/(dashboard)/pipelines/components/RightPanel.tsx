@@ -4,6 +4,8 @@ import { Node } from 'reactflow';
 import YamlEditor from '../../../components/ui/YamlEditor';
 import EnvironmentTab from '../../../components/ui/EnvironmentTab';
 import { EnvironmentVariable } from '../../../components/ui/EnvironmentVariableList';
+import { userMyInfo } from '@team-5-codecat/otto-sdk/lib/functional/user';
+import makeFetch from '@/app/lib/make-fetch';
 
 interface RightPanelProps {
   yamlText: string;
@@ -24,36 +26,38 @@ const RightPanel: React.FC<RightPanelProps> = ({
     {}
   );
   // 각 탭별로 독립적인 업로드된 파일 상태 관리
-  const [uploadedFiles, setUploadedFiles] = useState<Record<'build' | 'test' | 'deploy', File | null>>({
+  const [uploadedFiles, setUploadedFiles] = useState<
+    Record<'build' | 'test' | 'deploy', File | null>
+  >({
     build: null,
     test: null,
     deploy: null,
   });
 
-
   const handleRefresh = () => {
     // YAML 내용을 빈 문자열로 초기화
     onYamlChange('');
-    
+
     // 업로드된 파일들 초기화
     setUploadedFiles({
       build: null,
       test: null,
       deploy: null,
     });
-    
+
     // 환경 변수들 초기화
     setNodeEnvironments({});
   };
 
   const handleRun = async () => {
     try {
-      const response = await fetch('/api/v1/user');
+      await userMyInfo(makeFetch());
+      /*      const response = await fetch('/api/v1/user');
       console.log('API Response:', response);
       if (response.ok) {
         const data = await response.json();
         console.log('API Data:', data);
-      }
+      }*/
     } catch (error) {
       console.error('API Error:', error);
     }
@@ -130,17 +134,15 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
   // .env 파일 업로드 핸들러 (특정 노드 타입에만 적용)
   const handleEnvFileUpload = (envVars: Record<string, string>, file: File) => {
-    const targetNodes = getAvailableNodes().filter(node => 
-      node.data.name === activeEnvTab
-    );
-    
+    const targetNodes = getAvailableNodes().filter((node) => node.data.name === activeEnvTab);
+
     if (targetNodes.length === 0) {
       alert(`No ${activeEnvTab} nodes available. Please add a ${activeEnvTab} node first.`);
       return;
     }
 
     // 현재 탭에 파일 저장
-    setUploadedFiles(prev => ({
+    setUploadedFiles((prev) => ({
       ...prev,
       [activeEnvTab]: file,
     }));
@@ -167,7 +169,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
   // 파일 제거 핸들러
   const handleFileRemove = () => {
-    setUploadedFiles(prev => ({
+    setUploadedFiles((prev) => ({
       ...prev,
       [activeEnvTab]: null,
     }));
@@ -181,7 +183,6 @@ const RightPanel: React.FC<RightPanelProps> = ({
     );
   };
 
-
   return (
     <div className='w-64 min-w-64 bg-white border-l border-gray-200 flex flex-col md:w-72 lg:w-80 xl:w-96 2xl:w-[26rem]'>
       {/* 헤더 */}
@@ -194,7 +195,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
           >
             <RotateCcw size={16} className='text-gray-600' />
           </button>
-          <button 
+          <button
             onClick={handleRun}
             className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
           >
@@ -229,12 +230,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
       {/* 탭 컨텐츠 */}
       <div className='flex-1 overflow-hidden'>
-        {activeTab === 'yaml' && (
-          <YamlEditor
-            value={yamlText}
-            onChange={onYamlChange}
-          />
-        )}
+        {activeTab === 'yaml' && <YamlEditor value={yamlText} onChange={onYamlChange} />}
 
         {activeTab === 'env' && (
           <EnvironmentTab

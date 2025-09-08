@@ -1,27 +1,23 @@
 'use client';
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useAuth as useAuthHook, SignInFormData, SignUpFormData, SignInResponse } from '@/app/hooks/useAuth';
-
-// 사용자 타입
-interface User {
-  id: string;
-  email: string;
-  name: string;
-}
+import { useAuth as useAuthHook, SignInResponse } from '@/app/hooks/useAuth';
+import type { authSignIn } from '@team-5-codecat/otto-sdk/lib/functional/auth/sign_in';
+import type { authSignUp } from '@team-5-codecat/otto-sdk/lib/functional/auth/sign_up';
+import { userMyInfo } from '@team-5-codecat/otto-sdk/lib/functional/user';
 
 // 인증 상태 타입
 export interface AuthState {
   isAuthenticated: boolean;
-  user: User | null;
+  user: userMyInfo.Output | null;
   isLoading: boolean;
   error: string | null;
 }
 
 // 인증 컨텍스트 타입 - useAuth의 모든 기능을 포함
 export interface AuthContextType extends AuthState {
-  signIn: (formData: SignInFormData) => Promise<SignInResponse>;
-  signUp: (formData: SignUpFormData) => Promise<SignInResponse>;
+  signIn: (formData: authSignIn.Body) => Promise<SignInResponse>;
+  signUp: (formData: authSignUp.Body) => Promise<SignInResponse>;
   signOut: () => Promise<void>;
   validateToken: () => Promise<boolean>;
   refreshToken: () => Promise<boolean>;
@@ -93,17 +89,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     clearError,
   };
 
-  return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 };
 
 // useAuth 훅 (컨텍스트 접근용)
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  
+
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }

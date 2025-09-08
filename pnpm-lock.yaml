@@ -11,6 +11,9 @@ importers:
       '@Team-5-CodeCat/otto-sdk':
         specifier: ^0.3.3
         version: '@team-5-codecat/otto-sdk@0.3.3(@types/node@20.19.13)(typescript@5.9.2)'
+      '@nestia/fetcher':
+        specifier: ^8.0.7
+        version: 8.0.7
       '@radix-ui/themes':
         specifier: ^3.2.1
         version: 3.2.1(@types/react-dom@19.1.9(@types/react@19.1.12))(@types/react@19.1.12)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -373,6 +376,9 @@ packages:
 
   '@nestia/fetcher@7.4.0':
     resolution: {integrity: sha512-dbLpMuW6VGrmxicwaNelir13RPlq4yJk87nepjWxDnNjsuRBdYrBxCUJ7rmgvxYtMQCVrXeJrMcLvE+Pn496Jw==}
+
+  '@nestia/fetcher@8.0.7':
+    resolution: {integrity: sha512-qSsoyY2kXsxIdQ8O0RSxuPsW5DZWHJlb20oP8usrz8eL71gQBBCSD2uGGmbecqSSM5SJGskOJoTTT0rk5qoWHA==}
 
   '@next/env@15.5.2':
     resolution: {integrity: sha512-Qe06ew4zt12LeO6N7j8/nULSOe3fMXE4dM6xgpBQNvdzyK1sv5y4oAP3bq4LamrvGCZtmRYnW8URFCeX5nFgGg==}
@@ -3648,6 +3654,10 @@ snapshots:
     optional: true
 
   '@nestia/fetcher@7.4.0':
+    dependencies:
+      '@samchon/openapi': 4.7.1
+
+  '@nestia/fetcher@8.0.7':
     dependencies:
       '@samchon/openapi': 4.7.1
 
