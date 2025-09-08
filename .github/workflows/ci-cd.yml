@@ -217,16 +217,18 @@ jobs:
 
             # Create .env.production file
             echo "Creating .env.production..."
-            cat > .env.production << 'EOF' || {
+            {
+              echo "NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}"
+              echo "NEXT_PUBLIC_GITHUB_APP_NAME=${{ secrets.NEXT_PUBLIC_GITHUB_APP_NAME }}"
+              echo "PORT=${{ secrets.PORT }}"
+              echo "BACKEND_PORT=${{ secrets.BACKEND_PORT }}"
+              echo "NODE_ENV=production"
+            } > .env.production || {
               echo "ERROR: Failed to create .env.production"
               exit 1
             }
-            NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
-            NEXT_PUBLIC_GITHUB_APP_NAME=${{ secrets.NEXT_PUBLIC_GITHUB_APP_NAME }}
-            PORT=${{ secrets.PORT }}
-            BACKEND_PORT=${{ secrets.BACKEND_PORT }}
-            NODE_ENV=production
-            EOF
+
+            echo ".env.production created successfully"
 
             # Build the application
             echo "Building application..."
