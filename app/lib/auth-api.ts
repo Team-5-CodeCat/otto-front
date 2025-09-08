@@ -1,7 +1,7 @@
 // 백엔드 API와 연동하는 인증 관련 API 함수들
 
 // API 기본 설정
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 // API 응답 타입 정의
 export interface ApiResponse<T = unknown> {
