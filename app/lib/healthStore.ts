@@ -1,6 +1,6 @@
 // Health Check 상태 관리 스토어
 
-import { checkOttoscalerHealth as sdkCheckOttoscalerHealth } from '@Team-5-CodeCat/otto-sdk/lib/functional/health/ottoscaler';
+import * as ottoscalerHealth from '@Team-5-CodeCat/otto-sdk/lib/functional/health/ottoscaler';
 import type { OttoscalerHealthDto } from '@Team-5-CodeCat/otto-sdk/lib/structures/OttoscalerHealthDto';
 import { makeFetch } from './make-fetch';
 
@@ -54,7 +54,7 @@ export const checkOttoscalerHealth = async (): Promise<OttoscalerHealth> => {
   try {
     // makeFetch()로 connection 설정을 가져와서 SDK 호출
     const connection = makeFetch();
-    const result = await sdkCheckOttoscalerHealth(connection);
+    const result = await ottoscalerHealth.checkOttoscalerHealth(connection);
     return result;
   } catch (error) {
     // SDK 에러 처리
