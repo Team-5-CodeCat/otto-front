@@ -120,7 +120,7 @@ const LogsPage: React.FC = () => {
   const filteredLogs = filter === 'all' ? logs : logs.filter(log => log.status === filter);
 
   const formatTime = (timeString: string) => {
-    return new Date(timeString).toLocaleString('ko-KR', {
+    return new Date(timeString).toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
@@ -132,7 +132,7 @@ const LogsPage: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader className="w-8 h-8 text-blue-500 animate-spin" />
-        <span className="ml-2 text-gray-600">로그를 불러오는 중...</span>
+        <span className="ml-2 text-gray-600">Loading logs...</span>
       </div>
     );
   }
@@ -143,7 +143,7 @@ const LogsPage: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Builds</h1>
-          <p className="text-gray-600 mt-1">빌드 및 배포 로그를 확인하세요</p>
+          <p className="text-gray-600 mt-1">Monitor your build and deployment logs</p>
         </div>
         
         {/* Filter Buttons */}
@@ -158,9 +158,9 @@ const LogsPage: React.FC = () => {
                   : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
               }`}
             >
-              {status === 'all' ? '전체' : 
-               status === 'completed' ? '완료' :
-               status === 'running' ? '실행중' : '실패'}
+              {status === 'all' ? 'All' : 
+               status === 'completed' ? 'Completed' :
+               status === 'running' ? 'Running' : 'Failed'}
             </button>
           ))}
         </div>
@@ -171,7 +171,7 @@ const LogsPage: React.FC = () => {
         <div className="bg-white p-4 rounded-xl border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">총 배포</p>
+              <p className="text-sm text-gray-600">Total Builds</p>
               <p className="text-2xl font-bold text-gray-900">{logs.length}</p>
             </div>
             <div className="p-2 bg-blue-50 rounded-lg">
@@ -183,7 +183,7 @@ const LogsPage: React.FC = () => {
         <div className="bg-white p-4 rounded-xl border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">성공</p>
+              <p className="text-sm text-gray-600">Success</p>
               <p className="text-2xl font-bold text-green-600">
                 {logs.filter(log => log.status === 'completed').length}
               </p>
@@ -197,7 +197,7 @@ const LogsPage: React.FC = () => {
         <div className="bg-white p-4 rounded-xl border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">실행중</p>
+              <p className="text-sm text-gray-600">Running</p>
               <p className="text-2xl font-bold text-blue-600">
                 {logs.filter(log => log.status === 'running').length}
               </p>
@@ -211,7 +211,7 @@ const LogsPage: React.FC = () => {
         <div className="bg-white p-4 rounded-xl border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">실패</p>
+              <p className="text-sm text-gray-600">Failed</p>
               <p className="text-2xl font-bold text-red-600">
                 {logs.filter(log => log.status === 'failed').length}
               </p>
@@ -226,7 +226,7 @@ const LogsPage: React.FC = () => {
       {/* Logs List */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">최근 빌드 로그</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Recent Build Logs</h2>
         </div>
         
         <div className="divide-y divide-gray-200">
@@ -244,9 +244,9 @@ const LogsPage: React.FC = () => {
                         {log.title}
                       </Link>
                       <span className={getStatusBadge(log.status)}>
-                        {log.status === 'completed' ? '완료' :
-                         log.status === 'running' ? '실행중' :
-                         log.status === 'failed' ? '실패' : '대기중'}
+                        {log.status === 'completed' ? 'Completed' :
+                         log.status === 'running' ? 'Running' :
+                         log.status === 'failed' ? 'Failed' : 'Pending'}
                       </span>
                     </div>
                     
@@ -295,7 +295,7 @@ const LogsPage: React.FC = () => {
                     href={`/builds/${log.deploymentId}`}
                     className="inline-flex items-center space-x-1 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
                   >
-                    <span>상세 로그</span>
+                    <span>View Details</span>
                     <ExternalLink className="w-3 h-3" />
                   </Link>
                 </div>
@@ -308,7 +308,7 @@ const LogsPage: React.FC = () => {
       {filteredLogs.length === 0 && (
         <div className="text-center py-12">
           <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600">해당 조건의 로그가 없습니다.</p>
+          <p className="text-gray-600">No logs found for the selected filter.</p>
         </div>
       )}
     </div>
