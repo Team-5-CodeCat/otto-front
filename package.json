@@ -9,7 +9,7 @@
     "start:production": "dotenv -e .env.production -- next start"
   },
   "dependencies": {
-    "@Team-5-CodeCat/otto-sdk": "^0.4.0",
+    "@Team-5-CodeCat/otto-sdk": "0.5.3",
     "@nestia/fetcher": "^8.0.7",
     "@radix-ui/themes": "^3.2.1",
     "clsx": "^2.1.1",

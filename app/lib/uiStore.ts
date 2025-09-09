@@ -4,7 +4,7 @@ import { create } from 'zustand';
 interface UIState {
   // Pipeline Builder 표시 여부
   showPipelineBuilder: boolean;
-  
+
   // 액션들
   setShowPipelineBuilder: (show: boolean) => void;
   togglePipelineBuilder: () => void;
@@ -14,11 +14,11 @@ interface UIState {
 export const useUIStore = create<UIState>((set) => ({
   // 초기 상태
   showPipelineBuilder: false,
-  
+
   // 액션들
-  setShowPipelineBuilder: (show: boolean) => 
-    set({ showPipelineBuilder: show }),
-    
-  togglePipelineBuilder: () => 
+  setShowPipelineBuilder: (show: boolean) =>
+    set((state) => (state.showPipelineBuilder === show ? state : { showPipelineBuilder: show })),
+
+  togglePipelineBuilder: () =>
     set((state) => ({ showPipelineBuilder: !state.showPipelineBuilder })),
 }));

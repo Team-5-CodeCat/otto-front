@@ -14,7 +14,12 @@ interface EnvironmentTabProps {
   nodes: Node[];
   nodeEnvironments: Record<string, EnvironmentVariable[]>;
   onAddEnvironmentVariable: (nodeId: string) => void;
-  onUpdateEnvironmentVariable: (nodeId: string, index: number, field: 'key' | 'value', value: string) => void;
+  onUpdateEnvironmentVariable: (
+    nodeId: string,
+    index: number,
+    field: 'key' | 'value',
+    value: string
+  ) => void;
   onToggleVisibility: (nodeId: string, index: number) => void;
   onRemoveEnvironmentVariable: (nodeId: string, index: number) => void;
 }
@@ -34,12 +39,14 @@ export const EnvironmentTab: React.FC<EnvironmentTabProps> = ({
 }) => {
   // 현재 탭에 해당하는 노드들 필터링
   const getAvailableNodes = () => {
-    return nodes.filter(
-      (node) =>
-        node.type === 'jobNode' && 
-        ['build', 'test', 'deploy'].includes(node.data.name as string) &&
-        node.data.name === activeEnvTab
-    );
+    return nodes.filter((node) => {
+      const name = String(node.data.name || '').toLowerCase();
+      return (
+        node.type === 'jobNode' &&
+        ['build', 'test', 'deploy'].includes(name) &&
+        name === activeEnvTab
+      );
+    });
   };
 
   const availableNodes = getAvailableNodes();
@@ -54,7 +61,7 @@ export const EnvironmentTab: React.FC<EnvironmentTabProps> = ({
             onClick={() => onTabChange(tab)}
             className={`flex-1 px-3 py-2 text-xs font-medium transition-colors capitalize ${
               activeEnvTab === tab
-                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                ? 'text-emerald-700 border-b-2 border-emerald-600 bg-emerald-50'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -66,7 +73,7 @@ export const EnvironmentTab: React.FC<EnvironmentTabProps> = ({
       {/* 파일 업로드 섹션 */}
       <div className='p-4 border-b border-gray-200'>
         <h3 className='text-sm font-medium text-gray-900 mb-3'>Upload .env File</h3>
-        <EnvFileUploader 
+        <EnvFileUploader
           onFileUpload={onFileUpload}
           onFileRemove={onFileRemove}
           uploadedFile={uploadedFile}

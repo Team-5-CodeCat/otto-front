@@ -147,7 +147,14 @@ export function useAuth() {
           username: formData.username,
         });
 
-        console.log('회원가입 성공:', response.message);
+        console.log('회원가입 성공');
+        
+        // 회원가입 성공 후 로그인 페이지로 이동
+        router.push('/signin');
+        
+        // 로딩 상태 해제
+        setAuthState((prev) => ({ ...prev, isLoading: false }));
+        
         return {
           success: true,
           message: response.message,
@@ -169,7 +176,7 @@ export function useAuth() {
         };
       }
     },
-    [signIn]
+    [router]
   );
 
   // 로그아웃 (세션 기반)

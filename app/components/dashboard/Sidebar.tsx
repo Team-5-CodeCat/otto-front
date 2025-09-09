@@ -9,6 +9,7 @@ import DropdownSelect from './DropdownSelect';
 import ActionIcons from './ActionIcons';
 import PipelineBuilder from './PipelineBuilder';
 import { actionIcons } from './constants';
+import { checkOttoscalerHealth, healthStore } from '@/app/lib/healthStore';
 
 // Job 인터페이스
 interface Job {
@@ -57,9 +58,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   const isPipelinePage = pathname === '/pipelines' || pathname?.startsWith('/pipelines/');
 
   return (
-    <aside className='h-screen w-64 bg-white border-r border-gray-200 flex flex-col'>
+    <aside className='h-screen w-64 bg-white border-r border-emerald-200 flex flex-col'>
       {/* 로고/브랜드 영역 */}
-      <div className='h-16 px-4 flex items-center border-b border-gray-200 flex-shrink-0'>
+      <div className='h-16 px-4 flex items-center border-b border-emerald-200 flex-shrink-0'>
         {/* Otto 로고 - 클릭 시 홈으로 이동 */}
         <Link href='/' className='flex items-center space-x-2 hover:opacity-80 transition-opacity'>
           <span className='text-lg font-semibold text-gray-900'>Otto</span>
@@ -67,7 +68,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* 프로젝트/파이프라인 선택 섹션 */}
-      <div className='p-4 border-t border-gray-200 bg-white'>
+      <div className='p-4 border-t border-emerald-200 bg-white'>
         {/* 프로젝트 드롭다운 */}
         <DropdownSelect
           label='Project'
@@ -101,6 +102,33 @@ const Sidebar: React.FC<SidebarProps> = ({
         {/* 액션 아이콘들 */}
         <ActionIcons icons={actionIcons} />
 
+        {/* Health Check 버튼 */}
+        <button
+          onClick={async () => {
+            try {
+              healthStore.startHealthCheck();
+              const health = await checkOttoscalerHealth();
+              healthStore.setHealthCheckResult(health);
+
+              // 결과를 alert로 표시 (나중에 더 나은 UI로 개선 가능)
+              if (health.connected) {
+                alert(
+                  `✅ Ottoscaler is healthy!\n\nResponse time: ${health.responseTime}ms\nWorkers: ${health.workerStatus?.totalCount || 0} total`
+                );
+              } else {
+                alert(`❌ Ottoscaler is unhealthy!\n\n${health.error || 'Connection failed'}`);
+              }
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+              healthStore.setHealthCheckError(errorMessage);
+              alert(`❌ Health check failed!\n\n${errorMessage}`);
+            }
+          }}
+          className='w-full mt-2 px-3 py-2 text-sm text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 rounded-md transition-colors font-medium border border-emerald-200'
+        >
+          🩺 Check Ottoscaler Health
+        </button>
+
         {/* 새 파이프라인 생성 버튼 */}
         <button
           onClick={onNewPipelineClick}
@@ -110,11 +138,10 @@ const Sidebar: React.FC<SidebarProps> = ({
         </button>
       </div>
 
-
       {/* Pipeline Builder - 파이프라인 페이지에서만 표시 */}
       {isPipelinePage && showPipelineBuilder && (
         <PipelineBuilder
-          className='flex-1 min-h-0 border-t border-gray-200'
+          className='flex-1 min-h-0 border-t border-emerald-200'
           showHeader={false}
           showVersionSelector={true}
         />
@@ -122,24 +149,30 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Jobs 목록 - showJobs가 true일 때만 표시 */}
       {showJobs && jobs.length > 0 && (
-        <div className='flex-1 min-h-0 border-t border-gray-200 p-4'>
+        <div className='flex-1 min-h-0 border-t border-emerald-200 p-4'>
           <h3 className='font-semibold text-gray-900 mb-4'>Jobs</h3>
           <div className='space-y-2'>
-            {jobs.map(job => (
-              <div 
+            {jobs.map((job) => (
+              <div
                 key={job.id}
-                className={`flex items-center space-x-3 px-3 py-3 rounded-lg cursor-pointer transition-all hover:bg-gray-50 ${
-                  selectedJob === job.id 
-                    ? 'bg-blue-50 border border-blue-200 text-blue-700' 
+                className={`flex items-center space-x-3 px-3 py-3 rounded-lg cursor-pointer transition-all hover:bg-emerald-50 ${
+                  selectedJob === job.id
+                    ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
                     : 'text-gray-700'
                 }`}
                 onClick={() => onJobSelect && onJobSelect(job.id)}
               >
-                <div className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                  job.status === 'completed' ? 'bg-green-500' : 
-                  job.status === 'running' ? 'bg-blue-500' : 
-                  job.status === 'failed' ? 'bg-red-500' : 'bg-gray-400'
-                }`} />
+                <div
+                  className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                    job.status === 'completed'
+                      ? 'bg-emerald-500'
+                      : job.status === 'running'
+                        ? 'bg-emerald-600'
+                        : job.status === 'failed'
+                          ? 'bg-red-500'
+                          : 'bg-gray-400'
+                  }`}
+                />
                 <div className='flex-1 min-w-0'>
                   <span className='text-sm font-medium block truncate'>{job.name}</span>
                   <span className='text-xs text-gray-500'>{job.duration}</span>

@@ -3,9 +3,11 @@ import { RotateCcw, Play, Save, FolderOpen } from 'lucide-react';
 import { Node } from 'reactflow';
 import YamlEditor from '../../../components/ui/YamlEditor';
 import EnvironmentTab from '../../../components/ui/EnvironmentTab';
+import SavePipelineModal from './SavePipelineModal';
+import LoadPipelineModal from './LoadPipelineModal';
 import { EnvironmentVariable } from '../../../components/ui/EnvironmentVariableList';
-import { userMyInfo } from '@Team-5-CodeCat/otto-sdk/lib/functional/user';
-import makeFetch from '@/app/lib/make-fetch';
+// import { userMyInfo } from '@Team-5-CodeCat/otto-sdk/lib/functional/user';
+// import makeFetch from '@/app/lib/make-fetch';
 
 interface RightPanelProps {
   yamlText: string;
@@ -23,6 +25,8 @@ interface RightPanelProps {
     name: string;
     version: number;
   }>;
+  // ✅ 실행 콜백 추가
+  onRunPipeline?: () => Promise<void>;
 }
 
 const RightPanel: React.FC<RightPanelProps> = ({
@@ -33,6 +37,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   onSavePipeline,
   onLoadPipeline,
   availablePipelines = [],
+  onRunPipeline,
 }) => {
   const [activeTab, setActiveTab] = useState<'yaml' | 'env'>('yaml');
   const [activeEnvTab, setActiveEnvTab] = useState<'build' | 'test' | 'deploy'>('build');
@@ -104,9 +109,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
     }
   };
 
-  // ✅ 파이프라인 실행 (테스트용)
+  // ✅ 파이프라인 실행 (SDK)
   const handleRun = async () => {
-    console.log('파이프라인 실행:', yamlText);
+    if (onRunPipeline) {
+      await onRunPipeline();
+      return;
+    }
     alert('파이프라인 실행 기능은 준비 중입니다.');
   };
   // 노드별 환경 변수 추가
@@ -180,7 +188,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
   // .env 파일 업로드 핸들러 (특정 노드 타입에만 적용)
   const handleEnvFileUpload = (envVars: Record<string, string>, file: File) => {
-    const targetNodes = getAvailableNodes().filter((node) => node.data.name === activeEnvTab);
+    const targetNodes = getAvailableNodes().filter(
+      (node) => getNodeNameLower(node) === activeEnvTab
+    );
 
     if (targetNodes.length === 0) {
       alert(`No ${activeEnvTab} nodes available. Please add a ${activeEnvTab} node first.`);
@@ -222,11 +232,16 @@ const RightPanel: React.FC<RightPanelProps> = ({
   };
 
   // 현재 캔버스에 있는 노드들 필터링
+  const getNodeNameLower = (node: Node): string => {
+    const data = node.data as { name?: string };
+    return String(data?.name ?? '').toLowerCase();
+  };
+
   const getAvailableNodes = () => {
-    return nodes.filter(
-      (node) =>
-        node.type === 'jobNode' && ['build', 'test', 'deploy'].includes(node.data.name as string)
-    );
+    return nodes.filter((node) => {
+      const name = getNodeNameLower(node);
+      return node.type === 'jobNode' && ['build', 'test', 'deploy'].includes(name);
+    });
   };
 
   return (
@@ -265,10 +280,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
           <button
             onClick={handleRun}
-            className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
+            className='px-3 py-2 bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500'
             title='파이프라인 실행'
           >
-            <Play size={16} className='text-gray-600' />
+            <Play size={16} className='text-white' />
           </button>
         </div>
       </div>
@@ -279,7 +294,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
           onClick={() => setActiveTab('yaml')}
           className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === 'yaml'
-              ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+              ? 'text-emerald-700 border-b-2 border-emerald-600 bg-emerald-50'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -289,7 +304,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
           onClick={() => setActiveTab('env')}
           className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === 'env'
-              ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+              ? 'text-emerald-700 border-b-2 border-emerald-600 bg-emerald-50'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -318,75 +333,21 @@ const RightPanel: React.FC<RightPanelProps> = ({
         )}
       </div>
 
-      {/* ✅ 저장 모달 */}
-      {showSaveModal && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-          <div className='bg-white p-6 rounded-lg shadow-lg w-96'>
-            <h3 className='text-lg font-semibold mb-4'>파이프라인 저장</h3>
-            <input
-              type='text'
-              value={pipelineName}
-              onChange={(e) => setPipelineName(e.target.value)}
-              className='w-full p-2 border border-gray-300 rounded-lg mb-4'
-              placeholder='파이프라인 이름을 입력하세요'
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && pipelineName.trim()) {
-                  handleSaveConfirm();
-                }
-              }}
-            />
-            <div className='flex justify-end space-x-3'>
-              <button
-                onClick={() => setShowSaveModal(false)}
-                className='px-4 py-2 text-gray-600 hover:text-gray-800'
-              >
-                취소
-              </button>
-              <button
-                onClick={handleSaveConfirm}
-                disabled={!pipelineName.trim()}
-                className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50'
-              >
-                저장
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <SavePipelineModal
+        open={showSaveModal}
+        pipelineName={pipelineName}
+        onChange={setPipelineName}
+        onCancel={() => setShowSaveModal(false)}
+        onConfirm={handleSaveConfirm}
+        confirmDisabled={!pipelineName.trim()}
+      />
 
-      {/* ✅ 불러오기 모달 */}
-      {showLoadModal && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-          <div className='bg-white p-6 rounded-lg shadow-lg w-96'>
-            <h3 className='text-lg font-semibold mb-4'>파이프라인 불러오기</h3>
-            <div className='max-h-64 overflow-y-auto'>
-              {availablePipelines.length === 0 ? (
-                <p className='text-gray-500 text-center py-4'>저장된 파이프라인이 없습니다.</p>
-              ) : (
-                availablePipelines.map((pipeline) => (
-                  <div
-                    key={pipeline.pipelineID}
-                    className='p-3 border border-gray-200 rounded-lg mb-2 cursor-pointer hover:bg-gray-50'
-                    onClick={() => handleLoadConfirm(pipeline.pipelineID)}
-                  >
-                    <h4 className='font-medium'>{pipeline.name}</h4>
-                    <p className='text-sm text-gray-600'>버전: {pipeline.version}</p>
-                    <p className='text-xs text-gray-500'>ID: {pipeline.pipelineID}</p>
-                  </div>
-                ))
-              )}
-            </div>
-            <div className='flex justify-end mt-4'>
-              <button
-                onClick={() => setShowLoadModal(false)}
-                className='px-4 py-2 text-gray-600 hover:text-gray-800'
-              >
-                취소
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <LoadPipelineModal
+        open={showLoadModal}
+        pipelines={availablePipelines}
+        onCancel={() => setShowLoadModal(false)}
+        onSelect={handleLoadConfirm}
+      />
     </div>
   );
 };

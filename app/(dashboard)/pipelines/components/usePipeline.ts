@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   useNodesState,
   useEdgesState,
@@ -12,6 +12,10 @@ import { useNodeVersion } from '../../../contexts/NodeVersionContext';
 
 export const usePipeline = () => {
   const { selectedVersion } = useNodeVersion();
+  
+  // 업데이트 소스 추적용 ref
+  const isUpdatingFromYaml = useRef(false);
+  const isUpdatingFromNodes = useRef(false);
   
   // YAML 텍스트 상태 - 이것이 우리의 단일 진실 소스입니다
   const [yamlText, setYamlText] = useState(`- name: build
@@ -41,12 +45,19 @@ export const usePipeline = () => {
 
   // YAML 텍스트가 변경될 때 노드와 간선을 업데이트
   useEffect(() => {
-    setNodes((currentNodes) => {
-      const newNodes = yamlToNodes(yamlText, currentNodes);
-      return newNodes;
-    });
-    const newEdges = yamlToEdges(yamlText);
-    setEdges(newEdges);
+    if (!isUpdatingFromNodes.current) {
+      isUpdatingFromYaml.current = true;
+      setNodes((currentNodes) => {
+        const newNodes = yamlToNodes(yamlText, currentNodes);
+        return newNodes;
+      });
+      const newEdges = yamlToEdges(yamlText);
+      setEdges(newEdges);
+      // 다음 렌더 사이클에서 플래그 리셋
+      setTimeout(() => {
+        isUpdatingFromYaml.current = false;
+      }, 0);
+    }
   }, [yamlText, setNodes, setEdges]);
 
   // Node.js 버전이 변경될 때 YAML 텍스트의 node:20 부분을 업데이트
@@ -56,54 +67,44 @@ export const usePipeline = () => {
     });
   }, [selectedVersion]);
 
+  // 노드나 간선이 변경될 때마다 YAML 업데이트 (수동 YAML 편집은 제외)
+  useEffect(() => {
+    if (!isUpdatingFromYaml.current) {
+      isUpdatingFromNodes.current = true;
+      const newYaml = nodesToYaml(nodes, edges);
+      // 현재 YAML과 다른 경우에만 업데이트 (무한 루프 방지)
+      setYamlText(currentYaml => {
+        const shouldUpdate = newYaml !== currentYaml;
+        return shouldUpdate ? newYaml : currentYaml;
+      });
+      // 다음 렌더 사이클에서 플래그 리셋
+      setTimeout(() => {
+        isUpdatingFromNodes.current = false;
+      }, 0);
+    }
+  }, [nodes, edges]);
+
   // 노드 변경사항을 처리하는 함수 (위치 변경 시에는 YAML을 업데이트하지 않음)
   const handleNodesChange = useCallback((changes: NodeChange[]) => {
-    // 노드 상태만 업데이트하고, YAML은 건드리지 않음
-    // 노드의 시각적 위치와 YAML은 독립적으로 관리됨
-    return changes;
-  }, []);
+    // React Flow의 onNodesChange를 직접 사용
+    // 위치 변경은 시각적으로만 반영하고 YAML은 건드리지 않음
+    onNodesChange(changes);
+  }, [onNodesChange]);
 
   // 간선 연결 시 YAML 업데이트
   const onConnect = useCallback(
     (params: Edge | Connection) => {
-      setEdges((eds) => {
-        // addEdge가 자동으로 고유한 ID를 생성하도록 함
-        const newEdges = addEdge(params, eds);
-
-        // 간선이 추가되면 YAML을 업데이트 (노드 위치는 변경하지 않음)
-        setTimeout(() => {
-          setNodes((currentNodes) => {
-            const newYaml = nodesToYaml(currentNodes, newEdges);
-            setYamlText(newYaml);
-            return currentNodes; // 노드 위치는 그대로 유지
-          });
-        }, 50);
-
-        return newEdges;
-      });
+      setEdges((eds) => addEdge(params, eds));
     },
-    [setEdges, setNodes, setYamlText]
+    [setEdges]
   );
 
   // 간선 삭제 핸들러
   const handleEdgeDelete = useCallback(
     (edgeId: string) => {
-      setEdges((eds) => {
-        const newEdges = eds.filter((edge) => edge.id !== edgeId);
-
-        // 간선이 삭제되면 YAML을 업데이트 (노드 위치는 변경하지 않음)
-        setTimeout(() => {
-          setNodes((currentNodes) => {
-            const newYaml = nodesToYaml(currentNodes, newEdges);
-            setYamlText(newYaml);
-            return currentNodes; // 노드 위치는 그대로 유지
-          });
-        }, 50);
-
-        return newEdges;
-      });
+      setEdges((eds) => eds.filter((edge) => edge.id !== edgeId));
     },
-    [setEdges, setNodes, setYamlText]
+    [setEdges]
   );
 
   // 노드 추가 핸들러 (드래그 앤 드롭 지원)
@@ -118,7 +119,7 @@ export const usePipeline = () => {
           y: 100 + newNodeIndex * 150, // 세로로 순차 배치 (150px 간격)
         },
         data: {
-          name: nodeType,
+          name: nodeType === 'build' ? 'Build' : nodeType === 'test' ? 'Test' : nodeType === 'deploy' ? 'Deploy' : nodeType,
           image: nodeType === 'build' || nodeType === 'test' ? `node:${selectedVersion}` : 'ubuntu:22.04',
           commands:
             nodeType === 'build'
@@ -132,17 +133,8 @@ export const usePipeline = () => {
       };
 
       setNodes((nds) => [...nds, newNode]);
-
-      // YAML도 업데이트
-      setTimeout(() => {
-        setNodes((currentNodes) => {
-          const newYaml = nodesToYaml(currentNodes, edges);
-          setYamlText(newYaml);
-          return currentNodes;
-        });
-      }, 50);
     },
-    [nodes.length, edges, setNodes, setYamlText, selectedVersion]
+    [nodes.length, setNodes, selectedVersion]
   );
 
   // YAML 텍스트 변경 핸들러
@@ -157,7 +149,7 @@ export const usePipeline = () => {
   const handleUpdateNodeEnvironment = useCallback(
     (nodeId: string, environment: Record<string, string>) => {
       setNodes((currentNodes) => {
-        const updatedNodes = currentNodes.map((node) => {
+        return currentNodes.map((node) => {
           if (node.id === nodeId) {
             return {
               ...node,
@@ -169,17 +161,9 @@ export const usePipeline = () => {
           }
           return node;
         });
-
-        // YAML도 업데이트
-        setTimeout(() => {
-          const newYaml = nodesToYaml(updatedNodes, edges);
-          setYamlText(newYaml);
-        }, 50);
-
-        return updatedNodes;
       });
     },
-    [edges, setNodes, setYamlText]
+    [setNodes]
   );
 
   return {

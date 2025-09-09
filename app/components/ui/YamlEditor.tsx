@@ -25,7 +25,7 @@ export const YamlEditor: React.FC<YamlEditorProps> = ({
       <textarea
         value={value}
         onChange={handleChange}
-        className='w-full h-full resize-none border border-gray-300 rounded-lg p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+        className='w-full h-full resize-none border border-gray-300 rounded-lg p-3 font-mono text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
         placeholder={placeholder}
       />
     </div>

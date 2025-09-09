@@ -21,7 +21,7 @@ export default function Footer() {
             </a>
           </div>
 
-          <div className='text-sm text-gray-700'>© 2024 Otto. All rights reserved.</div>
+          <div className='text-sm text-gray-700'>© 2025 Otto. All rights reserved.</div>
         </div>
       </div>
     </footer>

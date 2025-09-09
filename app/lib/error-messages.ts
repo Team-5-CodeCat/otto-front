@@ -22,7 +22,7 @@ export function mapErrorToUserMessage(error: unknown): ErrorInfo {
 
   if (error instanceof Error) {
     const errorMessage = error.message.toLowerCase();
-    
+
     // 404 에러 - 엔드포인트를 찾을 수 없음
     if (errorMessage.includes('404') || errorMessage.includes('not found')) {
       return {
@@ -31,7 +31,7 @@ export function mapErrorToUserMessage(error: unknown): ErrorInfo {
         retryable: true,
       };
     }
-    
+
     // 401 에러 - 인증 실패
     if (errorMessage.includes('401') || errorMessage.includes('unauthorized')) {
       return {
@@ -40,7 +40,7 @@ export function mapErrorToUserMessage(error: unknown): ErrorInfo {
         retryable: false,
       };
     }
-    
+
     // 400 에러 - 잘못된 요청
     if (errorMessage.includes('400') || errorMessage.includes('bad request')) {
       return {
@@ -49,7 +49,7 @@ export function mapErrorToUserMessage(error: unknown): ErrorInfo {
         retryable: false,
       };
     }
-    
+
     // 403 에러 - 접근 금지
     if (errorMessage.includes('403') || errorMessage.includes('forbidden')) {
       return {
@@ -58,7 +58,16 @@ export function mapErrorToUserMessage(error: unknown): ErrorInfo {
         retryable: false,
       };
     }
-    
+
+    // 409 에러 - 리소스 충돌 (중복 가입 등)
+    if (errorMessage.includes('409') || errorMessage.includes('conflict')) {
+      return {
+        message: '이미 가입된 이메일입니다.',
+        suggestion: '로그인하거나 다른 이메일로 시도해주세요.',
+        retryable: false,
+      };
+    }
+
     // 422 에러 - 유효성 검증 실패
     if (errorMessage.includes('422') || errorMessage.includes('unprocessable')) {
       return {
@@ -67,7 +76,7 @@ export function mapErrorToUserMessage(error: unknown): ErrorInfo {
         retryable: false,
       };
     }
-    
+
     // 429 에러 - 너무 많은 요청
     if (errorMessage.includes('429') || errorMessage.includes('too many')) {
       return {
@@ -76,13 +85,13 @@ export function mapErrorToUserMessage(error: unknown): ErrorInfo {
         retryable: true,
       };
     }
-    
+
     // 500, 502, 503, 504 에러 - 서버 에러
     if (
-      errorMessage.includes('500') || 
-      errorMessage.includes('502') || 
-      errorMessage.includes('503') || 
-      errorMessage.includes('504') || 
+      errorMessage.includes('500') ||
+      errorMessage.includes('502') ||
+      errorMessage.includes('503') ||
+      errorMessage.includes('504') ||
       errorMessage.includes('internal server') ||
       errorMessage.includes('bad gateway') ||
       errorMessage.includes('service unavailable') ||
@@ -94,10 +103,10 @@ export function mapErrorToUserMessage(error: unknown): ErrorInfo {
         retryable: true,
       };
     }
-    
+
     // 네트워크 에러
     if (
-      errorMessage.includes('failed to fetch') || 
+      errorMessage.includes('failed to fetch') ||
       errorMessage.includes('network') ||
       errorMessage.includes('timeout') ||
       errorMessage.includes('connection')
@@ -108,7 +117,7 @@ export function mapErrorToUserMessage(error: unknown): ErrorInfo {
         retryable: true,
       };
     }
-    
+
     // CORS 에러
     if (errorMessage.includes('cors')) {
       return {
@@ -190,14 +199,14 @@ export function mapErrorToUserMessage(error: unknown): ErrorInfo {
  */
 export function extractStatusCode(error: Error): number | null {
   const message = error.message;
-  
+
   // 정규식으로 3자리 숫자 찾기 (HTTP 상태 코드)
   const statusCodeMatch = message.match(/\b[4-5]\d{2}\b/);
-  
+
   if (statusCodeMatch) {
     return parseInt(statusCodeMatch[0], 10);
   }
-  
+
   return null;
 }
 
