@@ -8,6 +8,7 @@ import { userMyInfo } from '@Team-5-CodeCat/otto-sdk/lib/functional/user';
 import { authSignInByRefresh } from '@Team-5-CodeCat/otto-sdk/lib/functional/auth/sign_in/refresh';
 import { authSignUp } from '@Team-5-CodeCat/otto-sdk/lib/functional/auth/sign_up';
 import { authSignOut } from '@Team-5-CodeCat/otto-sdk/lib/functional/auth/sign_out';
+import { mapErrorToUserMessage, type ErrorInfo } from '@/app/lib/error-messages';
 
 // 인증 상태 타입
 interface AuthState {
@@ -15,6 +16,7 @@ interface AuthState {
   isLoading: boolean;
   user: userMyInfo.Output | null;
   error: string | null;
+  errorInfo?: ErrorInfo | null;  // 상세한 에러 정보 추가
 }
 
 // 로그인 응답 타입 (프론트엔드용)
@@ -114,18 +116,19 @@ export function useAuth() {
           user,
         };
       } catch (error: unknown) {
-        const errorMessage =
-          error instanceof Error ? error.message : '로그인 중 알 수 없는 오류가 발생했습니다.';
-
+        // 사용자 친화적 에러 메시지로 변환
+        const errorInfo = mapErrorToUserMessage(error);
+        
         setAuthState((prev) => ({
           ...prev,
           isLoading: false,
-          error: errorMessage,
+          error: errorInfo.message,
+          errorInfo: errorInfo,
         }));
 
         return {
           success: false,
-          message: errorMessage,
+          message: errorInfo.message,
         };
       }
     },
@@ -150,18 +153,19 @@ export function useAuth() {
           message: response.message,
         };
       } catch (error: unknown) {
-        const errorMessage =
-          error instanceof Error ? error.message : '회원가입 중 알 수 없는 오류가 발생했습니다.';
-
+        // 사용자 친화적 에러 메시지로 변환
+        const errorInfo = mapErrorToUserMessage(error);
+        
         setAuthState((prev) => ({
           ...prev,
           isLoading: false,
-          error: errorMessage,
+          error: errorInfo.message,
+          errorInfo: errorInfo,
         }));
 
         return {
           success: false,
-          message: errorMessage,
+          message: errorInfo.message,
         };
       }
     },
@@ -205,5 +209,6 @@ export function useAuth() {
     signOut,
     validateToken,
     refreshToken,
+    errorInfo: authState.errorInfo,  // 에러 상세 정보 노출
   };
 }
