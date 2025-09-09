@@ -29,10 +29,10 @@ body {
 /* 파이프라인 간선 애니메이션 */
 @keyframes dashFlow {
   0% {
-    stroke-dashoffset: 0;
+    stroke-dashoffset: 18;
   }
   100% {
-    stroke-dashoffset: -18;
+    stroke-dashoffset: 0;
   }
 }
 
