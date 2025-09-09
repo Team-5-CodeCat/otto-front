@@ -3,6 +3,21 @@ import * as YAML from 'yaml';
 import { JobNodeData, JobYaml } from './types';
 
 /**
+ * 노드 이름을 표시용 형태로 변환 (첫글자 대문자)
+ */
+const toDisplayName = (name: string): string => {
+  const normalized = name.toLowerCase();
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+};
+
+/**
+ * 노드 이름을 YAML용 형태로 변환 (소문자)
+ */
+const toYamlName = (name: string): string => {
+  return name.toLowerCase();
+};
+
+/**
  * YAML 문자열을 파싱하여 React Flow 노드로 변환
  * 기존 노드가 있으면 위치를 보존함
  */
@@ -35,7 +50,7 @@ export const yamlToNodes = (yamlString: string, existingNodes?: Node[]): Node[] 
           y: 100 + index * 150, // 세로로 순차 배치 (150px 간격)
         },
         data: {
-          name: job.name === 'build' ? 'Build' : job.name === 'test' ? 'Test' : job.name === 'deploy' ? 'Deploy' : (job.name || `Job ${index + 1}`),
+          name: toDisplayName(job.name || `Job ${index + 1}`),
           image: job.image || 'unknown',
           commands: job.commands || '',
           environment: job.environment,
@@ -45,7 +60,8 @@ export const yamlToNodes = (yamlString: string, existingNodes?: Node[]): Node[] 
     });
   } catch (error) {
     console.error('YAML 파싱 오류:', error);
-    return [];
+    // 빈 배열 대신 기본 노드를 반환하여 UI가 완전히 비워지는 것을 방지
+    return existingNodes || [];
   }
 };
 
@@ -85,6 +101,7 @@ export const yamlToEdges = (yamlString: string): Edge[] => {
     return edges;
   } catch (error) {
     console.error('YAML 간선 파싱 오류:', error);
+    // 빈 배열을 반환하여 간선 연결이 초기화됨을 명시
     return [];
   }
 };
@@ -122,7 +139,7 @@ export const nodesToYaml = (nodeList: Node[], edgeList: Edge[]): string => {
     })
     .map((node) => {
       const job: JobYaml = {
-        name: node.data.name === 'Build' ? 'build' : node.data.name === 'Test' ? 'test' : node.data.name === 'Deploy' ? 'deploy' : node.data.name,
+        name: toYamlName(node.data.name),
         image: node.data.image,
       };
 
@@ -140,9 +157,7 @@ export const nodesToYaml = (nodeList: Node[], edgeList: Edge[]): string => {
       const dependencies = dependenciesMap.get(node.data.name);
       if (dependencies && dependencies.length > 0) {
         // dependencies도 소문자로 변환
-        job.dependencies = dependencies.map(dep => 
-          dep === 'Build' ? 'build' : dep === 'Test' ? 'test' : dep === 'Deploy' ? 'deploy' : dep
-        ).sort(); // 알파벳 순으로 정렬하여 일관성 유지
+        job.dependencies = dependencies.map(dep => toYamlName(dep)).sort(); // 알파벳 순으로 정렬하여 일관성 유지
       }
 
       return job;
