@@ -118,7 +118,7 @@ export const usePipeline = () => {
           y: 100 + newNodeIndex * 150, // 세로로 순차 배치 (150px 간격)
         },
         data: {
-          name: nodeType,
+          name: nodeType === 'build' ? 'Build' : nodeType === 'test' ? 'Test' : nodeType === 'deploy' ? 'Deploy' : nodeType,
           image: nodeType === 'build' || nodeType === 'test' ? `node:${selectedVersion}` : 'ubuntu:22.04',
           commands:
             nodeType === 'build'
