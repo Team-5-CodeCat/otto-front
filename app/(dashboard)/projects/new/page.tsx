@@ -12,7 +12,7 @@ import { Button, Card, Input, Select, Textarea } from '@/app/components/ui';
 // 프로젝트 스토어 (폴백용)
 import { createProject as createLocalProject } from '@/app/lib/projectStore';
 import makeFetch from '@/lib/make-fetch';
-import { projectCreateProject } from '@team-5-codecat/otto-sdk/lib/functional/projects';
+import { projectCreateProject } from '@Team-5-CodeCat/otto-sdk/lib/functional/projects';
 
 // 프로젝트 폼 타입
 interface ProjectForm {
