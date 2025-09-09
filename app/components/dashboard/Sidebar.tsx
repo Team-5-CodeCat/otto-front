@@ -9,6 +9,7 @@ import DropdownSelect from './DropdownSelect';
 import ActionIcons from './ActionIcons';
 import PipelineBuilder from './PipelineBuilder';
 import { actionIcons } from './constants';
+import { checkOttoscalerHealth, healthStore } from '@/app/lib/healthStore';
 
 // Job 인터페이스
 interface Job {
@@ -100,6 +101,31 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         {/* 액션 아이콘들 */}
         <ActionIcons icons={actionIcons} />
+
+        {/* Health Check 버튼 */}
+        <button
+          onClick={async () => {
+            try {
+              healthStore.startHealthCheck();
+              const health = await checkOttoscalerHealth();
+              healthStore.setHealthCheckResult(health);
+              
+              // 결과를 alert로 표시 (나중에 더 나은 UI로 개선 가능)
+              if (health.connected) {
+                alert(`✅ Ottoscaler is healthy!\n\nResponse time: ${health.responseTime}ms\nWorkers: ${health.workerStatus?.totalCount || 0} total`);
+              } else {
+                alert(`❌ Ottoscaler is unhealthy!\n\n${health.error || 'Connection failed'}`);
+              }
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+              healthStore.setHealthCheckError(errorMessage);
+              alert(`❌ Health check failed!\n\n${errorMessage}`);
+            }
+          }}
+          className='w-full mt-2 px-3 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors font-medium border border-blue-200'
+        >
+          🩺 Check Ottoscaler Health
+        </button>
 
         {/* 새 파이프라인 생성 버튼 */}
         <button
