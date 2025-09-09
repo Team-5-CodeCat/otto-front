@@ -11,7 +11,6 @@ import { pipelineCreate, pipelineGetById } from '@Team-5-CodeCat/otto-sdk/lib/fu
 import { pipelineGetByProject } from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines/project';
 import { pipelineCreateRun } from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines/runs';
 
-
 const YamlFlowEditor = () => {
   // 파이프라인 상태 및 액션 관리
   const {
@@ -136,7 +135,7 @@ const YamlFlowEditor = () => {
         await loadProjectPipelines(pid);
       }
 
-      const res = await pipelineCreateRun(makeFetch(), pipelineID!, {});
+      await pipelineCreateRun(makeFetch(), pipelineID!, {});
 
       alert('파이프라인 실행을 시작했습니다.');
     } catch (error) {
@@ -179,15 +178,17 @@ const YamlFlowEditor = () => {
     <div className='h-full'>
       {/* ✅ 파이프라인 상태 정보 헤더 */}
       {currentPipelineId && (
-        <div className='bg-blue-50 border-b border-blue-200 px-4 py-2'>
-          <p className='text-sm text-blue-800'>현재 편집 중인 파이프라인 ID: {currentPipelineId}</p>
+        <div className='bg-emerald-50 border-b border-emerald-200 px-4 py-2'>
+          <p className='text-sm text-emerald-800'>
+            현재 편집 중인 파이프라인 ID: {currentPipelineId}
+          </p>
         </div>
       )}
 
       {/* ✅ 로딩 상태 표시 */}
       {isLoading && (
-        <div className='bg-yellow-50 border-b border-yellow-200 px-4 py-2'>
-          <p className='text-sm text-yellow-800'>처리 중...</p>
+        <div className='bg-emerald-50 border-b border-emerald-200 px-4 py-2'>
+          <p className='text-sm text-emerald-800'>처리 중...</p>
         </div>
       )}
 

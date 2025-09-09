@@ -110,7 +110,7 @@ const FlowCanvasInner: React.FC<FlowCanvasProps> = ({
   }));
 
   return (
-    <div className='flex-1 bg-gray-50 h-full' ref={reactFlowWrapper}>
+    <div className='flex-1 bg-emerald-50/40 h-full' ref={reactFlowWrapper}>
       <ReactFlow
         nodes={nodes}
         edges={edgesWithDelete}
@@ -122,16 +122,16 @@ const FlowCanvasInner: React.FC<FlowCanvasProps> = ({
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
-        className='w-full h-full bg-gray-50'
+        className='w-full h-full bg-emerald-50/40'
         defaultEdgeOptions={{
           type: 'custom-edge',
           animated: true,
         }}
       >
-        <Background color='#e5e7eb' />
-        <Controls className='bg-white border border-gray-200 rounded-lg shadow-sm' />
+        <Background color='#d1fae5' />
+        <Controls className='bg-white border border-emerald-200 rounded-lg shadow-sm' />
         <MiniMap
-          className='bg-white border border-gray-200 rounded-lg shadow-sm'
+          className='bg-white border border-emerald-200 rounded-lg shadow-sm'
           maskColor='rgba(0, 0, 0, 0.1)'
         />
       </ReactFlow>

@@ -14,19 +14,21 @@ const JobNode: React.FC<JobNodeProps> = ({ data }) => {
   };
 
   return (
-    <div className='px-4 py-3 shadow-lg rounded-lg bg-white border border-gray-200 min-w-[180px] max-w-[220px] relative hover:shadow-xl transition-shadow'>
+    <div className='px-4 py-3 shadow-lg rounded-lg bg-white border border-emerald-200 min-w-[180px] max-w-[220px] relative hover:shadow-xl transition-shadow'>
       {/* 입력 핸들 (위쪽) */}
       <Handle
         type='target'
         position={Position.Top}
-        className='w-3 h-3 bg-gray-400 border-2 border-white hover:bg-blue-500 transition-colors'
+        className='w-3 h-3 bg-emerald-400 border-2 border-white hover:bg-emerald-500 transition-colors'
         style={{ top: -6 }}
       />
 
       {/* 노드 헤더 */}
       <div className='text-center'>
         <div className='text-base font-semibold text-gray-900 mb-1'>{data.name}</div>
-        <div className='text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded'>{data.image}</div>
+        <div className='text-xs text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-200'>
+          {data.image}
+        </div>
       </div>
 
       {/* 환경 변수가 있다면 표시 */}
@@ -52,7 +54,7 @@ const JobNode: React.FC<JobNodeProps> = ({ data }) => {
       <Handle
         type='source'
         position={Position.Bottom}
-        className='w-3 h-3 bg-gray-400 border-2 border-white hover:bg-green-500 transition-colors'
+        className='w-3 h-3 bg-emerald-400 border-2 border-white hover:bg-emerald-500 transition-colors'
         style={{ bottom: -6 }}
       />
     </div>
