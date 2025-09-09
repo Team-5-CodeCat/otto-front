@@ -60,9 +60,9 @@ export function getProjects(): Project[] {
 
   try {
     const stored = localStorage.getItem(PROJECTS_KEY);
-    return stored ? JSON.parse(stored) : initialProjects;
+    return stored ? JSON.parse(stored) : [];
   } catch {
-    return initialProjects;
+    return [];
   }
 }
 
@@ -142,6 +142,6 @@ export function initializeProjects(): void {
 
   const existing = localStorage.getItem(PROJECTS_KEY);
   if (!existing) {
-    saveProjects(initialProjects);
+    saveProjects([]);
   }
 }
