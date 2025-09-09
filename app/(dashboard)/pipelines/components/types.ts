@@ -5,7 +5,7 @@ export interface JobNodeData {
   name: string;
   image: string;
   commands: string;
-  environment?: Record<string, string | number>;
+  environment?: Record<string, string>;
   originalIndex?: number;
 }
 
@@ -13,7 +13,7 @@ export interface JobYaml {
   name: string;
   image: string;
   commands?: string;
-  environment?: Record<string, string | number>;
+  environment?: Record<string, string>;
   dependencies?: string[]; // 의존성 job 이름들
 }
 
