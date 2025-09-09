@@ -163,6 +163,11 @@ export const nodesToYaml = (nodeList: Node[], edgeList: Edge[]): string => {
       return job;
     });
 
+  // jobs 배열이 비어있으면 빈 문자열 반환
+  if (jobs.length === 0) {
+    return '';
+  }
+
   const yamlString = YAML.stringify(jobs, {
     indent: 2, // 들여쓰기 2칸
     lineWidth: 0, // 긴 줄도 자동으로 줄바꿈하지 않음
