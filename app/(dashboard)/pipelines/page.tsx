@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { usePipeline } from './components/usePipeline';
 import FlowCanvas from './components/FlowCanvas';
 import { useUIStore } from '@/app/lib/uiStore';
-import { useAuth } from '@/app/hooks/useAuth';
 // ✅ SDK import 추가
 import { pipelineCreate, pipelineGetById } from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines';
 import { pipelineGetByProject } from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines/project';
@@ -27,9 +26,6 @@ const YamlFlowEditor = () => {
 
   // UI 스토어에서 Pipeline Builder 제어 함수 가져오기
   const { setShowPipelineBuilder } = useUIStore();
-
-  // 인증 상태 및 refresh token 함수 가져오기
-  const { refreshToken, isAuthenticated } = useAuth();
 
   // ✅ SDK 관련 상태 추가
   const [currentPipelineId, setCurrentPipelineId] = useState<string | null>(null);
@@ -104,30 +100,6 @@ const YamlFlowEditor = () => {
     }
   };
 
-  // ✅ Refresh Token 전송 함수
-  const sendRefreshToken = async (): Promise<boolean> => {
-    if (!isAuthenticated) {
-      console.warn('사용자가 인증되지 않았습니다.');
-      return false;
-    }
-
-    try {
-      console.log('Refresh token 전송 중...');
-      const success = await refreshToken();
-
-      if (success) {
-        console.log('Refresh token 전송 성공');
-        return true;
-      } else {
-        console.error('Refresh token 전송 실패');
-        return false;
-      }
-    } catch (error) {
-      console.error('Refresh token 전송 중 오류 발생:', error);
-      return false;
-    }
-  };
-
   // 컴포넌트 마운트 시 Pipeline Builder 활성화
   useEffect(() => {
     setShowPipelineBuilder(true);
@@ -135,16 +107,11 @@ const YamlFlowEditor = () => {
     // ✅ 초기 파이프라인 목록 로드
     loadProjectPipelines();
 
-    // ✅ 인증된 사용자인 경우 refresh token 전송
-    if (isAuthenticated) {
-      sendRefreshToken();
-    }
-
     // 컴포넌트 언마운트 시 Pipeline Builder 비활성화
     return () => {
       setShowPipelineBuilder(false);
     };
-  }, [setShowPipelineBuilder, isAuthenticated]);
+  }, [setShowPipelineBuilder]);
 
   return (
     <div className='h-full'>
