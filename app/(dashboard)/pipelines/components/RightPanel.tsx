@@ -188,7 +188,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
   // .env 파일 업로드 핸들러 (특정 노드 타입에만 적용)
   const handleEnvFileUpload = (envVars: Record<string, string>, file: File) => {
-    const targetNodes = getAvailableNodes().filter((node) => node.data.name === activeEnvTab);
+    const targetNodes = getAvailableNodes().filter(
+      (node) => getNodeNameLower(node) === activeEnvTab
+    );
 
     if (targetNodes.length === 0) {
       alert(`No ${activeEnvTab} nodes available. Please add a ${activeEnvTab} node first.`);
@@ -230,11 +232,16 @@ const RightPanel: React.FC<RightPanelProps> = ({
   };
 
   // 현재 캔버스에 있는 노드들 필터링
+  const getNodeNameLower = (node: Node): string => {
+    const data = node.data as { name?: string };
+    return String(data?.name ?? '').toLowerCase();
+  };
+
   const getAvailableNodes = () => {
-    return nodes.filter(
-      (node) =>
-        node.type === 'jobNode' && ['build', 'test', 'deploy'].includes(node.data.name as string)
-    );
+    return nodes.filter((node) => {
+      const name = getNodeNameLower(node);
+      return node.type === 'jobNode' && ['build', 'test', 'deploy'].includes(name);
+    });
   };
 
   return (
@@ -273,10 +280,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
           <button
             onClick={handleRun}
-            className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
+            className='px-3 py-2 bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500'
             title='파이프라인 실행'
           >
-            <Play size={16} className='text-gray-600' />
+            <Play size={16} className='text-white' />
           </button>
         </div>
       </div>
@@ -287,7 +294,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
           onClick={() => setActiveTab('yaml')}
           className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === 'yaml'
-              ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+              ? 'text-emerald-700 border-b-2 border-emerald-600 bg-emerald-50'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -297,7 +304,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
           onClick={() => setActiveTab('env')}
           className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === 'env'
-              ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+              ? 'text-emerald-700 border-b-2 border-emerald-600 bg-emerald-50'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >

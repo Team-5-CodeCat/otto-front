@@ -35,7 +35,7 @@ export const EnvironmentVariableList: React.FC<EnvironmentVariableListProps> = (
         <h4 className='font-medium text-gray-900 capitalize'>{nodeName}</h4>
         <button
           onClick={() => onAddVariable(nodeId)}
-          className='flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 rounded transition-colors'
+          className='flex items-center gap-1 px-2 py-1 text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded transition-colors border border-emerald-200'
         >
           <Plus size={12} />
           추가
@@ -58,7 +58,7 @@ export const EnvironmentVariableList: React.FC<EnvironmentVariableListProps> = (
               value={env.key}
               onChange={(e) => onUpdateVariable(nodeId, index, 'key', e.target.value)}
               placeholder='Key'
-              className='px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500'
+              className='px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500'
             />
             <div className='relative'>
               <input
@@ -66,7 +66,7 @@ export const EnvironmentVariableList: React.FC<EnvironmentVariableListProps> = (
                 value={env.value}
                 onChange={(e) => onUpdateVariable(nodeId, index, 'value', e.target.value)}
                 placeholder='Value'
-                className='w-full px-2 py-1 pr-8 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500'
+                className='w-full px-2 py-1 pr-8 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500'
               />
               <button
                 onClick={() => onToggleVisibility(nodeId, index)}
@@ -80,9 +80,7 @@ export const EnvironmentVariableList: React.FC<EnvironmentVariableListProps> = (
 
         {/* 환경 변수가 없을 때 */}
         {environmentVariables.length === 0 && (
-          <div className='text-xs text-gray-500 italic py-2'>
-            No environment variables set
-          </div>
+          <div className='text-xs text-gray-500 italic py-2'>No environment variables set</div>
         )}
       </div>
     </div>

@@ -29,7 +29,7 @@ export const NodeVersionSelector: React.FC<NodeVersionSelectorProps> = ({ classN
         <button
           type='button'
           onClick={() => setIsOpen(!isOpen)}
-          className='w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+          className='w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500'
         >
           <div className='flex items-center justify-between'>
             <div className='flex items-center'>
@@ -37,7 +37,7 @@ export const NodeVersionSelector: React.FC<NodeVersionSelectorProps> = ({ classN
                 {currentVersionInfo?.label || `Node.js ${selectedVersion}`}
               </span>
               {currentVersionInfo?.isLTS && (
-                <span className='ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'>
+                <span className='ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'>
                   LTS
                 </span>
               )}
@@ -69,16 +69,16 @@ export const NodeVersionSelector: React.FC<NodeVersionSelectorProps> = ({ classN
                 type='button'
                 onClick={() => handleVersionSelect(versionInfo.version)}
                 className={cn(
-                  'w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700',
+                  'w-full text-left px-4 py-2 text-sm hover:bg-emerald-50 dark:hover:bg-gray-700',
                   selectedVersion === versionInfo.version
-                    ? 'bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
+                    ? 'bg-emerald-50 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100'
                     : 'text-gray-900 dark:text-gray-100'
                 )}
               >
                 <div className='flex items-center justify-between'>
                   <span>{versionInfo.label}</span>
                   {versionInfo.isLTS && (
-                    <span className='inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'>
+                    <span className='inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'>
                       LTS
                     </span>
                   )}
