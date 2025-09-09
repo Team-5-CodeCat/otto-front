@@ -132,7 +132,7 @@ export default function ProjectEditPage() {
   // 셀렉트 옵션
   const languageOptions = [
     { label: 'Node.js', value: 'node' },
-    { label: 'Python', value: 'python' },
+    //{ label: 'Python', value: 'python' },
     //{ label: 'Java', value: 'java' },
     //{ label: 'Go', value: 'go' },
   ];
