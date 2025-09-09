@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Github, Cpu, Menu, X } from 'lucide-react';
 
@@ -34,6 +35,29 @@ export default function Header() {
             </span>
           </div>
 
+          {/* Desktop Nav */}
+          <nav className='hidden md:flex items-center gap-4'>
+            <a
+              href='https://github.com'
+              className='text-gray-700 hover:text-gray-900 transition-colors flex items-center gap-2'
+            >
+              <Github className='w-5 h-5' />
+              GitHub
+            </a>
+            <Link
+              href='/signin'
+              className='text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md transition-colors'
+            >
+              Sign in
+            </Link>
+            <Link
+              href='/signup'
+              className='bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2 rounded-md shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500'
+            >
+              Sign up
+            </Link>
+          </nav>
+
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -55,6 +79,15 @@ export default function Header() {
               <Github className='w-5 h-5' />
               GitHub
             </a>
+            <Link href='/signin' className='text-gray-700 hover:text-gray-900 transition-colors'>
+              Sign in
+            </Link>
+            <Link
+              href='/signup'
+              className='bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2 rounded-md shadow-sm transition-colors'
+            >
+              Sign up
+            </Link>
           </nav>
         </div>
       )}
