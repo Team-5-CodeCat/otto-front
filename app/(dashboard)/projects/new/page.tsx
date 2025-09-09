@@ -1,17 +1,18 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 // UI components
-import { Card, Button, Input, Textarea, Select } from '@/app/components/ui';
+import { Button, Card, Input, Select, Textarea } from '@/app/components/ui';
 
 // Otto SDK
-import { functional, type IConnection } from '@Team-5-CodeCat/otto-sdk';
 
 // 프로젝트 스토어 (폴백용)
 import { createProject as createLocalProject } from '@/app/lib/projectStore';
+import makeFetch from '@/lib/make-fetch';
+import { projectCreateProject } from '@team-5-codecat/otto-sdk/lib/functional/projects';
 
 // 프로젝트 폼 타입
 interface ProjectForm {
@@ -53,20 +54,6 @@ export default function NewProjectPage() {
   const [errors, setErrors] = useState<Partial<Record<keyof ProjectForm, string>>>({});
   const [submitError, setSubmitError] = useState<string>('');
   const [isSubmitting, setSubmitting] = useState(false);
-
-  // SDK 연결 설정
-  const connection = useMemo<IConnection>(() => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-    return {
-      host: `${baseUrl}/api/v1`,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      options: {
-        credentials: 'include',
-      },
-    };
-  }, []);
 
   // 폼 입력 핸들러
   const handleInputChange = (field: keyof ProjectForm, value: string) => {
@@ -118,7 +105,7 @@ export default function NewProjectPage() {
       console.log('프로젝트 생성 시작:', formData);
 
       // SDK를 사용하여 프로젝트 생성 (직접 함수 호출)
-      const result = await functional.projects.createProject(connection, {
+      const result = await projectCreateProject(makeFetch(), {
         name: formData.name,
         webhookUrl: `https://api.otto.com/webhook/projects/${formData.name}`,
       });

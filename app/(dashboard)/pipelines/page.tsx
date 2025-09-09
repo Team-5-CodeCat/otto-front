@@ -4,10 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { usePipeline } from './components/usePipeline';
 import FlowCanvas from './components/FlowCanvas';
 import { useUIStore } from '@/app/lib/uiStore';
-import { createPipeline, getPipelineById } from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines';
-import { getPipelinesByProject } from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines/project';
+
 import { projectGetUserProjects } from '@Team-5-CodeCat/otto-sdk/lib/functional/projects';
 import makeFetch from '@/app/lib/make-fetch';
+import { pipelineCreate, pipelineGetById } from '@team-5-codecat/otto-sdk/lib/functional/pipelines';
+import { pipelineGetByProject } from '@team-5-codecat/otto-sdk/lib/functional/pipelines/project';
+import { pipelineCreateRun } from '@team-5-codecat/otto-sdk/lib/functional/pipelines/runs';
 
 const YamlFlowEditor = () => {
   // 파이프라인 상태 및 액션 관리
@@ -54,7 +56,7 @@ const YamlFlowEditor = () => {
 
     setIsLoading(true);
     try {
-      const response = await createPipeline(makeFetch(), {
+      const response = await pipelineCreate(makeFetch(), {
         name,
         yamlContent: yamlText,
         projectID: pid,
@@ -81,7 +83,7 @@ const YamlFlowEditor = () => {
   const loadPipeline = async (pipelineID: string) => {
     setIsLoading(true);
     try {
-      const pipeline = await getPipelineById(makeFetch(), pipelineID);
+      const pipeline = await pipelineGetById(makeFetch(), pipelineID);
 
       if (pipeline.originalSpec) {
         handleYamlChange(pipeline.originalSpec);
@@ -99,7 +101,7 @@ const YamlFlowEditor = () => {
   // ✅ SDK를 사용한 프로젝트별 파이프라인 목록 조회
   const loadProjectPipelines = async (projectID: string) => {
     try {
-      const result = await getPipelinesByProject(makeFetch(), projectID);
+      const result = await pipelineGetByProject(makeFetch(), projectID);
       setAvailablePipelines(result.pipelines || []);
     } catch (error) {
       console.error('파이프라인 목록 조회 실패:', error);
@@ -122,7 +124,7 @@ const YamlFlowEditor = () => {
     try {
       let pipelineID = currentPipelineId;
       if (!pipelineID) {
-        const created = await createPipeline(makeFetch(), {
+        const created = await pipelineCreate(makeFetch(), {
           name: 'quick-run',
           yamlContent: yamlText,
           projectID: pid,
@@ -133,19 +135,7 @@ const YamlFlowEditor = () => {
         await loadProjectPipelines(pid);
       }
 
-      const conn = makeFetch();
-      const res = await fetch(`${conn.host}/pipelines/${pipelineID}/runs`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          idempotencyKey: (globalThis.crypto?.randomUUID?.() ?? String(Date.now())) as string,
-        }),
-      });
-      if (!res.ok) {
-        const text = await res.text().catch(() => '');
-        throw new Error(`Run API failed: ${res.status} ${text}`);
-      }
+      const res = await pipelineCreateRun(makeFetch(), pipelineID!, {});
 
       alert('파이프라인 실행을 시작했습니다.');
     } catch (error) {
