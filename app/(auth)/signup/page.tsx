@@ -122,11 +122,11 @@ export default function SignUpPage() {
         password: formData.password,
         username: formData.username,
       });
-      
+
       if (!result.success) {
         console.error('회원가입 실패:', result.message);
       }
-      // 성공 시 useAuth에서 자동으로 로그인 후 리다이렉트 처리
+      // 성공 시 useAuth의 signUp에서 자동으로 로그인 페이지로 리다이렉트 처리
     } catch (error) {
       console.error('회원가입 오류:', error);
     }
@@ -197,7 +197,7 @@ export default function SignUpPage() {
               value={formData.password}
               onChange={(e) => handleInputChange('password', e.target.value)}
               error={formErrors.password}
-              helperText='Enter at least 6 characters'
+              helperText='Enter at least 8 characters'
               leftIcon={
                 <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                   <path
