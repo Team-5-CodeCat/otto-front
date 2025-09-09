@@ -4,9 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { usePipeline } from './components/usePipeline';
 import FlowCanvas from './components/FlowCanvas';
 import { useUIStore } from '@/app/lib/uiStore';
-import { createPipeline, getPipelineById } from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines';
+import {
+  createPipeline,
+  getPipelineById,
+  runs as pipelineRuns,
+} from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines';
 import { getPipelinesByProject } from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines/project';
-import { pipelineCreateRun } from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines/runs';
 import { projectGetUserProjects } from '@Team-5-CodeCat/otto-sdk/lib/functional/projects';
 import makeFetch from '@/app/lib/make-fetch';
 
@@ -134,7 +137,7 @@ const YamlFlowEditor = () => {
         await loadProjectPipelines(pid);
       }
 
-      await pipelineCreateRun(makeFetch(), pipelineID!, {
+      await pipelineRuns.pipelineCreateRun(makeFetch(), pipelineID!, {
         idempotencyKey: (globalThis.crypto?.randomUUID?.() ?? String(Date.now())) as string,
       });
 

@@ -70,25 +70,25 @@ export default function NewProjectPage() {
 
   // 폼 입력 핸들러
   const handleInputChange = (field: keyof ProjectForm, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      setErrors((prev) => ({ ...prev, [field]: '' }));
     }
   };
 
   // 환경 변수 관리 함수들
   const addEnvVar = () => {
-    setEnvVars(prev => [...prev, { key: '', value: '', masked: false }]);
+    setEnvVars((prev) => [...prev, { key: '', value: '', masked: false }]);
   };
 
   const removeEnvVar = (index: number) => {
-    setEnvVars(prev => prev.filter((_, i) => i !== index));
+    setEnvVars((prev) => prev.filter((_, i) => i !== index));
   };
 
   const updateEnvVar = (index: number, field: keyof EnvVar, value: string | boolean) => {
-    setEnvVars(prev => prev.map((envVar, i) => 
-      i === index ? { ...envVar, [field]: value } : envVar
-    ));
+    setEnvVars((prev) =>
+      prev.map((envVar, i) => (i === index ? { ...envVar, [field]: value } : envVar))
+    );
   };
 
   // 폼 검증
@@ -106,7 +106,7 @@ export default function NewProjectPage() {
   // 폼 제출 핸들러
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -116,9 +116,9 @@ export default function NewProjectPage() {
 
     try {
       console.log('프로젝트 생성 시작:', formData);
-      
-      // SDK를 사용하여 프로젝트 생성
-      const result = await functional.projects.createProject.projectCreateProject(connection, {
+
+      // SDK를 사용하여 프로젝트 생성 (직접 함수 호출)
+      const result = await functional.projects.createProject(connection, {
         name: formData.name,
         webhookUrl: `https://api.otto.com/webhook/projects/${formData.name}`,
       });
@@ -140,7 +140,6 @@ export default function NewProjectPage() {
 
       // 성공 시 프로젝트 목록 페이지로 이동
       router.push('/projects');
-
     } catch (error) {
       console.error('프로젝트 생성 실패:', error);
       setSubmitError(getErrorMessage(error));
@@ -150,45 +149,41 @@ export default function NewProjectPage() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-          <Link href="/projects" className="hover:text-blue-600">
+    <div className='p-6 max-w-4xl mx-auto'>
+      <div className='mb-6'>
+        <div className='flex items-center gap-2 text-sm text-gray-600 mb-4'>
+          <Link href='/projects' className='hover:text-blue-600'>
             프로젝트
           </Link>
           <span>/</span>
           <span>새 프로젝트</span>
         </div>
-        <h1 className="text-2xl font-bold">새 프로젝트 만들기</h1>
-        <p className="text-gray-600 mt-2">
-          새로운 CI/CD 프로젝트를 생성하세요.
-        </p>
+        <h1 className='text-2xl font-bold'>새 프로젝트 만들기</h1>
+        <p className='text-gray-600 mt-2'>새로운 CI/CD 프로젝트를 생성하세요.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className='space-y-6'>
         {/* 프로젝트 기본 정보 */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">프로젝트 정보</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className='p-6'>
+          <h2 className='text-lg font-semibold mb-4'>프로젝트 정보</h2>
+
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
                 프로젝트 이름 *
               </label>
               <Input
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="my-awesome-project"
+                placeholder='my-awesome-project'
                 className={errors.name ? 'border-red-500' : ''}
               />
-              {errors.name && (
-                <p className="text-sm text-red-600 mt-1">{errors.name}</p>
-              )}
+              {errors.name && <p className='text-sm text-red-600 mt-1'>{errors.name}</p>}
             </div>
 
             <div>
               <Select
-                label="언어/프레임워크"
+                label='언어/프레임워크'
                 value={formData.language}
                 onChange={(e) => handleInputChange('language', e.target.value)}
                 options={[
@@ -203,25 +198,23 @@ export default function NewProjectPage() {
             </div>
           </div>
 
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              설명
-            </label>
+          <div className='mt-4'>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>설명</label>
             <Textarea
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="프로젝트에 대한 간단한 설명을 입력하세요..."
+              placeholder='프로젝트에 대한 간단한 설명을 입력하세요...'
               rows={3}
             />
           </div>
         </Card>
 
         {/* 배포 설정 */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">배포 설정</h2>
-          
+        <Card className='p-6'>
+          <h2 className='text-lg font-semibold mb-4'>배포 설정</h2>
+
           <Select
-            label="배포 대상"
+            label='배포 대상'
             value={formData.deploy}
             onChange={(e) => handleInputChange('deploy', e.target.value)}
             options={[
@@ -235,78 +228,67 @@ export default function NewProjectPage() {
         </Card>
 
         {/* 환경 변수 */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">환경 변수</h2>
-          
-          <div className="space-y-3">
+        <Card className='p-6'>
+          <h2 className='text-lg font-semibold mb-4'>환경 변수</h2>
+
+          <div className='space-y-3'>
             {envVars.map((envVar, index) => (
-              <div key={index} className="flex gap-2 items-start">
+              <div key={index} className='flex gap-2 items-start'>
                 <Input
                   value={envVar.key}
                   onChange={(e) => updateEnvVar(index, 'key', e.target.value)}
-                  placeholder="환경 변수 이름"
-                  className="flex-1"
+                  placeholder='환경 변수 이름'
+                  className='flex-1'
                 />
                 <Input
                   value={envVar.value}
                   onChange={(e) => updateEnvVar(index, 'value', e.target.value)}
-                  placeholder="값"
+                  placeholder='값'
                   type={envVar.masked ? 'password' : 'text'}
-                  className="flex-1"
+                  className='flex-1'
                 />
-                <label className="flex items-center gap-1 text-sm">
+                <label className='flex items-center gap-1 text-sm'>
                   <input
-                    type="checkbox"
+                    type='checkbox'
                     checked={envVar.masked}
                     onChange={(e) => updateEnvVar(index, 'masked', e.target.checked)}
                   />
                   마스킹
                 </label>
                 <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
+                  type='button'
+                  variant='ghost'
+                  size='sm'
                   onClick={() => removeEnvVar(index)}
-                  className="text-red-600 hover:text-red-700"
+                  className='text-red-600 hover:text-red-700'
                 >
                   삭제
                 </Button>
               </div>
             ))}
-            
-            <Button
-              type="button"
-              variant="outline"
-              onClick={addEnvVar}
-              className="w-full"
-            >
+
+            <Button type='button' variant='outline' onClick={addEnvVar} className='w-full'>
               환경 변수 추가
             </Button>
           </div>
         </Card>
 
         {/* 제출 버튼 */}
-        <div className="flex gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.back()}
-          >
+        <div className='flex gap-4'>
+          <Button type='button' variant='outline' onClick={() => router.back()}>
             취소
           </Button>
           <Button
-            type="submit"
+            type='submit'
             disabled={isSubmitting}
-            className="bg-blue-600 text-white hover:bg-blue-700"
+            className='bg-blue-600 text-white hover:bg-blue-700'
           >
             {isSubmitting ? '생성 중...' : '프로젝트 생성'}
           </Button>
         </div>
 
         {submitError && (
-          <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
-            {submitError}
-          </div>
+          <div className='text-sm text-red-600 bg-red-50 p-3 rounded'>{submitError}</div>
         )}
       </form>
     </div>
