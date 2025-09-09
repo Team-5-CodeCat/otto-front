@@ -49,6 +49,8 @@ interface FlowCanvasProps {
     name: string;
     version: number;
   }>;
+  // ✅ 실행 콜백 추가
+  onRunPipeline?: () => Promise<void>;
 }
 
 // FlowCanvas 내부 컴포넌트
@@ -171,6 +173,7 @@ const FlowCanvas: React.FC<FlowCanvasProps> = (props) => {
           {...(props.onSavePipeline && { onSavePipeline: props.onSavePipeline })}
           {...(props.onLoadPipeline && { onLoadPipeline: props.onLoadPipeline })}
           {...(props.availablePipelines && { availablePipelines: props.availablePipelines })}
+          {...(props.onRunPipeline && { onRunPipeline: props.onRunPipeline })}
         />
       </div>
     </>

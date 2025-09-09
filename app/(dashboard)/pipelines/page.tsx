@@ -4,9 +4,9 @@ import React, { useEffect, useState } from 'react';
 import { usePipeline } from './components/usePipeline';
 import FlowCanvas from './components/FlowCanvas';
 import { useUIStore } from '@/app/lib/uiStore';
-// ✅ SDK import 추가
-import { pipelineCreate, pipelineGetById } from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines';
-import { pipelineGetByProject } from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines/project';
+import { createPipeline, getPipelineById } from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines';
+import { getPipelinesByProject } from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines/project';
+import { projectGetUserProjects } from '@Team-5-CodeCat/otto-sdk/lib/functional/projects';
 import makeFetch from '@/app/lib/make-fetch';
 
 const YamlFlowEditor = () => {
@@ -29,6 +29,7 @@ const YamlFlowEditor = () => {
 
   // ✅ SDK 관련 상태 추가
   const [currentPipelineId, setCurrentPipelineId] = useState<string | null>(null);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [availablePipelines, setAvailablePipelines] = useState<
     Array<{
       pipelineID: string;
@@ -39,18 +40,24 @@ const YamlFlowEditor = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   // ✅ SDK를 사용한 파이프라인 저장
-  const savePipeline = async (name: string, projectID: string = 'temp-project-id') => {
+  const savePipeline = async (name: string, projectID?: string) => {
     if (!yamlText.trim()) {
       alert('YAML 내용이 비어있습니다.');
       return { success: false };
     }
 
+    const pid = projectID ?? currentProjectId;
+    if (!pid) {
+      alert('프로젝트가 선택되지 않았습니다. 프로젝트를 먼저 생성/선택해주세요.');
+      return { success: false };
+    }
+
     setIsLoading(true);
     try {
-      const response = await pipelineCreate(makeFetch(), {
+      const response = await createPipeline(makeFetch(), {
         name,
         yamlContent: yamlText,
-        projectID,
+        projectID: pid,
         version: 1,
       });
 
@@ -58,7 +65,7 @@ const YamlFlowEditor = () => {
       alert(`파이프라인 "${response.name}"이 저장되었습니다!`);
 
       // 파이프라인 목록 새로고침
-      await loadProjectPipelines(projectID);
+      await loadProjectPipelines(pid);
 
       return { success: true, pipelineId: response.pipelineID };
     } catch (error) {
@@ -74,7 +81,7 @@ const YamlFlowEditor = () => {
   const loadPipeline = async (pipelineID: string) => {
     setIsLoading(true);
     try {
-      const pipeline = await pipelineGetById(makeFetch(), pipelineID);
+      const pipeline = await getPipelineById(makeFetch(), pipelineID);
 
       if (pipeline.originalSpec) {
         handleYamlChange(pipeline.originalSpec);
@@ -90,9 +97,9 @@ const YamlFlowEditor = () => {
   };
 
   // ✅ SDK를 사용한 프로젝트별 파이프라인 목록 조회
-  const loadProjectPipelines = async (projectID: string = 'temp-project-id') => {
+  const loadProjectPipelines = async (projectID: string) => {
     try {
-      const result = await pipelineGetByProject(makeFetch(), projectID);
+      const result = await getPipelinesByProject(makeFetch(), projectID);
       setAvailablePipelines(result.pipelines || []);
     } catch (error) {
       console.error('파이프라인 목록 조회 실패:', error);
@@ -100,12 +107,76 @@ const YamlFlowEditor = () => {
     }
   };
 
+  // ✅ 실행: 저장 유무 확인 후 Run 호출
+  const runPipeline = async (projectID?: string) => {
+    if (!yamlText.trim()) {
+      alert('YAML 내용이 비어있습니다.');
+      return;
+    }
+    const pid = projectID ?? currentProjectId;
+    if (!pid) {
+      alert('프로젝트가 선택되지 않았습니다. 프로젝트를 먼저 생성/선택해주세요.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      let pipelineID = currentPipelineId;
+      if (!pipelineID) {
+        const created = await createPipeline(makeFetch(), {
+          name: 'quick-run',
+          yamlContent: yamlText,
+          projectID: pid,
+          version: 1,
+        });
+        pipelineID = created.pipelineID;
+        setCurrentPipelineId(pipelineID);
+        await loadProjectPipelines(pid);
+      }
+
+      const conn = makeFetch();
+      const res = await fetch(`${conn.host}/pipelines/${pipelineID}/runs`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idempotencyKey: (globalThis.crypto?.randomUUID?.() ?? String(Date.now())) as string,
+        }),
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`Run API failed: ${res.status} ${text}`);
+      }
+
+      alert('파이프라인 실행을 시작했습니다.');
+    } catch (error) {
+      console.error('파이프라인 실행 실패:', error);
+      alert('파이프라인 실행에 실패했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // 컴포넌트 마운트 시 Pipeline Builder 활성화
   useEffect(() => {
     setShowPipelineBuilder(true);
 
-    // ✅ 초기 파이프라인 목록 로드
-    loadProjectPipelines();
+    // ✅ 사용자 프로젝트 조회 후 첫 프로젝트 선택 및 파이프라인 목록 로드
+    (async () => {
+      try {
+        const projects = await projectGetUserProjects(makeFetch());
+        if (projects.length > 0) {
+          const recent = [...projects].sort(
+            (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          )[0]!;
+          setCurrentProjectId(recent.projectID);
+          await loadProjectPipelines(recent.projectID);
+        } else {
+          console.warn('사용자 프로젝트가 없습니다. 프로젝트를 먼저 생성하세요.');
+        }
+      } catch (error) {
+        console.error('프로젝트 목록 조회 실패:', error);
+      }
+    })();
 
     // 컴포넌트 언마운트 시 Pipeline Builder 비활성화
     return () => {
@@ -144,6 +215,7 @@ const YamlFlowEditor = () => {
         onSavePipeline={savePipeline}
         onLoadPipeline={loadPipeline}
         availablePipelines={availablePipelines}
+        onRunPipeline={runPipeline}
       />
     </div>
   );
