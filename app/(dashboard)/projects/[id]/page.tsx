@@ -1,34 +1,28 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
+import { functional } from '@Team-5-CodeCat/otto-sdk';
+import makeFetch from '@/app/lib/make-fetch';
 
 // UI components
 import { Card, Button } from '@/app/components/ui';
 
-// 프로젝트 스토어
-import { getProject, deleteProject } from '@/app/lib/projectStore';
+// Project components
 
-// 프로젝트 상세 타입
-interface ProjectDetail {
-  id: string;
-  name: string;
-  description: string;
-  repo: string;
-  triggerBranches: string;
-  defaultBranch: string;
-  language: string;
-  deploy: string;
-  webhookUrl: string; // 가변 URL
-  createdAt: string;
-  updatedAt: string;
+// SDK 타입 추출
+type UserProject = Awaited<ReturnType<typeof functional.projects.projectGetUserProjects>>[0];
+
+// 프로젝트 상세 타입 (SDK 타입 기반)
+interface ProjectDetail extends UserProject {
+  description?: string;
+  language?: string;
+  deploy?: string;
   status: 'active' | 'inactive' | 'error';
 }
 
 export default function ProjectDetailPage() {
-  const router = useRouter();
   const params = useParams();
   const projectId = params.id as string;
 
@@ -38,33 +32,46 @@ export default function ProjectDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // SDK 연결 설정
+  const connection = useMemo(() => makeFetch(), []);
 
   // 프로젝트 데이터 로드
   useEffect(() => {
     const loadProject = async () => {
       try {
-        // 로딩 시뮬레이션
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        setError(null);
+        console.log('프로젝트 상세 조회 시작...', projectId);
 
-        // 로컬 스토어에서 프로젝트 조회
-        const projectData = getProject(projectId);
+        // SDK를 사용해서 프로젝트 목록 조회 후 해당 프로젝트 찾기
+        const projects = await functional.projects.projectGetUserProjects(connection);
+        console.log('프로젝트 목록 조회 성공:', projects);
+
+        const projectData = projects.find((p) => p.projectID === projectId);
 
         if (projectData) {
-          // Project 타입을 ProjectDetail 타입으로 변환
+          // SDK 데이터를 ProjectDetail 타입으로 변환
           const projectDetail: ProjectDetail = {
             ...projectData,
+            status: 'active' as const, // 기본값
           };
           setProject(projectDetail);
+        } else {
+          setError('프로젝트를 찾을 수 없습니다.');
         }
       } catch (error) {
-        console.error('Failed to load project:', error);
+        console.error('프로젝트 상세 조회 실패:', error);
+        const errorMessage =
+          error instanceof Error ? error.message : '프로젝트를 불러오는데 실패했습니다.';
+        setError(errorMessage);
       } finally {
         setIsLoading(false);
       }
     };
 
     loadProject();
-  }, [projectId]);
+  }, [projectId, connection]);
 
   // 웹훅 URL 복사
   const copyWebhookUrl = async () => {
@@ -79,21 +86,18 @@ export default function ProjectDetailPage() {
     }
   };
 
-  // 프로젝트 삭제
+  // 프로젝트 삭제 (현재는 비활성화 - SDK에 삭제 API가 없음)
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      // 로딩 시뮬레이션
+      // TODO: SDK에 프로젝트 삭제 API가 추가되면 구현
+      console.log('프로젝트 삭제 요청:', projectId);
+
+      // 임시로 로딩 시뮬레이션
       await new Promise((resolve) => setTimeout(resolve, 800));
 
-      // 로컬 스토어에서 프로젝트 삭제
-      const success = deleteProject(projectId);
-
-      if (success) {
-        router.push('/projects');
-      } else {
-        console.error('Failed to delete project: Project not found');
-      }
+      // 현재는 삭제 기능을 비활성화
+      alert('프로젝트 삭제 기능은 현재 개발 중입니다.');
     } catch (error) {
       console.error('Failed to delete project:', error);
     } finally {
@@ -113,6 +117,21 @@ export default function ProjectDetailPage() {
             <div className='h-32 bg-gray-200 rounded'></div>
             <div className='h-32 bg-gray-200 rounded'></div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (error) {
+    return (
+      <div className='p-6'>
+        <div className='text-center py-12'>
+          <h1 className='text-2xl font-bold text-gray-900 mb-2'>Error Loading Project</h1>
+          <p className='text-gray-600 mb-4'>{error}</p>
+          <Link href='/projects' className='text-blue-600 hover:text-blue-500'>
+            Back to Projects
+          </Link>
         </div>
       </div>
     );
@@ -176,30 +195,43 @@ export default function ProjectDetailPage() {
             <div>
               <label className='block text-sm font-medium text-gray-700'>Description</label>
               <p className='mt-1 text-sm text-gray-900'>
-                {project.description || 'No description provided'}
+                {project.description || 'No description available'}
               </p>
             </div>
 
             <div>
-              <label className='block text-sm font-medium text-gray-700'>GitHub Repository</label>
-              <a
-                href={`https://github.com/${project.repo}`}
-                target='_blank'
-                rel='noopener noreferrer'
-                className='mt-1 text-sm text-blue-600 hover:text-blue-500'
-              >
-                {project.repo} ↗
-              </a>
+              <label className='block text-sm font-medium text-gray-700'>GitHub Repositories</label>
+              <div className='mt-1 space-y-2'>
+                {project.repositories.map((repo, index) => (
+                  <div key={index} className='flex items-center justify-between'>
+                    <a
+                      href={`https://github.com/${repo.repoFullName}`}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      className='text-sm text-blue-600 hover:text-blue-500'
+                    >
+                      {repo.repoFullName} ↗
+                    </a>
+                    <span
+                      className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        repo.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {repo.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className='grid grid-cols-2 gap-4'>
               <div>
                 <label className='block text-sm font-medium text-gray-700'>Language</label>
-                <p className='mt-1 text-sm text-gray-900 capitalize'>{project.language}</p>
+                <p className='mt-1 text-sm text-gray-900 capitalize'>Node.js</p>
               </div>
               <div>
                 <label className='block text-sm font-medium text-gray-700'>Deployment</label>
-                <p className='mt-1 text-sm text-gray-900 uppercase'>{project.deploy}</p>
+                <p className='mt-1 text-sm text-gray-900 uppercase'>AWS EC2</p>
               </div>
             </div>
           </div>
@@ -211,30 +243,23 @@ export default function ProjectDetailPage() {
             <h2 className='text-lg font-semibold text-gray-900'>Branch Configuration</h2>
 
             <div>
-              <label className='block text-sm font-medium text-gray-700'>Trigger Branches</label>
-              <div className='mt-1 flex flex-wrap gap-1'>
-                {project.triggerBranches.split(',').map((branch, index) => (
-                  <span
-                    key={index}
-                    className='inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800'
-                  >
-                    {branch.trim()}
-                  </span>
+              <label className='block text-sm font-medium text-gray-700'>Selected Branches</label>
+              <div className='mt-1 space-y-2'>
+                {project.repositories.map((repo, index) => (
+                  <div key={index} className='flex items-center justify-between'>
+                    <span className='text-sm text-gray-900'>{repo.repoFullName}</span>
+                    <span className='inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800'>
+                      {repo.selectedBranch}
+                    </span>
+                  </div>
                 ))}
               </div>
-            </div>
-
-            <div>
-              <label className='block text-sm font-medium text-gray-700'>Default Branch</label>
-              <span className='mt-1 inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800'>
-                {project.defaultBranch}
-              </span>
             </div>
           </div>
         </Card>
 
-        {/* 웹훅 URL (전체 너비) */}
-        <Card className='lg:col-span-2'>
+        {/* 웹훅 URL */}
+        <Card>
           <div className='space-y-4'>
             <h2 className='text-lg font-semibold text-gray-900'>Webhook Configuration</h2>
 
@@ -243,20 +268,24 @@ export default function ProjectDetailPage() {
               <div className='flex items-center space-x-2'>
                 <input
                   type='text'
-                  value={project.webhookUrl}
+                  value={project.webhookUrl || 'Webhook URL not available'}
                   readOnly
                   className='flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm'
                 />
-                <Button
-                  variant='outline'
-                  onClick={copyWebhookUrl}
-                  className={copySuccess ? 'bg-green-50 border-green-300 text-green-700' : ''}
-                >
-                  {copySuccess ? 'Copied!' : 'Copy'}
-                </Button>
+                {project.webhookUrl && (
+                  <Button
+                    variant='outline'
+                    onClick={copyWebhookUrl}
+                    className={copySuccess ? 'bg-green-50 border-green-300 text-green-700' : ''}
+                  >
+                    {copySuccess ? 'Copied!' : 'Copy'}
+                  </Button>
+                )}
               </div>
               <p className='mt-1 text-xs text-gray-500'>
-                GitHub App automatically configures this webhook URL for your repository
+                {project.webhookUrl
+                  ? 'GitHub App automatically configures this webhook URL for your repository'
+                  : 'Webhook URL will be configured automatically when the project is set up'}
               </p>
             </div>
           </div>
