@@ -4,11 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { usePipeline } from './components/usePipeline';
 import FlowCanvas from './components/FlowCanvas';
 import { useUIStore } from '@/app/lib/uiStore';
-import {
-  createPipeline,
-  getPipelineById,
-  runs as pipelineRuns,
-} from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines';
+import { createPipeline, getPipelineById } from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines';
 import { getPipelinesByProject } from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines/project';
 import { projectGetUserProjects } from '@Team-5-CodeCat/otto-sdk/lib/functional/projects';
 import makeFetch from '@/app/lib/make-fetch';
@@ -137,9 +133,19 @@ const YamlFlowEditor = () => {
         await loadProjectPipelines(pid);
       }
 
-      await pipelineRuns.pipelineCreateRun(makeFetch(), pipelineID!, {
-        idempotencyKey: (globalThis.crypto?.randomUUID?.() ?? String(Date.now())) as string,
+      const conn = makeFetch();
+      const res = await fetch(`${conn.host}/pipelines/${pipelineID}/runs`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idempotencyKey: (globalThis.crypto?.randomUUID?.() ?? String(Date.now())) as string,
+        }),
       });
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`Run API failed: ${res.status} ${text}`);
+      }
 
       alert('파이프라인 실행을 시작했습니다.');
     } catch (error) {
