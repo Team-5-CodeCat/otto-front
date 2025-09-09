@@ -6,7 +6,7 @@ export const createNodeTemplates = (selectedVersion: string): NodeTemplate[] => 
   {
     type: 'build',
     label: 'Build',
-    description: 'Build your application',
+    description: 'Build your code',
     defaultImage: `node:${selectedVersion}`,
     defaultCommands: 'npm ci\nnpm run build',
   },

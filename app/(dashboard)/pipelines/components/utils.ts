@@ -35,7 +35,7 @@ export const yamlToNodes = (yamlString: string, existingNodes?: Node[]): Node[] 
           y: 100 + index * 150, // 세로로 순차 배치 (150px 간격)
         },
         data: {
-          name: job.name || `Job ${index + 1}`,
+          name: job.name === 'build' ? 'Build' : job.name === 'test' ? 'Test' : job.name === 'deploy' ? 'Deploy' : (job.name || `Job ${index + 1}`),
           image: job.image || 'unknown',
           commands: job.commands || '',
           environment: job.environment,
@@ -122,7 +122,7 @@ export const nodesToYaml = (nodeList: Node[], edgeList: Edge[]): string => {
     })
     .map((node) => {
       const job: JobYaml = {
-        name: node.data.name,
+        name: node.data.name === 'Build' ? 'build' : node.data.name === 'Test' ? 'test' : node.data.name === 'Deploy' ? 'deploy' : node.data.name,
         image: node.data.image,
       };
 
@@ -139,7 +139,10 @@ export const nodesToYaml = (nodeList: Node[], edgeList: Edge[]): string => {
       // dependencies 추가 (간선이 있는 경우)
       const dependencies = dependenciesMap.get(node.data.name);
       if (dependencies && dependencies.length > 0) {
-        job.dependencies = dependencies.sort(); // 알파벳 순으로 정렬하여 일관성 유지
+        // dependencies도 소문자로 변환
+        job.dependencies = dependencies.map(dep => 
+          dep === 'Build' ? 'build' : dep === 'Test' ? 'test' : dep === 'Deploy' ? 'deploy' : dep
+        ).sort(); // 알파벳 순으로 정렬하여 일관성 유지
       }
 
       return job;
