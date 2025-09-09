@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   useNodesState,
   useEdgesState,
@@ -12,6 +12,10 @@ import { useNodeVersion } from '../../../contexts/NodeVersionContext';
 
 export const usePipeline = () => {
   const { selectedVersion } = useNodeVersion();
+  
+  // 업데이트 소스 추적용 ref
+  const isUpdatingFromYaml = useRef(false);
+  const isUpdatingFromNodes = useRef(false);
   
   // YAML 텍스트 상태 - 이것이 우리의 단일 진실 소스입니다
   const [yamlText, setYamlText] = useState(`- name: build
@@ -41,12 +45,19 @@ export const usePipeline = () => {
 
   // YAML 텍스트가 변경될 때 노드와 간선을 업데이트
   useEffect(() => {
-    setNodes((currentNodes) => {
-      const newNodes = yamlToNodes(yamlText, currentNodes);
-      return newNodes;
-    });
-    const newEdges = yamlToEdges(yamlText);
-    setEdges(newEdges);
+    if (!isUpdatingFromNodes.current) {
+      isUpdatingFromYaml.current = true;
+      setNodes((currentNodes) => {
+        const newNodes = yamlToNodes(yamlText, currentNodes);
+        return newNodes;
+      });
+      const newEdges = yamlToEdges(yamlText);
+      setEdges(newEdges);
+      // 다음 렌더 사이클에서 플래그 리셋
+      setTimeout(() => {
+        isUpdatingFromYaml.current = false;
+      }, 0);
+    }
   }, [yamlText, setNodes, setEdges]);
 
   // Node.js 버전이 변경될 때 YAML 텍스트의 node:20 부분을 업데이트
@@ -58,14 +69,20 @@ export const usePipeline = () => {
 
   // 노드나 간선이 변경될 때마다 YAML 업데이트 (수동 YAML 편집은 제외)
   useEffect(() => {
-    if (nodes.length > 0) {
+    if (!isUpdatingFromYaml.current) {
+      isUpdatingFromNodes.current = true;
       const newYaml = nodesToYaml(nodes, edges);
       // 현재 YAML과 다른 경우에만 업데이트 (무한 루프 방지)
-      if (newYaml !== yamlText) {
-        setYamlText(newYaml);
-      }
+      setYamlText(currentYaml => {
+        const shouldUpdate = newYaml !== currentYaml;
+        return shouldUpdate ? newYaml : currentYaml;
+      });
+      // 다음 렌더 사이클에서 플래그 리셋
+      setTimeout(() => {
+        isUpdatingFromNodes.current = false;
+      }, 0);
     }
-  }, [nodes, edges]); // yamlText는 의존성에서 제외하여 무한 루프 방지
+  }, [nodes, edges]);
 
   // 노드 변경사항을 처리하는 함수 (위치 변경 시에는 YAML을 업데이트하지 않음)
   const handleNodesChange = useCallback((changes: NodeChange[]) => {
