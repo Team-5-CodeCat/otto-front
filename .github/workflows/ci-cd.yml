@@ -170,12 +170,32 @@ jobs:
               exit 1
             }
 
-            # Pull latest changes
+            # Handle git pull with force option to avoid conflicts
             echo "Pulling latest changes..."
+            
+            # First, stash any local changes
+            git stash || echo "No local changes to stash"
+            
+            # Pull latest changes
             git pull origin main || {
-              echo "ERROR: Git pull failed"
-              exit 1
+              echo "WARNING: Git pull failed, trying force checkout..."
+              
+              # If pull fails, force checkout to match remote
+              git fetch origin main || {
+                echo "ERROR: Git fetch failed"
+                exit 1
+              }
+              
+              git reset --hard origin/main || {
+                echo "ERROR: Git reset failed"
+                exit 1
+              }
+              
+              echo "Successfully reset to remote main branch"
             }
+            
+            # Drop stashed changes (if any) since we want clean remote state
+            git stash drop 2>/dev/null || echo "No stashed changes to drop"
 
             # Setup NPM authentication - now with fixed permissions
             echo "Setting up NPM authentication..."
