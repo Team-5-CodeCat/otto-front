@@ -7,9 +7,7 @@ import pluginReactHooks from 'eslint-plugin-react-hooks';
 const flatReactConfig = pluginReact.configs.flat?.recommended || pluginReact.configs.recommended;
 
 export default [
-<<<<<<< HEAD
   // JavaScript/TypeScript 파일 설정
-=======
   // 무시할 파일들
   {
     ignores: [
@@ -35,8 +33,6 @@ export default [
   // TypeScript 권장 설정
   ...tseslint.configs.recommended,
 
-  // 전역 설정
->>>>>>> 8e24367 (fix: ci-cd (3))
   {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     languageOptions: {
@@ -66,14 +62,7 @@ export default [
       ...pluginReactHooks.configs.recommended.rules,
       'react/react-in-jsx-scope': 'off', // Next.js에서는 불필요
       'react/prop-types': 'off', // TypeScript 사용 시 불필요
-<<<<<<< HEAD
-<<<<<<< HEAD
       'react/no-unescaped-entities': 'off', // 따옴표 등 특수문자 허용
-=======
->>>>>>> 8e24367 (fix: ci-cd (3))
-=======
-      'react/no-unescaped-entities': 'off', // 따옴표 등 특수문자 허용
->>>>>>> cc81707 (fix: ci-cd (4))
     },
     settings: {
       react: {
@@ -97,13 +86,4 @@ export default [
       '@typescript-eslint/no-empty-interface': 'off',
     },
   },
-<<<<<<< HEAD
-<<<<<<< HEAD
 ];
-];
-=======
-];
->>>>>>> 8e24367 (fix: ci-cd (3))
-=======
-];
->>>>>>> cc81707 (fix: ci-cd (4))
