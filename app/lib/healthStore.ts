@@ -1,6 +1,6 @@
 // Health Check 상태 관리 스토어
 
-import * as ottoscalerHealth from '@Team-5-CodeCat/otto-sdk/lib/functional/health/ottoscaler';
+import { functional } from '@Team-5-CodeCat/otto-sdk';
 import type { OttoscalerHealthDto } from '@Team-5-CodeCat/otto-sdk/lib/structures/OttoscalerHealthDto';
 import { makeFetch } from './make-fetch';
 
@@ -25,7 +25,7 @@ const initialState: HealthStore = {
 // localStorage에서 상태 로드
 const loadState = (): HealthStore => {
   if (typeof window === 'undefined') return initialState;
-  
+
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -34,14 +34,14 @@ const loadState = (): HealthStore => {
   } catch (error) {
     console.error('Failed to load health store:', error);
   }
-  
+
   return initialState;
 };
 
 // localStorage에 상태 저장
 const saveState = (state: HealthStore): void => {
   if (typeof window === 'undefined') return;
-  
+
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (error) {
@@ -54,7 +54,7 @@ export const checkOttoscalerHealth = async (): Promise<OttoscalerHealth> => {
   try {
     // makeFetch()로 connection 설정을 가져와서 SDK 호출
     const connection = makeFetch();
-    const result = await ottoscalerHealth.checkOttoscalerHealth(connection);
+    const result = await functional.health.ottoscaler.healthgetHealthCheck(connection);
     return result;
   } catch (error) {
     // SDK 에러 처리

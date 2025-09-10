@@ -371,9 +371,3 @@ const FIXED_DEPLOYMENT = 'EC2';
 이 프롬프트를 바탕으로 완전히 작동하는 프로젝트 생성 페이지를 구현해주세요. 모든
 단계가 매끄럽게 연결되고, 사용자가 중단 없이 프로젝트를 생성할 수 있도록 견고한
 에러 처리와 상태 관리를 포함해주세요.
-
-Todos ☒ Analyze PROJECTS.md requirements and current implementation gaps ☒
-Update BasicInfoStep to use fixed values (Node.js, EC2) ☒ Update
-useProjectCreation hook to match requirements ☐ Fix GitHub installation popup
-handling ☐ Implement proper project creation with API calls ☐ Add dynamic
-routing after project creation

@@ -8,17 +8,6 @@ import makeFetch from '@/app/lib/make-fetch';
 // Otto SDK 타입 추출
 type UserProject = Awaited<ReturnType<typeof functional.projects.projectGetUserProjects>>[0];
 
-// 프로젝트 목록 아이템 타입
-interface ProjectListItem {
-  id: string;
-  name: string;
-  description: string;
-  repo: string;
-  status: 'active' | 'inactive' | 'error';
-  lastBuild: string | null;
-  updatedAt: string;
-}
-
 // 프로젝트 목록 컴포넌트
 function ProjectsList() {
   const [projects, setProjects] = useState<UserProject[]>([]);
@@ -32,15 +21,16 @@ function ProjectsList() {
       try {
         setError(null);
         console.log('프로젝트 목록 조회 시작...');
-        
+
         // Otto SDK를 사용해서 프로젝트 목록 조회
         const projectData = await functional.projects.projectGetUserProjects(connection);
         console.log('프로젝트 목록 조회 성공:', projectData);
-        
+
         setProjects(projectData);
       } catch (error) {
         console.error('프로젝트 목록 조회 실패:', error);
-        const errorMessage = error instanceof Error ? error.message : '프로젝트 목록을 불러오는데 실패했습니다.';
+        const errorMessage =
+          error instanceof Error ? error.message : '프로젝트 목록을 불러오는데 실패했습니다.';
         setError(errorMessage);
       } finally {
         setIsLoading(false);
@@ -125,12 +115,12 @@ function ProjectsList() {
         <p className='text-gray-600 mb-4'>
           Create your first project to get started with CI/CD automation.
         </p>
-        <Link
+        {/* <Link
           href='/projects/new'
           className='inline-flex items-center px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700'
         >
           Create Project
-        </Link>
+        </Link> */}
       </div>
     );
   }
@@ -173,7 +163,9 @@ function ProjectsList() {
                       <span
                         key={repo.id}
                         className={`px-2 py-1 text-xs rounded-md ${
-                          repo.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+                          repo.isActive
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-600'
                         }`}
                       >
                         {repo.selectedBranch}

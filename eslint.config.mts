@@ -7,6 +7,7 @@ import pluginReactHooks from 'eslint-plugin-react-hooks';
 const flatReactConfig = pluginReact.configs.flat?.recommended || pluginReact.configs.recommended;
 
 export default [
+  // JavaScript/TypeScript 파일 설정
   // 무시할 파일들
   {
     ignores: [
@@ -32,7 +33,6 @@ export default [
   // TypeScript 권장 설정
   ...tseslint.configs.recommended,
 
-  // 전역 설정
   {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     languageOptions: {
