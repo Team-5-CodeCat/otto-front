@@ -6,9 +6,9 @@ import { functional } from '@Team-5-CodeCat/otto-sdk';
 import makeFetch from '@/app/lib/make-fetch';
 
 // SDK 타입 추출
-type CreateProjectResponse = Awaited<
-  ReturnType<typeof functional.projects.with_github.createProjectWithGithub>
->;
+// type CreateProjectResponse = Awaited<
+//   ReturnType<typeof functional.projects.with_github.createProjectWithGithub>
+// >;
 type CreateProjectDto = Parameters<
   typeof functional.projects.with_github.createProjectWithGithub
 >[1];
