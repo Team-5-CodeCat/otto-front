@@ -8,10 +8,10 @@ import {
   NodeChange,
 } from 'reactflow';
 import { yamlToNodes, yamlToEdges, nodesToYaml } from './utils';
-import { useNodeVersion } from '../../../contexts/NodeVersionContext';
 
 export const usePipeline = () => {
-  const { selectedVersion } = useNodeVersion();
+  // 기본 노드 버전 사용
+  const selectedVersion = '18';
   
   // 업데이트 소스 추적용 ref
   const isUpdatingFromYaml = useRef(false);

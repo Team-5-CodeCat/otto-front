@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { NodeVersionProvider } from '../../contexts/NodeVersionContext';
 import Sidebar from './Sidebar';
@@ -11,7 +10,6 @@ import { Project, Pipeline } from './types';
 const mockProjects: Project[] = [
   { id: '1', name: 'Frontend Project' },
   { id: '2', name: 'Backend API' },
-  { id: '3', name: 'Mobile App' },
 ];
 
 // 임시 파이프라인 데이터 (전역 상태로 관리)
@@ -19,8 +17,6 @@ const mockPipelines: Pipeline[] = [
   { id: '1', name: 'Pipeline #1', projectId: '1' },
   { id: '2', name: 'Pipeline #2', projectId: '1' },
   { id: '3', name: 'Pipeline #3', projectId: '2' },
-  { id: '4', name: 'Pipeline #4', projectId: '2' },
-  { id: '5', name: 'Pipeline #5', projectId: '3' },
 ];
 
 // 대시보드 레이아웃 Props
@@ -31,7 +27,6 @@ interface DashboardLayoutProps {
 // 대시보드 레이아웃 (좌: Sidebar, 우: Content)
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { isLoading } = useAuth();
-  const router = useRouter();
   // 새 프로젝트 생성 모달 상태
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
@@ -61,36 +56,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     }
   }, [newProjectName]);
 
-  // 새 파이프라인 생성 핸들러
-  const handleCreatePipeline = useCallback(() => {
-    if (newPipelineName.trim() && selectedProject) {
-      // TODO: 백엔드와 연결하여 실제 파이프라인 생성
-      const newPipeline: Pipeline = {
-        id: `pipeline-${Date.now()}`,
-        name: newPipelineName.trim(),
-        projectId: selectedProject.id,
-      };
-
-      // 불변성을 유지하면서 상태 업데이트
-      setPipelines((prev) => [...prev, newPipeline]);
-      setSelectedPipeline(newPipeline);
-      setNewPipelineName('');
-      setIsNewPipelineModalOpen(false);
-
-      // 파이프라인 페이지로 이동
-      router.push('/pipelines');
-    }
-  }, [newPipelineName, selectedProject, router]);
-
   // 모달 닫기 핸들러들
   const handleCloseProjectModal = useCallback(() => {
     setIsNewProjectModalOpen(false);
     setNewProjectName('');
-  }, []);
-
-  const handleClosePipelineModal = useCallback(() => {
-    setIsNewPipelineModalOpen(false);
-    setNewPipelineName('');
   }, []);
 
   // 선택된 프로젝트의 파이프라인들 필터링
@@ -121,7 +90,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           selectedPipeline={selectedPipeline}
           onProjectSelect={setSelectedProject}
           onPipelineSelect={setSelectedPipeline}
-          onNewPipelineClick={() => setIsNewPipelineModalOpen(true)}
         />
 
         {/* 메인 콘텐츠 영역 */}
@@ -165,57 +133,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               <button
                 onClick={handleCreateProject}
                 disabled={!newProjectName.trim()}
-                className='px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed'
-              >
-                생성
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 새 파이프라인 생성 모달 */}
-      {isNewPipelineModalOpen && (
-        <div
-          className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center'
-          style={{ zIndex: 9999 }}
-        >
-          <div className='bg-white rounded-lg p-6 w-96'>
-            <h3 className='text-lg font-medium text-gray-900 mb-4'>새 파이프라인 생성</h3>
-            <div className='mb-4'>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
-                파이프라인 이름
-              </label>
-              <input
-                type='text'
-                value={newPipelineName}
-                onChange={(e) => setNewPipelineName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && selectedProject && newPipelineName.trim()) {
-                    handleCreatePipeline();
-                  }
-                }}
-                className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500'
-                placeholder='파이프라인 이름을 입력하세요'
-                autoFocus
-              />
-            </div>
-            <div className='mb-4'>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>프로젝트</label>
-              <div className='px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm text-gray-700'>
-                {selectedProject?.name || '프로젝트를 선택해주세요'}
-              </div>
-            </div>
-            <div className='flex justify-end space-x-3'>
-              <button
-                onClick={handleClosePipelineModal}
-                className='px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200'
-              >
-                취소
-              </button>
-              <button
-                onClick={handleCreatePipeline}
-                disabled={!selectedProject || !newPipelineName.trim()}
                 className='px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed'
               >
                 생성

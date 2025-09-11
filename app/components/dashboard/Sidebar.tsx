@@ -42,7 +42,6 @@ const Sidebar: React.FC<SidebarProps> = ({
   selectedPipeline,
   onProjectSelect,
   onPipelineSelect,
-  onNewPipelineClick,
   showJobs = false,
   jobs = [],
   selectedJob,
@@ -127,14 +126,6 @@ const Sidebar: React.FC<SidebarProps> = ({
           className='w-full mt-2 px-3 py-2 text-sm text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 rounded-md transition-colors font-medium border border-emerald-200'
         >
           🩺 Check Ottoscaler Health
-        </button>
-
-        {/* 새 파이프라인 생성 버튼 */}
-        <button
-          onClick={onNewPipelineClick}
-          className='w-full mt-3 px-3 py-2 text-sm text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors font-medium'
-        >
-          + New Pipeline
         </button>
       </div>
 

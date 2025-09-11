@@ -1,8 +1,6 @@
 'use client';
 
 import React from 'react';
-import NodeVersionSelector from '@/app/components/ui/NodeVersionSelector';
-import { useNodeVersion } from '@/app/contexts/NodeVersionContext';
 import { createNodeTemplates } from './constants';
 
 interface PipelineBuilderProps {
@@ -18,10 +16,11 @@ const PipelineBuilder: React.FC<PipelineBuilderProps> = ({
   showVersionSelector = true,
   onDragStart,
 }) => {
-  const { selectedVersion } = useNodeVersion();
+  // 기본 노드 버전 사용
+  const defaultVersion = '18'; // 기본값으로 Node.js 18 사용
   
   // 노드 템플릿 정의
-  const nodeTemplates = createNodeTemplates(selectedVersion);
+  const nodeTemplates = createNodeTemplates(defaultVersion);
 
   // 기본 드래그 시작 핸들러
   const defaultOnDragStart = (event: React.DragEvent, nodeType: string) => {
@@ -41,12 +40,6 @@ const PipelineBuilder: React.FC<PipelineBuilderProps> = ({
         </div>
       )}
 
-      {/* Node.js 버전 선택기 (옵션) */}
-      {showVersionSelector && (
-        <div className='p-4 border-b border-gray-200'>
-          <NodeVersionSelector />
-        </div>
-      )}
 
       {/* 노드 팔레트 */}
       <div className='flex-1 p-4 overflow-y-auto'>
