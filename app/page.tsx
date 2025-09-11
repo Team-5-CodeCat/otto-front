@@ -4,7 +4,8 @@
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from './hooks/useAuth';
-import Landing from './(landing)/landing';
+import dynamic from 'next/dynamic';
+const Landing = dynamic(() => import('@/app/(landing)/landing'), { ssr: false });
 
 export default function Home() {
   const _router = useRouter();
@@ -22,13 +23,12 @@ export default function Home() {
         // 인증된 사용자가 루트 페이지에 접근하면 프로젝트로 리다이렉트
         // 하지만 즉시 리다이렉트하지 않고 사용자가 선택할 수 있도록 함
       } catch {
-        // 인증 실패는 무시하고 랜딩 페이지 표시
+        // 인증 실패는 무시하고 홈 화면 표시
       }
     };
 
     checkAuth();
   }, [validateToken]);
 
-  // 랜딩 페이지 표시
   return <Landing />;
 }
