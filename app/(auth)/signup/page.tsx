@@ -134,10 +134,6 @@ export default function SignUpPage() {
 
   return (
     <div className='min-h-screen bg-gray-50 text-gray-900 relative overflow-hidden'>
-      <BackgroundElements />
-      <div className='relative z-10'>
-        <Header />
-      </div>
       <div className='relative z-10 flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8'>
         <div className='max-w-md w-full space-y-8'>
           <div className='text-center'>
@@ -371,9 +367,6 @@ export default function SignUpPage() {
             </div>
           </Card>
         </div>
-      </div>
-      <div className='relative z-10'>
-        <Footer />
       </div>
     </div>
   );
