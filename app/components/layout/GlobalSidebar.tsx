@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Search,
   Plus,
@@ -11,6 +11,7 @@ import {
   BookOpen,
   FileText,
   Home,
+  Check,
 } from 'lucide-react';
 
 /**
@@ -48,6 +49,22 @@ interface BottomIcon {
 }
 
 /**
+ * 워크스페이스의 인터페이스 (GitHub 연동 준비)
+ */
+interface Workspace {
+  /** 워크스페이스 고유 ID */
+  id: string;
+  /** 워크스페이스 표시 이름 */
+  name: string;
+  /** GitHub 저장소 URL (옵션) */
+  githubUrl?: string;
+  /** 워크스페이스 소유자 */
+  owner: string;
+  /** 현재 선택된 워크스페이스인지 여부 */
+  isActive?: boolean;
+}
+
+/**
  * GlobalSidebar 컴포넌트
  *
  * 워크스페이스 네비게이션과 블록 팔레트 기능을 제공하는 플로팅 사이드바 컴포넌트입니다.
@@ -71,6 +88,57 @@ const GlobalSidebar = () => {
 
   /** 현재 선택된 폴더 이름 */
   const [selectedFolder, setSelectedFolder] = useState<string>('dfsdfdsf');
+
+  /** 워크스페이스 드롭다운 열림/닫힘 상태 */
+  const [isWorkspaceDropdownOpen, setIsWorkspaceDropdownOpen] = useState<boolean>(false);
+
+  /** 현재 선택된 워크스페이스 ID */
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>('workspace-1');
+
+  /** 워크스페이스 드롭다운 참조 */
+  const workspaceDropdownRef = useRef<HTMLDivElement>(null);
+
+  // 워크스페이스 드롭다운 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (workspaceDropdownRef.current && !workspaceDropdownRef.current.contains(event.target as Node)) {
+        setIsWorkspaceDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  /**
+   * 사용 가능한 워크스페이스 목록 (GitHub 연동 대비 모킹 데이터)
+   * 향후 GitHub API를 통해 실제 저장소 데이터로 교체될 예정
+   */
+  const workspaces: Workspace[] = [
+    {
+      id: 'workspace-1',
+      name: "dbswl030's Workspace",
+      owner: 'dbswl030',
+      githubUrl: 'https://github.com/dbswl030/otto-workspace',
+      isActive: true,
+    },
+    {
+      id: 'workspace-2',
+      name: 'Team Project Workspace',
+      owner: 'dbswl030',
+      githubUrl: 'https://github.com/dbswl030/team-project',
+      isActive: false,
+    },
+    {
+      id: 'workspace-3',
+      name: 'ML Pipeline Workspace',
+      owner: 'dbswl030',
+      githubUrl: 'https://github.com/dbswl030/ml-pipeline',
+      isActive: false,
+    },
+  ];
 
   /**
    * 팔레트에서 사용 가능한 블록들의 설정
@@ -127,6 +195,35 @@ const GlobalSidebar = () => {
   };
 
   /**
+   * 워크스페이스 선택을 처리합니다
+   * GitHub 연동 시 저장소 전환 로직이 추가될 예정입니다
+   *
+   * @param workspaceId - 선택할 워크스페이스의 ID
+   */
+  const handleWorkspaceSelect = (workspaceId: string) => {
+    setSelectedWorkspaceId(workspaceId);
+    setIsWorkspaceDropdownOpen(false);
+    // TODO: GitHub 연동 시 저장소 전환 로직 추가
+  };
+
+  /**
+   * 워크스페이스 드롭다운 토글을 처리합니다
+   */
+  const handleWorkspaceDropdownToggle = () => {
+    setIsWorkspaceDropdownOpen(!isWorkspaceDropdownOpen);
+  };
+
+  /**
+   * 현재 선택된 워크스페이스를 반환합니다
+   *
+   * @returns 현재 선택된 워크스페이스 객체
+   */
+  const getSelectedWorkspace = (): Workspace => {
+    const selectedWorkspace = workspaces.find((ws) => ws.id === selectedWorkspaceId);
+    return selectedWorkspace || workspaces[0]!;
+  };
+
+  /**
    * 검색 쿼리를 기반으로 블록들을 필터링합니다
    * 검색어와 일치하는 블록들을 반환합니다 (대소문자 구분 안함)
    *
@@ -141,11 +238,67 @@ const GlobalSidebar = () => {
       {/* Workspace Header Card */}
       <div className='bg-white rounded-xl shadow-lg border border-gray-200 p-4'>
         <div className='flex items-center justify-between'>
-          <div className='flex items-center space-x-2'>
-            <h1 className='text-lg font-semibold text-gray-900'>dbswl030's Workspace</h1>
-            <ChevronDown className='w-4 h-4 text-gray-400' />
+          <div className='relative flex-1' ref={workspaceDropdownRef}>
+            {/* 워크스페이스 드롭다운 버튼 */}
+            <button
+              onClick={handleWorkspaceDropdownToggle}
+              className='flex items-center space-x-2 w-full text-left hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors'
+            >
+              <div className='flex-1 min-w-0'>
+                <h1 className='text-lg font-semibold text-gray-900 truncate'>
+                  {getSelectedWorkspace().name}
+                </h1>
+                <p className='text-xs text-gray-500 truncate'>
+                  {getSelectedWorkspace().owner}
+                </p>
+              </div>
+              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${
+                isWorkspaceDropdownOpen ? 'rotate-180' : ''
+              }`} />
+            </button>
+
+            {/* 워크스페이스 드롭다운 메뉴 */}
+            {isWorkspaceDropdownOpen && (
+              <div className='absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-20'>
+                <div className='py-1 max-h-64 overflow-y-auto'>
+                  {workspaces.map((workspace) => (
+                    <button
+                      key={workspace.id}
+                      onClick={() => handleWorkspaceSelect(workspace.id)}
+                      className={`w-full flex items-center space-x-3 px-3 py-2.5 text-sm hover:bg-gray-50 transition-colors ${
+                        workspace.id === selectedWorkspaceId ? 'bg-blue-50' : ''
+                      }`}
+                    >
+                      <div className='flex-1 min-w-0 text-left'>
+                        <div className={`font-medium truncate ${
+                          workspace.id === selectedWorkspaceId ? 'text-blue-900' : 'text-gray-900'
+                        }`}>
+                          {workspace.name}
+                        </div>
+                        <div className='text-xs text-gray-500 truncate'>
+                          {workspace.owner}
+                        </div>
+                      </div>
+                      {workspace.id === selectedWorkspaceId && (
+                        <Check className='w-4 h-4 text-blue-600' />
+                      )}
+                    </button>
+                  ))}
+                  
+                  {/* GitHub에서 새 워크스페이스 가져오기 (향후 구현) */}
+                  <div className='border-t border-gray-100 mt-1 pt-1'>
+                    <button className='w-full flex items-center space-x-3 px-3 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors'>
+                      <Plus className='w-4 h-4' />
+                      <span>GitHub에서 가져오기</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-          <button className='p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg'>
+          
+          {/* 복사 버튼 */}
+          <button className='p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg ml-2'>
             <Copy className='w-4 h-4' />
           </button>
         </div>
