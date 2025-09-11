@@ -7,22 +7,11 @@ import { OrbitControls, Environment, Stars } from '@react-three/drei';
 import Meshes from '../../Meshes';
 
 interface Props {
-  centerType?: 'sphere' | 'torus' | 'knot' | 'gltf' | 'text' | 'none';
-  gltfUrl?: string;
-  centerScale?: number;
   centerText?: string;
-  centerFont?: string;
   centerSize?: number;
 }
 
-const FakeGlowCanvas: React.FC<Props> = ({
-  centerType = 'sphere',
-  gltfUrl,
-  centerScale,
-  centerText,
-  centerFont,
-  centerSize,
-}) => {
+const FakeGlowCanvas: React.FC<Props> = ({ centerText, centerSize }) => {
   const shaderControls = {
     // 더 입체적으로 보이도록 글로우 파라미터 조정
     falloff: 0.6,
@@ -41,16 +30,7 @@ const FakeGlowCanvas: React.FC<Props> = ({
         <directionalLight position={[100, 100, 60]} intensity={2} />
         <ambientLight intensity={1.5} />
         <Environment preset='city' />
-        <Meshes
-          shaderControls={shaderControls}
-          centerType={centerType}
-          gltfUrl={gltfUrl}
-          centerScale={centerScale}
-          centerText={centerText}
-          centerFont={centerFont}
-          centerSize={centerSize}
-          showSideObjects={false}
-        />
+        <Meshes shaderControls={shaderControls} centerText={centerText} centerSize={centerSize} />
         <Stars speed={0.6} />
       </Canvas>
     </div>

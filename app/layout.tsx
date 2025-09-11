@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { cn } from '@/lib/utils';
+import GlobalLayout from './components/layout/GlobalLayout';
 
 import './styles/globals.css';
 
@@ -26,7 +27,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en'>
-      <body className={cn(geistSans.variable, geistMono.variable, 'antialiased')}>{children}</body>
+      <body className={cn(geistSans.variable, geistMono.variable, 'antialiased')}>
+        <GlobalLayout>
+          {children}
+        </GlobalLayout>
+      </body>
     </html>
   );
 }
