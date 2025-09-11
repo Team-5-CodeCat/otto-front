@@ -144,14 +144,14 @@ const FlowCanvas: React.FC<FlowCanvasProps> = (props) => {
     <>
       {/* 대시보드 레이아웃을 벗어나서 전체 화면 사용 */}
       <div
-        className='absolute inset-0 flex bg-gray-100 overflow-hidden z-10'
+        className='absolute inset-0 flex bg-gray-100 overflow-hidden'
         style={{
           position: 'fixed',
           top: 0,
-          left: '256px', // 사이드바 너비만큼 왼쪽 여백
+          left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 50,
+          zIndex: 40,
         }}
       >
         {/* 중앙 영역 - 플로우 캔버스 */}

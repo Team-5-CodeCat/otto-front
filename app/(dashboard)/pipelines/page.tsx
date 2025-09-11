@@ -175,7 +175,7 @@ const YamlFlowEditor = () => {
   }, [setShowPipelineBuilder]);
 
   return (
-    <div className='h-full'>
+    <div>
       {/* ✅ 파이프라인 상태 정보 헤더 */}
       {currentPipelineId && (
         <div className='bg-emerald-50 border-b border-emerald-200 px-4 py-2'>
