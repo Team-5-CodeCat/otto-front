@@ -6,14 +6,17 @@
 
 ### 개발
 ```bash
-# 환경 변수와 함께 개발 서버 시작
+# 개발 서버 시작 (.env.dev 사용)
 pnpm dev
 
 # 애플리케이션 빌드
 pnpm build
 
-# 프로덕션 서버 시작
+# 프로덕션 서버 시작 (.env.prod 사용)
 pnpm start
+
+# 개발 환경으로 빌드된 서버 시작
+pnpm start:dev
 
 # 의존성 설치 (@Team-5-CodeCat/otto-sdk를 위해 GitHub Package 인증 필요)
 pnpm install
@@ -53,7 +56,9 @@ npx tsc --noEmit
 
 #### API 통합
 - `app/lib/make-fetch.ts`에서 SDK 연결 설정
-- 베이스 URL: `process.env.NEXT_PUBLIC_API_BASE_URL` (기본값: localhost:4000)
+- 환경변수: `process.env.NEXT_PUBLIC_API_BASE_URL`
+  - 기본값: `http://localhost:4000`
+- API 경로에 `/api/v1` prefix 자동 추가
 - `next.config.ts`의 Next.js rewrites를 통한 API 라우트 프록시
 - 모든 API 호출은 쿠키 기반 인증을 위해 credentials: 'include' 사용
 
@@ -71,9 +76,25 @@ npx tsc --noEmit
   - `uiStore`: UI 상태 관리
 
 ### 환경 설정
-- `.env.dev.local`: 로컬 개발 환경
-- `.env.production`: 프로덕션 환경 (CI에서 생성)
-- 필수 변수: `NEXT_PUBLIC_API_BASE_URL`
+
+#### 환경변수 파일 구조
+- `.env.example`: 기본 템플릿 (모든 환경변수 키만 포함, 값은 비워둠)
+- `.env.dev`: 개발 환경 설정 (`pnpm dev`, `pnpm start:dev`에서 사용)
+- `.env.prod`: 프로덕션 환경 설정 (`pnpm start`에서 사용)
+- `.env.dev.example`: 개발 환경 예제 (값 포함)
+- `.env.prod.example`: 프로덕션 환경 예제 (값 포함)
+
+#### 현재 사용 중인 환경변수
+- **필수 변수**: `NEXT_PUBLIC_API_BASE_URL`
+  - 개발: `http://localhost:4000`
+  - 프로덕션: 실제 API 서버 URL
+  - 코드에서 `app/lib/make-fetch.ts`에서 사용
+
+#### 환경변수 관리 패턴
+- `dotenv-cli`를 사용하여 package.json 스크립트에서 자동 로드
+- `.env.dev`와 `.env.prod`는 `.gitignore`에 포함 (git 커밋 제외)
+- CI/CD에서는 `.env.prod` 파일을 동적 생성
+- `NEXT_PUBLIC_` prefix로 클라이언트 사이드 접근 가능
 
 ### TypeScript 설정
 - 추가 체크와 함께 strict 모드 활성화

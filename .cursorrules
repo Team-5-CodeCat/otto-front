@@ -47,17 +47,32 @@ app/
 ## 🔧 개발 환경
 
 ### 명령어
-- **개발**: `pnpm dev` (turbopack + .env.local 사용)
+- **개발**: `pnpm dev` (.env.dev 사용, turbopack)
 - **빌드**: `pnpm build` (turbopack 사용)
-- **시작**: `pnpm start` (.env.local 필요)
+- **프로덕션 시작**: `pnpm start` (.env.prod 사용)
+- **개발 환경 시작**: `pnpm start:dev` (.env.dev 사용)
 - **린트**: `npx eslint .`
 - **타입 체크**: `npx tsc --noEmit`
 
-### 환경 변수
-- `PORT`: 프론트엔드 포트
-- `BACKEND_PORT`: 백엔드 API 포트
-- `NEXT_PUBLIC_API_BASE_URL`: API 베이스 URL (기본값: 클라이언트 localhost:4000, 서버 host.docker.internal:4000)
-- `NEXT_PUBLIC_GITHUB_APP_NAME`: GitHub 앱 이름 (기본값: 'otto-test-1')
+### 환경변수 구조
+
+#### 파일 구조
+- `.env.example`: 기본 템플릿 (키만 포함, 값 비워둠)
+- `.env.dev`: 개발 환경 설정 (git 제외)
+- `.env.prod`: 프로덕션 환경 설정 (git 제외)
+- `.env.dev.example`: 개발 환경 예제 (값 포함)
+- `.env.prod.example`: 프로덕션 환경 예제 (값 포함)
+
+#### 현재 사용 중인 환경변수
+- `NEXT_PUBLIC_API_BASE_URL`: API 베이스 URL (필수)
+  - 개발: `http://localhost:4000`
+  - 프로덕션: 실제 API 서버 URL
+  - 기본값: `http://localhost:4000`
+
+#### 환경변수 관리 패턴
+- `dotenv-cli`를 통한 자동 로드 (package.json 스크립트)
+- `NEXT_PUBLIC_` prefix를 사용하여 클라이언트 사이드 접근 가능
+- `app/lib/make-fetch.ts`에서 환경변수 처리 중앙화
 
 ## 📝 코드 스타일 가이드라인
 

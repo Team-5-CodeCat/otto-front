@@ -19,14 +19,26 @@ cd otto-front
 ```
 
 2. 환경 변수 설정
+
+#### 환경변수 파일 구조
+- `.env.example`: 기본 템플릿 (키만 포함, 값 비워둠)
+- `.env.dev.example`: 개발 환경 예제
+- `.env.prod.example`: 프로덕션 환경 예제
+- `.env.dev`: 실제 개발 환경 설정 (git에서 제외)
+- `.env.prod`: 실제 프로덕션 환경 설정 (git에서 제외)
+
 ```bash
-# .env.dev.local 파일 생성
-cp .env.example .env.dev.local
+# 개발 환경 파일 생성
+cp .env.dev.example .env.dev
+
+# 프로덕션 환경 파일 생성 (필요시)
+cp .env.prod.example .env.prod
 ```
 
-`.env.dev.local` 파일에 다음 변수 설정:
-```
-NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
+#### 현재 사용 중인 환경변수
+```env
+# 필수 환경변수
+NEXT_PUBLIC_API_BASE_URL=http://localhost:4000  # 개발: localhost:4000, 프로덕션: 실제 API URL
 ```
 
 3. GitHub Package Registry 인증 설정
@@ -59,6 +71,9 @@ pnpm build
 
 # 프로덕션 서버 실행
 pnpm start
+
+# 개발 환경으로 빌드된 서버 실행
+pnpm start:dev
 
 # 코드 린팅
 npx eslint .
@@ -118,11 +133,17 @@ otto-front/
 
 ## 🔐 환경 변수
 
-| 변수명 | 설명 | 기본값 |
-|--------|------|--------|
-| `NEXT_PUBLIC_API_BASE_URL` | 백엔드 API URL | `http://localhost:4000` |
-| `PORT` | 프론트엔드 포트 | `3000` |
-| `BACKEND_PORT` | 백엔드 포트 | `4000` |
+### 현재 사용 중인 환경변수
+| 변수명 | 설명 | 개발 환경 | 프로덕션 환경 |
+|--------|------|----------|-------------|
+| `NEXT_PUBLIC_API_BASE_URL` | 백엔드 API URL | `http://localhost:4000` | `https://api.otto.example.com` |
+
+### 환경변수 파일 관리
+- **`.env.example`**: 기본 템플릿, 모든 환경변수 키 포함
+- **`.env.dev`**: 개발 환경용 (`pnpm dev`, `pnpm start:dev`에서 사용)
+- **`.env.prod`**: 프로덕션 환경용 (`pnpm start`에서 사용)
+
+⚠️ **주의**: `.env.dev`와 `.env.prod`는 `.gitignore`에 포함되어 있어 git에 커밋되지 않습니다.
 
 ## 🧪 테스트
 
@@ -158,9 +179,6 @@ pnpm build
 pnpm start
 ```
 
-### Docker 지원
-
-Docker 컨테이너에서 실행 시, 백엔드 API 연결을 위해 `host.docker.internal`을 사용합니다.
 
 ## 🤝 기여하기
 
