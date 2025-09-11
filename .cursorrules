@@ -1,92 +1,92 @@
-# Otto Frontend - Cursor Rules
+# Otto 프론트엔드 - Cursor 규칙
 
-## 🎯 Project Overview
+## 🎯 프로젝트 개요
 Otto는 CI/CD 파이프라인 자동화 플랫폼입니다. Next.js 15 (App Router), TypeScript, Tailwind CSS v4, Radix UI로 구성된 프론트엔드 애플리케이션입니다.
 
-## 📁 Core Architecture
+## 📁 핵심 아키텍처
 
-### Tech Stack
-- **Framework**: Next.js 15 with App Router + Turbopack
-- **Language**: TypeScript 5+ with strict configuration
-- **Styling**: Tailwind CSS v4 + Radix UI Themes
-- **State Management**: Custom stores in `app/lib/`
-- **Flow Diagrams**: ReactFlow for pipeline visualization
-- **Backend Integration**: `@Team-5-CodeCat/otto-sdk` 
-- **Package Manager**: pnpm with workspace configuration
-- **Authentication**: JWT-based with localStorage token management
+### 기술 스택
+- **프레임워크**: Next.js 15 with App Router + Turbopack
+- **언어**: TypeScript 5+ (strict 설정)
+- **스타일링**: Tailwind CSS v4 + Radix UI Themes
+- **상태 관리**: `app/lib/`의 커스텀 스토어
+- **플로우 다이어그램**: 파이프라인 시각화를 위한 ReactFlow
+- **백엔드 통합**: `@Team-5-CodeCat/otto-sdk`
+- **패키지 매니저**: workspace 설정의 pnpm
+- **인증**: localStorage 토큰 관리의 JWT 기반
 
-### Directory Structure Rules
+### 디렉토리 구조 규칙
 ```
 app/
-├── (auth)/                 # Authentication pages (signin/signup)
-├── (dashboard)/           # Main dashboard with nested routes
-│   ├── builds/           # Build management pages
-│   ├── deployments/      # Deployment management pages
-│   ├── environments/     # Environment management
-│   ├── pipelines/        # Pipeline editor with ReactFlow
-│   ├── projects/         # Project management
-│   ├── settings/         # Application settings
-│   └── tests/           # Test management
-├── (landing)/            # Marketing pages
-├── api/                 # Next.js API routes (GitHub integration)
-├── components/          # Reusable UI components
-│   ├── ui/             # Basic UI components
-│   ├── dashboard/      # Dashboard-specific components
-│   ├── auth/           # Authentication components
-│   └── github/         # GitHub integration components
-├── contexts/           # React contexts (AuthContext)
-├── hooks/              # Custom hooks (useAuth)
-└── lib/                # Utilities and state management
-    ├── *Store.ts       # Domain-specific state stores
-    ├── api.ts          # GitHub API utilities
-    ├── auth-api.ts     # Authentication API
-    ├── jwt-utils.ts    # JWT handling
-    └── token-manager.ts # Token management
+├── (auth)/                 # 인증 페이지 (signin/signup)
+├── (dashboard)/           # 중첩 라우트가 있는 메인 대시보드
+│   ├── builds/           # 빌드 관리 페이지
+│   ├── deployments/      # 배포 관리 페이지
+│   ├── environments/     # 환경 관리
+│   ├── pipelines/        # ReactFlow 파이프라인 에디터
+│   ├── projects/         # 프로젝트 관리
+│   ├── settings/         # 애플리케이션 설정
+│   └── tests/           # 테스트 관리
+├── (landing)/            # 마케팅 페이지
+├── api/                 # Next.js API 라우트 (GitHub 통합)
+├── components/          # 재사용 가능한 UI 컴포넌트
+│   ├── ui/             # 기본 UI 컴포넌트
+│   ├── dashboard/      # 대시보드 전용 컴포넌트
+│   ├── auth/           # 인증 컴포넌트
+│   └── github/         # GitHub 통합 컴포넌트
+├── contexts/           # React 컨텍스트 (AuthContext)
+├── hooks/              # 커스텀 훅 (useAuth)
+└── lib/                # 유틸리티와 상태 관리
+    ├── *Store.ts       # 도메인별 상태 스토어
+    ├── api.ts          # GitHub API 유틸리티
+    ├── auth-api.ts     # 인증 API
+    ├── jwt-utils.ts    # JWT 처리
+    └── token-manager.ts # 토큰 관리
 ```
 
-## 🔧 Development Environment
+## 🔧 개발 환경
 
-### Commands
-- **Dev**: `pnpm dev` (uses turbopack + .env.local)
-- **Build**: `pnpm build` (uses turbopack)
-- **Start**: `pnpm start` (requires .env.local)
-- **Lint**: `npx eslint .`
-- **Type Check**: `npx tsc --noEmit`
+### 명령어
+- **개발**: `pnpm dev` (turbopack + .env.local 사용)
+- **빌드**: `pnpm build` (turbopack 사용)
+- **시작**: `pnpm start` (.env.local 필요)
+- **린트**: `npx eslint .`
+- **타입 체크**: `npx tsc --noEmit`
 
-### Environment Variables
-- `PORT`: Frontend port
-- `BACKEND_PORT`: Backend API port  
-- `NEXT_PUBLIC_API_BASE_URL`: API base URL (defaults: localhost:4000 client-side, host.docker.internal:4000 server-side)
-- `NEXT_PUBLIC_GITHUB_APP_NAME`: GitHub app name (defaults: 'otto-test-1')
+### 환경 변수
+- `PORT`: 프론트엔드 포트
+- `BACKEND_PORT`: 백엔드 API 포트
+- `NEXT_PUBLIC_API_BASE_URL`: API 베이스 URL (기본값: 클라이언트 localhost:4000, 서버 host.docker.internal:4000)
+- `NEXT_PUBLIC_GITHUB_APP_NAME`: GitHub 앱 이름 (기본값: 'otto-test-1')
 
-## 📝 Code Style Guidelines
+## 📝 코드 스타일 가이드라인
 
-### TypeScript Configuration
-- **Strict Mode**: Enabled with additional safety features
-- **noUncheckedIndexedAccess**: true - Always check array/object access
-- **exactOptionalPropertyTypes**: true - Strict optional property handling
-- **noImplicitOverride**: true - Explicit override keywords required
+### TypeScript 설정
+- **Strict 모드**: 추가 안전 기능과 함께 활성화
+- **noUncheckedIndexedAccess**: true - 항상 배열/객체 접근 체크
+- **exactOptionalPropertyTypes**: true - 엄격한 선택적 프로퍼티 처리
+- **noImplicitOverride**: true - 명시적 override 키워드 필수
 
-### Import/Export Patterns
-- Use path aliases: `@/components/*`, `@/lib/*`, `@/utils/*`
-- Prefer named exports for components
-- Use default exports only for page components and main entry points
+### Import/Export 패턴
+- 경로 별칭 사용: `@/components/*`, `@/lib/*`, `@/utils/*`
+- 컴포넌트는 named export 선호
+- page 컴포넌트와 메인 엔트리 포인트만 default export 사용
 
-### Component Architecture
-- **UI Components** (`app/components/ui/`): Reusable, composable components with variant patterns
-- **Domain Components**: Feature-specific components in appropriate domain folders
-- **Page Components**: Located in route folders, handle data fetching and layout
+### 컴포넌트 아키텍처
+- **UI 컴포넌트** (`app/components/ui/`): 재사용 가능하고 조합 가능한 variant 패턴 컴포넌트
+- **도메인 컴포넌트**: 적절한 도메인 폴더의 기능별 컴포넌트
+- **페이지 컴포넌트**: 라우트 폴더에 위치, 데이터 페칭과 레이아웃 처리
 
-### Styling Guidelines
-- **Primary**: Tailwind CSS with utility-first approach
-- **Component Variants**: Use object-based variant patterns like Button component
-- **Responsive Design**: Mobile-first approach with sm:, md:, lg: breakpoints
-- **Color Palette**: Consistent color system across components
-- **Dark Mode**: Not currently implemented but structure should support it
+### 스타일링 가이드라인
+- **기본**: 유틸리티 우선 접근법의 Tailwind CSS
+- **컴포넌트 변형**: Button 컴포넌트처럼 객체 기반 variant 패턴 사용
+- **반응형 디자인**: sm:, md:, lg: 브레이크포인트로 모바일 우선 접근
+- **색상 팔레트**: 컴포넌트 전체에 일관된 색상 시스템
+- **다크 모드**: 현재 구현되지 않았지만 구조는 지원 가능
 
-## 🧩 Component Patterns
+## 🧩 컴포넌트 패턴
 
-### Button Component Pattern
+### Button 컴포넌트 패턴
 ```tsx
 interface ComponentProps extends React.HTMLAttributes<HTMLElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
@@ -103,8 +103,8 @@ const Component: React.FC<ComponentProps> = ({
   ...props
 }) => {
   const baseClasses = 'base-styles';
-  const variantClasses = { /* variant mappings */ };
-  const sizeClasses = { /* size mappings */ };
+  const variantClasses = { /* variant 매핑 */ };
+  const sizeClasses = { /* size 매핑 */ };
   
   return (
     <element 
@@ -117,7 +117,7 @@ const Component: React.FC<ComponentProps> = ({
 };
 ```
 
-### ReactFlow Node Pattern
+### ReactFlow 노드 패턴
 ```tsx
 interface NodeProps {
   data: NodeData;
@@ -127,14 +127,14 @@ const CustomNode: React.FC<NodeProps> = ({ data }) => {
   return (
     <div className="node-styles">
       <Handle type="target" position={Position.Top} />
-      {/* Node content */}
+      {/* 노드 콘텐츠 */}
       <Handle type="source" position={Position.Bottom} />
     </div>
   );
 };
 ```
 
-### Store Pattern
+### 스토어 패턴
 ```tsx
 interface StoreState {
   data: DataType[];
@@ -143,116 +143,116 @@ interface StoreState {
 }
 
 export const useStore = () => {
-  // State management logic
-  // CRUD operations
-  // Error handling
+  // 상태 관리 로직
+  // CRUD 작업
+  // 에러 처리
 };
 ```
 
-## 🔒 Security Guidelines
+## 🔒 보안 가이드라인
 
-### Authentication
-- JWT tokens stored in localStorage (key: 'auth_token')
-- Bearer token authentication for API calls
-- AuthGuard component for route protection
-- Environment-aware API URLs for client/server-side requests
+### 인증
+- localStorage에 JWT 토큰 저장 (키: 'auth_token')
+- API 호출을 위한 Bearer 토큰 인증
+- 라우트 보호를 위한 AuthGuard 컴포넌트
+- 클라이언트/서버 사이드 요청을 위한 환경 인식 API URL
 
-### Data Handling
-- Mask sensitive environment variables in UI
-- Sanitize user inputs
-- Validate API responses
-- Handle error states gracefully
+### 데이터 처리
+- UI에서 민감한 환경 변수 마스킹
+- 사용자 입력 검증
+- API 응답 검증
+- 우아한 에러 상태 처리
 
-### GitHub Integration
-- OAuth app integration with installation flow
-- Repository and branch management
-- Secure token handling for GitHub API calls
+### GitHub 통합
+- 설치 플로우가 있는 OAuth 앱 통합
+- 저장소와 브랜치 관리
+- GitHub API 호출을 위한 안전한 토큰 처리
 
-## 🌐 API Integration
+## 🌐 API 통합
 
-### Backend Communication
-- Custom API utilities in `app/lib/api.ts`
-- Environment-aware base URLs
-- Consistent error handling patterns
-- TypeScript interfaces for API responses
+### 백엔드 통신
+- `app/lib/api.ts`의 커스텀 API 유틸리티
+- 환경 인식 베이스 URL
+- 일관된 에러 처리 패턴
+- API 응답을 위한 TypeScript 인터페이스
 
-### GitHub API Integration
-- Repository listing and management
-- Branch operations
-- Installation flow handling
-- Error recovery mechanisms
+### GitHub API 통합
+- 저장소 목록과 관리
+- 브랜치 작업
+- 설치 플로우 처리
+- 에러 복구 메커니즘
 
-## 🎨 UI/UX Standards
+## 🎨 UI/UX 표준
 
-### Layout Patterns
-- Dashboard layout with sidebar navigation
-- Responsive design with mobile support
-- Consistent spacing and typography
-- Loading states and error boundaries
+### 레이아웃 패턴
+- 사이드바 네비게이션이 있는 대시보드 레이아웃
+- 모바일 지원의 반응형 디자인
+- 일관된 간격과 타이포그래피
+- 로딩 상태와 에러 바운더리
 
-### Form Handling
-- Controlled components with proper validation
-- Loading states during submission
-- Clear error messaging
-- Accessible form elements
+### 폼 처리
+- 적절한 검증이 있는 제어 컴포넌트
+- 제출 중 로딩 상태
+- 명확한 에러 메시징
+- 접근 가능한 폼 요소
 
-### Data Visualization
-- ReactFlow for pipeline visualization
-- Custom nodes and edges for workflow representation
-- Interactive pipeline editing capabilities
-- Real-time updates and state management
+### 데이터 시각화
+- 파이프라인 시각화를 위한 ReactFlow
+- 워크플로우 표현을 위한 커스텀 노드와 엣지
+- 대화형 파이프라인 편집 기능
+- 실시간 업데이트와 상태 관리
 
-## 📋 Code Quality Rules
+## 📋 코드 품질 규칙
 
-### File Organization
-- Group related functionality together
-- Use descriptive file names
-- Maintain consistent folder structure
-- Separate concerns appropriately
+### 파일 구성
+- 관련 기능을 함께 그룹화
+- 설명적인 파일 이름 사용
+- 일관된 폴더 구조 유지
+- 관심사를 적절히 분리
 
-### Error Handling
-- Use proper TypeScript error types
-- Implement graceful fallbacks
-- Log errors appropriately
-- Provide user-friendly error messages
+### 에러 처리
+- 적절한 TypeScript 에러 타입 사용
+- 우아한 폴백 구현
+- 적절히 에러 로깅
+- 사용자 친화적인 에러 메시지 제공
 
-### Performance
-- Lazy load components when appropriate
-- Optimize bundle size
-- Use React.memo for expensive components
-- Implement proper cleanup in useEffect
+### 성능
+- 적절한 경우 컴포넌트 지연 로딩
+- 번들 크기 최적화
+- 비싼 컴포넌트에 React.memo 사용
+- useEffect에서 적절한 정리 구현
 
-### Testing Strategy
-- Component testing for UI components
-- Integration testing for API interactions
-- End-to-end testing for critical user flows
-- Mock external dependencies properly
+### 테스트 전략
+- UI 컴포넌트를 위한 컴포넌트 테스팅
+- API 상호작용을 위한 통합 테스팅
+- 중요한 사용자 플로우를 위한 엔드투엔드 테스팅
+- 외부 의존성을 적절히 모킹
 
-## 📖 Documentation Standards
-- Comprehensive JSDoc comments for complex functions
-- README files for major features
-- Inline comments for business logic
-- API documentation for custom hooks
+## 📖 문서화 표준
+- 복잡한 함수에 대한 포괄적인 JSDoc 주석
+- 주요 기능에 대한 README 파일
+- 비즈니스 로직에 대한 인라인 주석
+- 커스텀 훅에 대한 API 문서
 
-## 🚀 Deployment Considerations
-- Environment variable management
-- Build optimization with Turbopack
-- Docker compatibility for API communication
-- Production error handling and monitoring
+## 🚀 배포 고려사항
+- 환경 변수 관리
+- Turbopack으로 빌드 최적화
+- API 통신을 위한 Docker 호환성
+- 프로덕션 에러 처리와 모니터링
 
-## 🔄 Development Workflow
-- Feature branches from main
-- Comprehensive PR reviews
-- Consistent commit message format
-- Integration testing before merge
+## 🔄 개발 워크플로우
+- main에서 기능 브랜치 생성
+- 포괄적인 PR 리뷰
+- 일관된 커밋 메시지 형식
+- 병합 전 통합 테스팅
 
 ---
 
-**Key Principles:**
-1. **Type Safety**: Leverage TypeScript's strict mode features
-2. **Component Reusability**: Build composable, reusable components
-3. **Performance**: Optimize for bundle size and runtime performance
-4. **Developer Experience**: Maintain clear patterns and documentation
-5. **User Experience**: Prioritize responsive design and accessibility
-6. **Security**: Implement secure authentication and data handling
-7. **Maintainability**: Write clean, testable, and well-documented code
+**핵심 원칙:**
+1. **타입 안전성**: TypeScript의 strict 모드 기능 활용
+2. **컴포넌트 재사용성**: 조합 가능하고 재사용 가능한 컴포넌트 구축
+3. **성능**: 번들 크기와 런타임 성능 최적화
+4. **개발자 경험**: 명확한 패턴과 문서 유지
+5. **사용자 경험**: 반응형 디자인과 접근성 우선
+6. **보안**: 안전한 인증과 데이터 처리 구현
+7. **유지보수성**: 깨끗하고 테스트 가능하며 잘 문서화된 코드 작성
