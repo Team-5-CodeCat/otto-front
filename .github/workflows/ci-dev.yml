@@ -1,4 +1,4 @@
-name: CI Pipeline (Dev Branch)
+name: CI
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [dev]
 
 jobs:
-  build-and-test:
+  build-and-test-otto-front:
     runs-on: ubuntu-latest
 
     steps:
@@ -38,10 +38,10 @@ jobs:
       - name: Run type checking
         run: npx tsc --noEmit
 
-      - name: Create .env.production
+      - name: Create .env.prod
         run: |
           set -e  # Exit on error
-          echo "NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}" > .env.production
+          echo "NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}" > .env.prod
 
       - name: Build application
         run: pnpm build
