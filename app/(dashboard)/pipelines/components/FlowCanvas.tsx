@@ -148,7 +148,7 @@ const FlowCanvas: React.FC<FlowCanvasProps> = (props) => {
         style={{
           position: 'fixed',
           top: 0,
-          left: '256px', // 사이드바 너비만큼 왼쪽 여백
+          left: 0,
           right: 0,
           bottom: 0,
           zIndex: 50,
