@@ -49,26 +49,26 @@ interface BottomIcon {
 
 /**
  * GlobalSidebar 컴포넌트
- * 
+ *
  * 워크스페이스 네비게이션과 블록 팔레트 기능을 제공하는 플로팅 사이드바 컴포넌트입니다.
  * 주요 기능:
  * - 검색 기능이 있는 워크스페이스 헤더
  * - 폴더 관리 섹션
  * - 워크플로 생성을 위한 드래그 가능한 블록 팔레트
  * - 하단 네비게이션 아이콘
- * 
+ *
  * 사이드바는 화면 왼쪽에 고정된 오버레이로 위치하며,
  * 더 나은 시각적 계층구조를 위해 분리된 카드 섹션들로 구성됩니다.
- * 
+ *
  * @returns 플로팅 사이드바를 나타내는 JSX 엘리먼트
  */
 const GlobalSidebar = () => {
   /** 글로벌 워크스페이스 검색용 쿼리 */
   const [searchQuery, setSearchQuery] = useState<string>('');
-  
+
   /** 팔레트에서 블록 필터링을 위한 검색 쿼리 */
   const [searchBlocks, setSearchBlocks] = useState<string>('');
-  
+
   /** 현재 선택된 폴더 이름 */
   const [selectedFolder, setSelectedFolder] = useState<string>('dfsdfdsf');
 
@@ -108,7 +108,7 @@ const GlobalSidebar = () => {
   /**
    * 블록의 드래그 시작 이벤트를 처리합니다
    * 캔버스에 블록을 드롭할 수 있도록 드래그 데이터를 설정합니다
-   * 
+   *
    * @param e - 드래그 이벤트
    * @param blockType - 드래그되는 블록의 타입 (소문자 블록 이름)
    */
@@ -119,7 +119,7 @@ const GlobalSidebar = () => {
   /**
    * 폴더 선택을 처리합니다
    * 현재 선택된 폴더 상태를 업데이트합니다
-   * 
+   *
    * @param folderName - 선택할 폴더의 이름
    */
   const handleFolderSelect = (folderName: string) => {
@@ -129,13 +129,11 @@ const GlobalSidebar = () => {
   /**
    * 검색 쿼리를 기반으로 블록들을 필터링합니다
    * 검색어와 일치하는 블록들을 반환합니다 (대소문자 구분 안함)
-   * 
+   *
    * @returns 검색 쿼리와 일치하는 필터링된 블록 배열
    */
   const getFilteredBlocks = (): Block[] => {
-    return blocks.filter(block => 
-      block.name.toLowerCase().includes(searchBlocks.toLowerCase())
-    );
+    return blocks.filter((block) => block.name.toLowerCase().includes(searchBlocks.toLowerCase()));
   };
 
   return (
