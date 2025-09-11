@@ -1,13 +1,10 @@
 'use client';
-
 import React, { useEffect, useState } from 'react';
 import ReactFlow, { Node, Edge, Background, ReactFlowProvider, MarkerType } from 'reactflow';
 import { cn } from '@/lib/utils';
 import 'reactflow/dist/style.css';
-
 const BackgroundFlow: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
-
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 640);
@@ -19,7 +16,7 @@ const BackgroundFlow: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // 데스크톱용 가로 레이아웃노드
+  // 데스크톱용 가로 레이아웃 노드
   const desktopNodes: Node[] = [
     {
       id: '1',
@@ -85,7 +82,6 @@ const BackgroundFlow: React.FC = () => {
       },
     },
   ];
-
   // 모바일용 계단식 레이아웃 노드
   const mobileNodes: Node[] = [
     {
@@ -152,7 +148,6 @@ const BackgroundFlow: React.FC = () => {
       },
     },
   ];
-
   // 데스크톱용 가로 엣지
   const desktopEdges: Edge[] = [
     {
@@ -192,7 +187,6 @@ const BackgroundFlow: React.FC = () => {
       },
     },
   ];
-
   // 모바일용 세로 엣지
   const mobileEdges: Edge[] = [
     {
@@ -232,7 +226,6 @@ const BackgroundFlow: React.FC = () => {
       },
     },
   ];
-
   const nodes = isMobile ? mobileNodes : desktopNodes;
   const edges = isMobile ? mobileEdges : desktopEdges;
 
