@@ -4,7 +4,7 @@
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from './hooks/useAuth';
-import Landing from './(landing)/landing';
+import Link from 'next/link';
 
 export default function Home() {
   const _router = useRouter();
@@ -29,6 +29,22 @@ export default function Home() {
     checkAuth();
   }, [validateToken]);
 
-  // 랜딩 페이지 표시
-  return <Landing />;
+  // 임시 홈: 로그인/회원가입 링크만 표시
+  return (
+    <main className='mx-auto max-w-3xl px-4 py-16'>
+      <h1 className='text-2xl font-semibold mb-4'>Welcome to Otto</h1>
+      <p className='text-gray-600 mb-6'>Choose an action to continue.</p>
+      <div className='flex gap-3'>
+        <Link href='/signin' className='px-4 py-2 rounded-md bg-emerald-600 text-white'>
+          Sign in
+        </Link>
+        <Link
+          href='/signup'
+          className='px-4 py-2 rounded-md border border-emerald-600 text-emerald-700'
+        >
+          Sign up
+        </Link>
+      </div>
+    </main>
+  );
 }

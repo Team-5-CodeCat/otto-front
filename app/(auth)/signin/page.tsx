@@ -5,9 +5,6 @@ import Link from 'next/link';
 import Button from '@/app/components/ui/Button';
 import Input from '@/app/components/ui/Input';
 import Card from '@/app/components/ui/Card';
-import Header from '@/app/(landing)/components/Header';
-import Footer from '@/app/(landing)/components/Footer';
-import BackgroundElements from '@/app/(landing)/components/BackgroundElements';
 
 // 인증 훅
 import { useAuth } from '@/app/hooks/useAuth';
