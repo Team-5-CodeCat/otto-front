@@ -88,7 +88,7 @@ const GlobalSidebar = () => {
   const [searchBlocks, setSearchBlocks] = useState<string>('');
 
   /** 현재 선택된 폴더 이름 */
-  const [selectedFolder, setSelectedFolder] = useState<string>('dfsdfdsf');
+  const [_selectedFolder, setSelectedFolder] = useState<string>('dfsdfdsf');
 
   /** 워크스페이스 드롭다운 열림/닫힘 상태 */
   const [isWorkspaceDropdownOpen, setIsWorkspaceDropdownOpen] = useState<boolean>(false);
