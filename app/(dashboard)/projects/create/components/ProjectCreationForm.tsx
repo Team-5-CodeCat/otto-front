@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { functional } from '@Team-5-CodeCat/otto-sdk';
+import { functional } from '@cooodecat/otto-sdk';
 import makeFetch from '@/app/lib/make-fetch';
 
 // SDK 타입 추출
