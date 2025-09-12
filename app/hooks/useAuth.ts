@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { authSignIn } from '@Team-5-CodeCat/otto-sdk/lib/functional/auth/sign_in';
+import { authSignIn } from '@cooodecat/otto-sdk/lib/functional/auth/sign_in';
 import makeFetch from '@/app/lib/make-fetch';
-import { userMyInfo } from '@Team-5-CodeCat/otto-sdk/lib/functional/user';
-import { authSignInByRefresh } from '@Team-5-CodeCat/otto-sdk/lib/functional/auth/sign_in/refresh';
-import { authSignUp } from '@Team-5-CodeCat/otto-sdk/lib/functional/auth/sign_up';
-import { authSignOut } from '@Team-5-CodeCat/otto-sdk/lib/functional/auth/sign_out';
+import { userMyInfo } from '@cooodecat/otto-sdk/lib/functional/user';
+import { authSignInByRefresh } from '@cooodecat/otto-sdk/lib/functional/auth/sign_in/refresh';
+import { authSignUp } from '@cooodecat/otto-sdk/lib/functional/auth/sign_up';
+import { authSignOut } from '@cooodecat/otto-sdk/lib/functional/auth/sign_out';
 import { mapErrorToUserMessage, type ErrorInfo } from '@/app/lib/error-messages';
 
 // 인증 상태 타입

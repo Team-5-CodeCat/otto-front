@@ -6,7 +6,7 @@ import EnvironmentTab from '../../../components/ui/EnvironmentTab';
 import SavePipelineModal from './SavePipelineModal';
 import { EnvironmentVariable } from '../../../components/ui/EnvironmentVariableList';
 import LoadPipelineModal from './LoadPipelineModel';
-// import { userMyInfo } from '@Team-5-CodeCat/otto-sdk/lib/functional/user';
+// import { userMyInfo } from '@cooodecat/otto-sdk/lib/functional/user';
 // import makeFetch from '@/app/lib/make-fetch';
 
 interface RightPanelProps {
