@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import ReactFlow, {
   Node,
   Edge,
@@ -360,7 +360,7 @@ const BackgroundFlow: React.FC = () => {
   const [completedNodes, setCompletedNodes] = useState<Set<string>>(new Set());
 
   // 노드 순서 정의
-  const nodeOrder = ['trigger', 'condition', 'build', 'test', 'deploy'];
+  const nodeOrder = useMemo(() => ['trigger', 'condition', 'build', 'test', 'deploy'], []);
 
   // 현재 활성 노드 계산
   const getCurrentActiveNode = () => nodeOrder[currentStepIndex];
@@ -409,11 +409,13 @@ const BackgroundFlow: React.FC = () => {
         // 이전 노드를 완료 상태로 추가
         if (prev < nodeOrder.length) {
           const prevNodeId = nodeOrder[prev];
-          setCompletedNodes((completed) => {
-            const newCompleted = new Set(completed);
-            newCompleted.add(prevNodeId);
-            return newCompleted;
-          });
+          if (prevNodeId) {
+            setCompletedNodes((completed) => {
+              const newCompleted = new Set(completed);
+              newCompleted.add(prevNodeId);
+              return newCompleted;
+            });
+          }
         }
 
         // 사이클이 완료되면 완료 상태 초기화
@@ -428,7 +430,7 @@ const BackgroundFlow: React.FC = () => {
     }, 2500); // 2.5초마다 다음 단계로
 
     return () => clearInterval(interval);
-  }, [isAutoPlaying, nodeOrder.length]);
+  }, [isAutoPlaying, nodeOrder]);
 
   useEffect(() => {
     const checkMobile = () => {
