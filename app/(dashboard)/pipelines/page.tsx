@@ -211,39 +211,39 @@ const YamlFlowEditor = () => {
 
   return (
     <div className='relative'>
-      {/* ✅ Floating Action Buttons - 오른쪽 위 */}
-      <div className='fixed top-4 right-4 z-50 flex items-center space-x-2'>
+      {/* ✅ Floating Action Buttons - 레이아웃과 통일된 디자인 */}
+      <div className='fixed top-4 right-4 z-50 flex items-center space-x-3'>
         <button
           onClick={handleRefresh}
-          className='p-3 bg-white hover:bg-gray-50 rounded-lg shadow-lg border border-gray-200 transition-all hover:shadow-xl'
+          className='p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors bg-white/90 backdrop-blur-sm border border-gray-200/80 shadow-sm hover:shadow-md'
           title='스크립트 내용 초기화'
         >
-          <RotateCcw size={20} className='text-gray-600' />
+          <RotateCcw size={18} />
         </button>
         
         <button
           onClick={runPipeline}
           disabled={isLoading}
-          className='p-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 rounded-lg shadow-lg transition-all hover:shadow-xl disabled:cursor-not-allowed'
+          className='p-2.5 text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 disabled:text-gray-400 disabled:hover:bg-gray-50 rounded-lg transition-colors bg-white/90 backdrop-blur-sm border border-emerald-200/80 shadow-sm hover:shadow-md disabled:cursor-not-allowed'
           title='파이프라인 실행'
         >
-          <Play size={20} className='text-white' fill='white' />
+          <Play size={18} />
         </button>
       </div>
 
-      {/* ✅ 파이프라인 상태 정보 헤더 */}
+      {/* ✅ 파이프라인 상태 정보 헤더 - 통일된 디자인 */}
       {currentPipelineId && (
-        <div className='bg-emerald-50 border-b border-emerald-200 px-4 py-2'>
-          <p className='text-sm text-emerald-800'>
+        <div className='bg-gray-50 border-b border-gray-200 px-4 py-2'>
+          <p className='text-sm text-gray-600'>
             현재 편집 중인 파이프라인 ID: {currentPipelineId}
           </p>
         </div>
       )}
 
-      {/* ✅ 로딩 상태 표시 */}
+      {/* ✅ 로딩 상태 표시 - 통일된 디자인 */}
       {isLoading && (
-        <div className='bg-emerald-50 border-b border-emerald-200 px-4 py-2'>
-          <p className='text-sm text-emerald-800'>처리 중...</p>
+        <div className='bg-gray-50 border-b border-gray-200 px-4 py-2'>
+          <p className='text-sm text-gray-600'>처리 중...</p>
         </div>
       )}
 

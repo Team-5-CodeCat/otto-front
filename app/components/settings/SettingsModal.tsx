@@ -145,13 +145,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     </div>
   );
 
-  /**
-   * 환경 변수들을 브라우저의 로컬 스토리지에 저장합니다.
-   * @description 모든 탭(build, test, deploy)의 환경 변수를 JSON 형태로 저장합니다.
-   */
-  const saveEnvironmentVariables = () => {
-    localStorage.setItem('otto-env-variables', JSON.stringify(environmentVariables));
-  };
 
   /**
    * 특정 카테고리에 새로운 빈 환경 변수를 추가합니다.
