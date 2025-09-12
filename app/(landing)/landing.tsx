@@ -1,7 +1,8 @@
 'use client';
 
 import Header from './components/Header';
-import HeroSection from './components/HeroSection';
+import FeaturesSection from './components/FeaturesSection';
+import WorkflowSection from './components/WorkflowSection';
 import HowItWorksSection from './components/HowItWorksSection';
 import Footer from './components/Footer';
 import BackgroundElements from './components/BackgroundElements';
@@ -14,8 +15,9 @@ export default function Landing() {
 
       {/* Content Layer */}
       <div className='relative z-10'>
+        <WorkflowSection />
         <Header />
-        <HeroSection />
+        <FeaturesSection />
         <HowItWorksSection />
         <Footer />
       </div>
