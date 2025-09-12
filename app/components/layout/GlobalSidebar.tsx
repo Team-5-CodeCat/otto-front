@@ -86,6 +86,8 @@ const GlobalSidebar = () => {
   /** 팔레트에서 블록 필터링을 위한 검색 쿼리 */
   const [searchBlocks, setSearchBlocks] = useState<string>('');
 
+  /** 현재 선택된 폴더 이름 */
+  const [selectedFolder, setSelectedFolder] = useState<string>('dfsdfdsf');
 
   /** 워크스페이스 드롭다운 열림/닫힘 상태 */
   const [isWorkspaceDropdownOpen, setIsWorkspaceDropdownOpen] = useState<boolean>(false);
@@ -99,7 +101,10 @@ const GlobalSidebar = () => {
   // 워크스페이스 드롭다운 외부 클릭 시 닫기
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (workspaceDropdownRef.current && !workspaceDropdownRef.current.contains(event.target as Node)) {
+      if (
+        workspaceDropdownRef.current &&
+        !workspaceDropdownRef.current.contains(event.target as Node)
+      ) {
         setIsWorkspaceDropdownOpen(false);
       }
     };
@@ -246,13 +251,13 @@ const GlobalSidebar = () => {
                 <h1 className='text-lg font-semibold text-gray-900 truncate'>
                   {getSelectedWorkspace().name}
                 </h1>
-                <p className='text-xs text-gray-500 truncate'>
-                  {getSelectedWorkspace().owner}
-                </p>
+                <p className='text-xs text-gray-500 truncate'>{getSelectedWorkspace().owner}</p>
               </div>
-              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${
-                isWorkspaceDropdownOpen ? 'rotate-180' : ''
-              }`} />
+              <ChevronDown
+                className={`w-4 h-4 text-gray-400 transition-transform ${
+                  isWorkspaceDropdownOpen ? 'rotate-180' : ''
+                }`}
+              />
             </button>
 
             {/* 워크스페이스 드롭다운 메뉴 */}
@@ -268,21 +273,21 @@ const GlobalSidebar = () => {
                       }`}
                     >
                       <div className='flex-1 min-w-0 text-left'>
-                        <div className={`font-medium truncate ${
-                          workspace.id === selectedWorkspaceId ? 'text-blue-900' : 'text-gray-900'
-                        }`}>
+                        <div
+                          className={`font-medium truncate ${
+                            workspace.id === selectedWorkspaceId ? 'text-blue-900' : 'text-gray-900'
+                          }`}
+                        >
                           {workspace.name}
                         </div>
-                        <div className='text-xs text-gray-500 truncate'>
-                          {workspace.owner}
-                        </div>
+                        <div className='text-xs text-gray-500 truncate'>{workspace.owner}</div>
                       </div>
                       {workspace.id === selectedWorkspaceId && (
                         <Check className='w-4 h-4 text-blue-600' />
                       )}
                     </button>
                   ))}
-                  
+
                   {/* GitHub에서 새 워크스페이스 가져오기 (향후 구현) */}
                   <div className='border-t border-gray-100 mt-1 pt-1'>
                     <button className='w-full flex items-center space-x-3 px-3 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors'>
@@ -294,7 +299,7 @@ const GlobalSidebar = () => {
               </div>
             )}
           </div>
-          
+
           {/* 복사 버튼 */}
           <button className='p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg ml-2'>
             <Copy className='w-4 h-4' />

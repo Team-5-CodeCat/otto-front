@@ -12,10 +12,10 @@ import ReactFlow, {
   useReactFlow,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import JobNode from './JobNode';
-import CustomEdge from './CustomEdge';
 // import NodePalette from './NodePalette';
 import RightPanel from './RightPanel';
+import JobNode from './JobNode';
+import CustomEdge from './CustomEdge';
 
 // 노드 타입 정의
 const nodeTypes = {

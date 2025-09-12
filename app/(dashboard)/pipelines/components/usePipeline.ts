@@ -1,22 +1,15 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import {
-  useNodesState,
-  useEdgesState,
-  Edge,
-  addEdge,
-  Connection,
-  NodeChange,
-} from 'reactflow';
+import { useNodesState, useEdgesState, Edge, addEdge, Connection, NodeChange } from 'reactflow';
 import { yamlToNodes, yamlToEdges, nodesToYaml } from './utils';
 
 export const usePipeline = () => {
   // 기본 노드 버전 사용
   const selectedVersion = '18';
-  
+
   // 업데이트 소스 추적용 ref
   const isUpdatingFromYaml = useRef(false);
   const isUpdatingFromNodes = useRef(false);
-  
+
   // YAML 텍스트 상태 - 이것이 우리의 단일 진실 소스입니다
   const [yamlText, setYamlText] = useState(`- name: build
   image: node:20
@@ -62,7 +55,7 @@ export const usePipeline = () => {
 
   // Node.js 버전이 변경될 때 YAML 텍스트의 node:20 부분을 업데이트
   useEffect(() => {
-    setYamlText(prevYaml => {
+    setYamlText((prevYaml) => {
       return prevYaml.replace(/image: node:\d+/g, `image: node:${selectedVersion}`);
     });
   }, [selectedVersion]);
@@ -73,7 +66,7 @@ export const usePipeline = () => {
       isUpdatingFromNodes.current = true;
       const newYaml = nodesToYaml(nodes, edges);
       // 현재 YAML과 다른 경우에만 업데이트 (무한 루프 방지)
-      setYamlText(currentYaml => {
+      setYamlText((currentYaml) => {
         const shouldUpdate = newYaml !== currentYaml;
         return shouldUpdate ? newYaml : currentYaml;
       });
@@ -85,11 +78,14 @@ export const usePipeline = () => {
   }, [nodes, edges]);
 
   // 노드 변경사항을 처리하는 함수 (위치 변경 시에는 YAML을 업데이트하지 않음)
-  const handleNodesChange = useCallback((changes: NodeChange[]) => {
-    // React Flow의 onNodesChange를 직접 사용
-    // 위치 변경은 시각적으로만 반영하고 YAML은 건드리지 않음
-    onNodesChange(changes);
-  }, [onNodesChange]);
+  const handleNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      // React Flow의 onNodesChange를 직접 사용
+      // 위치 변경은 시각적으로만 반영하고 YAML은 건드리지 않음
+      onNodesChange(changes);
+    },
+    [onNodesChange]
+  );
 
   // 간선 연결 시 YAML 업데이트
   const onConnect = useCallback(
@@ -119,8 +115,18 @@ export const usePipeline = () => {
           y: 100 + newNodeIndex * 150, // 세로로 순차 배치 (150px 간격)
         },
         data: {
-          name: nodeType === 'build' ? 'Build' : nodeType === 'test' ? 'Test' : nodeType === 'deploy' ? 'Deploy' : nodeType,
-          image: nodeType === 'build' || nodeType === 'test' ? `node:${selectedVersion}` : 'ubuntu:22.04',
+          name:
+            nodeType === 'build'
+              ? 'Build'
+              : nodeType === 'test'
+                ? 'Test'
+                : nodeType === 'deploy'
+                  ? 'Deploy'
+                  : nodeType,
+          image:
+            nodeType === 'build' || nodeType === 'test'
+              ? `node:${selectedVersion}`
+              : 'ubuntu:22.04',
           commands:
             nodeType === 'build'
               ? 'npm ci\nnpm run build'
