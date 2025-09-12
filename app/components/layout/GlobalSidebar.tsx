@@ -13,6 +13,7 @@ import {
   Home,
   Check,
 } from 'lucide-react';
+import SettingsModal from '../settings/SettingsModal';
 
 /**
  * 블록 팔레트 아이템의 인터페이스
@@ -87,13 +88,20 @@ const GlobalSidebar = () => {
   const [searchBlocks, setSearchBlocks] = useState<string>('');
 
   /** 현재 선택된 폴더 이름 */
-  const [selectedFolder, setSelectedFolder] = useState<string>('dfsdfdsf');
+  const [_selectedFolder, setSelectedFolder] = useState<string>('dfsdfdsf');
 
   /** 워크스페이스 드롭다운 열림/닫힘 상태 */
   const [isWorkspaceDropdownOpen, setIsWorkspaceDropdownOpen] = useState<boolean>(false);
 
   /** 현재 선택된 워크스페이스 ID */
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>('workspace-1');
+
+  /** 
+   * Settings 모달의 열림/닫힘 상태를 관리하는 state
+   * true일 때 SettingsModal 컴포넌트가 React Portal을 통해 전체 화면에 표시됩니다
+   */
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
+
 
   /** 워크스페이스 드롭다운 참조 */
   const workspaceDropdownRef = useRef<HTMLDivElement>(null);
@@ -234,6 +242,23 @@ const GlobalSidebar = () => {
    */
   const getFilteredBlocks = (): Block[] => {
     return blocks.filter((block) => block.name.toLowerCase().includes(searchBlocks.toLowerCase()));
+  };
+
+  /**
+   * Settings 버튼 클릭을 처리하여 Settings 모달을 열어줍니다.
+   * 모달 상태를 true로 설정하여 SettingsModal 컴포넌트를 표시합니다.
+   */
+  const handleSettingsClick = () => {
+    setIsSettingsModalOpen(true);
+  };
+
+  /**
+   * Settings 모달 닫기를 처리합니다.
+   * 모달 상태를 false로 설정하여 SettingsModal 컴포넌트를 숨깁니다.
+   * ESC 키 누름, 백드롭 클릭, 또는 닫기 버튼 클릭 시 호출됩니다.
+   */
+  const handleSettingsModalClose = () => {
+    setIsSettingsModalOpen(false);
   };
 
   return (
@@ -395,6 +420,7 @@ const GlobalSidebar = () => {
                 key={index}
                 className='p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors'
                 title={item.title}
+                onClick={item.title === 'Settings' ? handleSettingsClick : undefined}
               >
                 <item.icon className='w-4 h-4' />
               </button>
@@ -402,6 +428,15 @@ const GlobalSidebar = () => {
           </div>
         </div>
       </div>
+      
+      {/* 
+        Settings Modal - React Portal을 통해 document.body에 직접 렌더링
+        전체 화면 중앙에 블러 배경과 함께 표시되며 사이드바 레이아웃 제약을 벗어남
+      */}
+      <SettingsModal 
+        isOpen={isSettingsModalOpen} 
+        onClose={handleSettingsModalClose} 
+      />
     </div>
   );
 };
