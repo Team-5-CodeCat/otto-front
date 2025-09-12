@@ -11,7 +11,7 @@ Otto는 CI/CD 파이프라인 자동화 플랫폼입니다. Next.js 15 (App Rout
 - **스타일링**: Tailwind CSS v4 + Radix UI Themes
 - **상태 관리**: `app/lib/`의 커스텀 스토어
 - **플로우 다이어그램**: 파이프라인 시각화를 위한 ReactFlow
-- **백엔드 통합**: `@Team-5-CodeCat/otto-sdk`
+- **백엔드 통합**: `@cooodecat/otto-sdk`
 - **패키지 매니저**: workspace 설정의 pnpm
 - **인증**: localStorage 토큰 관리의 JWT 기반
 

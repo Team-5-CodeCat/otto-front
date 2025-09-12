@@ -38,11 +38,6 @@ jobs:
       - name: Run type checking
         run: npx tsc --noEmit
 
-      - name: Create .env.prod
-        run: |
-          set -e  # Exit on error
-          echo "NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}" > .env.prod
-
       - name: Build application
         run: pnpm build
 

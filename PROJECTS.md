@@ -13,7 +13,7 @@ App Router를 사용하여 Otto CI/CD 서비스의 프로젝트 생성 페이지
 - TypeScript (strict mode)
 - React Query (TanStack Query) - 데이터 페칭용
 - Tailwind CSS - 스타일링
-- @Team-5-CodeCat/otto-sdk - 백엔드 API 연동
+- @cooodecat/otto-sdk - 백엔드 API 연동
 
 **아키텍처 패턴:** 하이브리드 접근 방식을 사용하여 서버 컴포넌트로 페이지 구조와
 초기 데이터를 로드하고, 클라이언트 컴포넌트로 모든 사용자 상호작용을

@@ -5,11 +5,11 @@ import { usePipeline } from './components/usePipeline';
 import FlowCanvas from './components/FlowCanvas';
 import { useUIStore } from '@/app/lib/uiStore';
 
-import { projectGetUserProjects } from '@Team-5-CodeCat/otto-sdk/lib/functional/projects';
+import { projectGetUserProjects } from '@cooodecat/otto-sdk/lib/functional/projects';
 import makeFetch from '@/app/lib/make-fetch';
-import { pipelineCreate, pipelineGetById } from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines';
-import { pipelineGetByProject } from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines/project';
-import { pipelineCreateRun } from '@Team-5-CodeCat/otto-sdk/lib/functional/pipelines/runs';
+import { pipelineCreate, pipelineGetById } from '@cooodecat/otto-sdk/lib/functional/pipelines';
+import { pipelineGetByProject } from '@cooodecat/otto-sdk/lib/functional/pipelines/project';
+import { pipelineCreateRun } from '@cooodecat/otto-sdk/lib/functional/pipelines/runs';
 
 const YamlFlowEditor = () => {
   // 파이프라인 상태 및 액션 관리

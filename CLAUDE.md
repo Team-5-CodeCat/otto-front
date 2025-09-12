@@ -18,7 +18,7 @@ pnpm start
 # 개발 환경으로 빌드된 서버 시작
 pnpm start:dev
 
-# 의존성 설치 (@Team-5-CodeCat/otto-sdk를 위해 GitHub Package 인증 필요)
+# 의존성 설치 (@cooodecat/otto-sdk를 위해 GitHub Package 인증 필요)
 pnpm install
 ```
 
@@ -37,7 +37,7 @@ npx tsc --noEmit
 - **프레임워크**: Next.js 15.5.2 with Turbopack
 - **UI**: React 19.1.0, Tailwind CSS v4, Radix UI Themes
 - **상태 관리**: Zustand 스토어 (buildStore, deploymentStore, healthStore, uiStore)
-- **API 클라이언트**: @Team-5-CodeCat/otto-sdk with @nestia/fetcher
+- **API 클라이언트**: @cooodecat/otto-sdk with @nestia/fetcher
 - **타입 안전성**: strict 모드의 TypeScript, 런타임 검증을 위한 Typia
 - **패키지 매니저**: pnpm 9.15.9
 
