@@ -11,7 +11,7 @@ interface GlobalLayoutProps {
 /**
  * 사이드바가 표시되지 않아야 하는 경로들
  */
-const SIDEBAR_EXCLUDED_PATHS = ['/', '/signin', '/signup'];
+const SIDEBAR_EXCLUDED_PATHS = ['/', '/signin'];
 
 /**
  * 전역 레이아웃 컴포넌트
@@ -26,7 +26,7 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   return (
     <div className={`min-h-screen relative ${shouldShowSidebar ? 'bg-gray-50' : ''}`}>
       {/* 조건부 사이드바 렌더링 */}
-      {shouldShowSidebar && <GlobalSidebar />}s{/* Main Content Area - Full Width */}
+      {shouldShowSidebar && <GlobalSidebar />}
       <main className='min-h-screen'>{children}</main>
     </div>
   );
