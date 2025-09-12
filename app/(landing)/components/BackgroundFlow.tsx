@@ -480,6 +480,24 @@ const BackgroundFlow: React.FC = () => {
         title: 'Build',
         type: 'build',
       },
+      id: 'build',
+      type: 'pipeline',
+      position: { x: 50, y: 320 },
+      data: {
+        title: 'Build',
+        type: 'build',
+      },
+      draggable: false,
+      selectable: false,
+    },
+    {
+      id: 'test',
+      type: 'pipeline',
+      position: { x: 50, y: 400 },
+      data: {
+        title: 'Test',
+        type: 'test',
+      },
       draggable: false,
       selectable: false,
     },
@@ -530,14 +548,27 @@ const BackgroundFlow: React.FC = () => {
       },
       draggable: false,
       selectable: false,
+      style: {
+        backgroundColor: '#10b981',
+        color: 'white',
+        border: '2px solid #059669',
+        borderRadius: '12px',
+        fontSize: '16px',
+        fontWeight: '600',
+        width: 120,
+        height: 60,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
     },
     {
-      id: 'condition',
-      type: 'condition',
-      position: { x: 20, y: 190 },
+      id: 'build',
+      type: 'pipeline',
+      position: { x: 5, y: 280 },
       data: {
-        title: '조건 검사',
-        type: 'condition',
+        title: 'Build',
+        type: 'build',
       },
       draggable: false,
       selectable: false,
@@ -578,8 +609,12 @@ const BackgroundFlow: React.FC = () => {
   ];
 
   // 데스크톱용 트리거 기반 엣지 (Attio 스타일)
+  // 데스크톱용 트리거 기반 엣지 (Attio 스타일)
   const desktopEdges: Edge[] = [
     {
+      id: 'trigger-condition',
+      source: 'trigger',
+      target: 'condition',
       id: 'trigger-condition',
       source: 'trigger',
       target: 'condition',
@@ -590,9 +625,16 @@ const BackgroundFlow: React.FC = () => {
         strokeWidth: isEdgeActive(0, 1) ? 3 : 2,
         strokeDasharray: '4 4',
         opacity: isEdgeActive(0, 1) ? 1 : 0.5,
+      animated: isEdgeActive(0, 1),
+      style: {
+        stroke: isEdgeActive(0, 1) ? '#54D490' : '#E5E7EB',
+        strokeWidth: isEdgeActive(0, 1) ? 3 : 2,
+        strokeDasharray: '4 4',
+        opacity: isEdgeActive(0, 1) ? 1 : 0.5,
       },
       markerEnd: {
         type: MarkerType.ArrowClosed,
+        color: isEdgeActive(0, 1) ? '#0FC27B' : '#9CA3AF',
         color: isEdgeActive(0, 1) ? '#0FC27B' : '#9CA3AF',
       },
     },
@@ -601,7 +643,17 @@ const BackgroundFlow: React.FC = () => {
       source: 'condition',
       sourceHandle: 'left',
       target: 'build',
+      id: 'condition-build',
+      source: 'condition',
+      sourceHandle: 'left',
+      target: 'build',
       type: 'smoothstep',
+      animated: isEdgeActive(1, 2),
+      style: {
+        stroke: isEdgeActive(1, 2) ? '#54D490' : '#E5E7EB',
+        strokeWidth: isEdgeActive(1, 2) ? 3 : 2,
+        strokeDasharray: '4 4',
+        opacity: isEdgeActive(1, 2) ? 1 : 0.5,
       animated: isEdgeActive(1, 2),
       style: {
         stroke: isEdgeActive(1, 2) ? '#54D490' : '#E5E7EB',
@@ -625,12 +677,33 @@ const BackgroundFlow: React.FC = () => {
         fillOpacity: 0.9,
       },
     },
+        color: isEdgeActive(1, 2) ? '#0FC27B' : '#9CA3AF',
+      },
+      label: 'sucess',
+      labelStyle: {
+        fill: isEdgeActive(1, 2) ? '#0B935D' : '#9CA3AF',
+        fontWeight: 600,
+        fontSize: '11px',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+      },
+      labelBgStyle: {
+        fill: isEdgeActive(1, 2) ? '#DDF9E4' : '#F9FAFB',
+        fillOpacity: 0.9,
+      },
+    },
     {
       id: 'condition-skip',
       source: 'condition',
       sourceHandle: 'right',
       target: 'skip',
+      id: 'condition-skip',
+      source: 'condition',
+      sourceHandle: 'right',
+      target: 'skip',
       type: 'smoothstep',
+      animated: false, // Skip은 항상 비활성
+      style: {
+        stroke: '#D1D3D6',
       animated: false, // Skip은 항상 비활성
       style: {
         stroke: '#D1D3D6',
@@ -662,13 +735,44 @@ const BackgroundFlow: React.FC = () => {
         strokeWidth: isEdgeActive(2, 3) ? 3 : 2,
         strokeDasharray: '4 4',
         opacity: isEdgeActive(2, 3) ? 1 : 0.5,
+        strokeDasharray: '6 6',
+        opacity: 0.5,
+      },
+      markerEnd: { type: MarkerType.ArrowClosed, color: '#9CA3AF' },
+      label: 'fail',
+      labelStyle: {
+        fill: '#6B7280',
+        fontWeight: 500,
+        fontSize: '11px',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+      },
+      labelBgStyle: {
+        fill: '#F9FAFB',
+        fillOpacity: 0.9,
+      },
+    },
+    {
+      id: 'build-test',
+      source: 'build',
+      target: 'test',
+      type: 'smoothstep',
+      animated: isEdgeActive(2, 3),
+      style: {
+        stroke: isEdgeActive(2, 3) ? '#54D490' : '#E5E7EB',
+        strokeWidth: isEdgeActive(2, 3) ? 3 : 2,
+        strokeDasharray: '4 4',
+        opacity: isEdgeActive(2, 3) ? 1 : 0.5,
       },
       markerEnd: {
         type: MarkerType.ArrowClosed,
         color: isEdgeActive(2, 3) ? '#0FC27B' : '#9CA3AF',
+        color: isEdgeActive(2, 3) ? '#0FC27B' : '#9CA3AF',
       },
     },
     {
+      id: 'test-deploy',
+      source: 'test',
+      target: 'deploy',
       id: 'test-deploy',
       source: 'test',
       target: 'deploy',
@@ -679,11 +783,59 @@ const BackgroundFlow: React.FC = () => {
         strokeWidth: isEdgeActive(3, 4) ? 3 : 2,
         strokeDasharray: '4 4',
         opacity: isEdgeActive(3, 4) ? 1 : 0.5,
+      animated: isEdgeActive(3, 4),
+      style: {
+        stroke: isEdgeActive(3, 4) ? '#54D490' : '#E5E7EB',
+        strokeWidth: isEdgeActive(3, 4) ? 3 : 2,
+        strokeDasharray: '4 4',
+        opacity: isEdgeActive(3, 4) ? 1 : 0.5,
       },
       markerEnd: {
         type: MarkerType.ArrowClosed,
         color: isEdgeActive(3, 4) ? '#0FC27B' : '#9CA3AF',
+        color: isEdgeActive(3, 4) ? '#0FC27B' : '#9CA3AF',
       },
+    },
+  ];
+
+  // 모바일용 간단한 세로 엣지
+  const mobileEdges: Edge[] = [
+    {
+      id: 'trigger-condition',
+      source: 'trigger',
+      target: 'condition',
+      type: 'smoothstep',
+      animated: true,
+      style: { stroke: '#3b82f6', strokeWidth: 2 },
+      markerEnd: { type: MarkerType.ArrowClosed, color: '#3b82f6' },
+    },
+    {
+      id: 'condition-build',
+      source: 'condition',
+      sourceHandle: 'left',
+      target: 'build',
+      type: 'smoothstep',
+      animated: true,
+      style: { stroke: '#10b981', strokeWidth: 2 },
+      markerEnd: { type: MarkerType.ArrowClosed, color: '#10b981' },
+    },
+    {
+      id: 'build-test',
+      source: 'build',
+      target: 'test',
+      type: 'smoothstep',
+      animated: true,
+      style: { stroke: '#f59e0b', strokeWidth: 2 },
+      markerEnd: { type: MarkerType.ArrowClosed, color: '#f59e0b' },
+    },
+    {
+      id: 'test-deploy',
+      source: 'test',
+      target: 'deploy',
+      type: 'smoothstep',
+      animated: true,
+      style: { stroke: '#6366f1', strokeWidth: 2 },
+      markerEnd: { type: MarkerType.ArrowClosed, color: '#6366f1' },
     },
   ];
 
@@ -780,7 +932,56 @@ const BackgroundFlow: React.FC = () => {
         </ReactFlow>
       </div>
     </ReactFlowProvider>
+    <ReactFlowProvider>
+      <div
+        className={cn(
+          'w-screen relative -mx-4 sm:-mx-6 lg:-mx-8',
+          isMobile ? 'h-[500px]' : 'h-[600px]'
+        )}
+      >
+        {/* 심플한 그리드 배경 */}
+        <div className='absolute inset-0 pointer-events-none opacity-30'>
+          <svg width='100%' height='100%' className='text-gray-300'>
+            <defs>
+              <pattern id='simple-grid' width='24' height='24' patternUnits='userSpaceOnUse'>
+                <circle cx='2' cy='2' r='1' fill='currentColor' opacity='0.2' />
+              </pattern>
+            </defs>
+            <rect width='100%' height='100%' fill='url(#simple-grid)' />
+          </svg>
+        </div>
+
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          fitView
+          fitViewOptions={{
+            padding: isMobile ? 0.05 : 0.02,
+            includeHiddenNodes: false,
+            minZoom: isMobile ? 1.0 : 1.2,
+            maxZoom: isMobile ? 1.4 : 1.8,
+          }}
+          nodesDraggable={false}
+          nodesConnectable={false}
+          elementsSelectable={false}
+          panOnDrag={false}
+          zoomOnScroll={false}
+          zoomOnPinch={false}
+          zoomOnDoubleClick={false}
+          preventScrolling={false}
+          proOptions={{ hideAttribution: true }}
+          onPaneClick={() => {
+            // 클릭 시 자동 재생 토글
+            setIsAutoPlaying(!isAutoPlaying);
+          }}
+        >
+          <Background color='transparent' />
+        </ReactFlow>
+      </div>
+    </ReactFlowProvider>
   );
 };
 
 export default BackgroundFlow;
+
