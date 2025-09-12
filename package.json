@@ -18,7 +18,6 @@
     "clsx": "^2.1.1",
     "daisyui": "^5.1.10",
     "eslint-plugin-react-hooks": "^5.2.0",
-    "leva": "^0.10.0",
     "lucide-react": "^0.542.0",
     "next": "15.5.2",
     "react": "19.1.0",
