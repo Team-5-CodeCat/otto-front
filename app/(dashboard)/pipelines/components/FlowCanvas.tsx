@@ -4,7 +4,6 @@ import ReactFlow, {
   Edge,
   Background,
   Controls,
-  MiniMap,
   Connection,
   ReactFlowProvider,
   NodeChange,
@@ -129,10 +128,9 @@ const FlowCanvasInner: React.FC<FlowCanvasProps> = ({
         }}
       >
         <Background color='#d1fae5' />
-        <Controls className='bg-white border border-emerald-200 rounded-lg shadow-sm' />
-        <MiniMap
+        <Controls
           className='bg-white border border-emerald-200 rounded-lg shadow-sm'
-          maskColor='rgba(0, 0, 0, 0.1)'
+          position='bottom-right'
         />
       </ReactFlow>
     </div>
