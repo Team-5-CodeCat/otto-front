@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Check, Circle } from 'lucide-react';
+import { LogDetailsPanel } from '../../../components/log-details-panel';
 
 interface LogItem {
   id: string;
@@ -32,11 +33,23 @@ interface PipelineLogsTableProps {
 // 향상된 로그 테이블 컴포넌트
 const PipelineLogsTable: React.FC<PipelineLogsTableProps> = ({
   logs,
-  newLogIds,
+  newLogIds: _newLogIds,
   onLoadMore,
   hasMore,
   isLoading,
 }) => {
+  const [selectedBuildId, setSelectedBuildId] = useState<string | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
+  const handleRowClick = (logId: string) => {
+    setSelectedBuildId(logId);
+    setIsDetailsOpen(true);
+  };
+
+  const handleCloseDetails = () => {
+    setIsDetailsOpen(false);
+    setSelectedBuildId(null);
+  };
   const observerRef = React.useRef<HTMLTableRowElement>(null);
 
   React.useEffect(() => {
@@ -149,22 +162,22 @@ const PipelineLogsTable: React.FC<PipelineLogsTableProps> = ({
         <table className='w-full'>
           <thead>
             <tr>
-              <th className='text-left p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[120px]'>
+              <th className='text-center p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[120px]'>
                 Status
               </th>
-              <th className='text-left p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[150px]'>
+              <th className='text-left p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[140px]'>
                 Pipeline
               </th>
-              <th className='text-left p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[200px]'>
+              <th className='text-center p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[180px]'>
                 Trigger
               </th>
-              <th className='text-left p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[100px]'>
+              <th className='text-center p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[110px]'>
                 Branch
               </th>
-              <th className='text-left p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider flex-1'>
+              <th className='text-center p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[300px]'>
                 Commit
               </th>
-              <th className='text-left p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[100px]'>
+              <th className='text-left p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[120px]'>
                 Duration
               </th>
             </tr>
@@ -177,14 +190,18 @@ const PipelineLogsTable: React.FC<PipelineLogsTableProps> = ({
         <table className='w-full'>
           <tbody className='divide-y divide-gray-100 bg-white'>
             {logs.map((log: LogItem, index: number) => (
-              <tr key={log.id} className={getRowClassName(log, index)}>
+              <tr
+                key={log.id}
+                className={getRowClassName(log, index)}
+                onClick={() => handleRowClick(log.id)}
+              >
                 <td className='p-4 w-[120px]'>{getStatusBadge(log.status)}</td>
-                <td className='p-4 w-[150px]'>
+                <td className='p-4 w-[140px]'>
                   <span className='font-semibold text-gray-900 group-hover:text-blue-700 transition-colors truncate block'>
                     {log.pipelineName}
                   </span>
                 </td>
-                <td className='p-4 w-[200px]'>
+                <td className='p-4 w-[180px]'>
                   <div className='text-sm space-y-1'>
                     <div className='font-medium text-gray-800 truncate'>{log.trigger.type}</div>
                     <div className='text-gray-500 flex items-center gap-1 truncate'>
@@ -193,12 +210,12 @@ const PipelineLogsTable: React.FC<PipelineLogsTableProps> = ({
                     </div>
                   </div>
                 </td>
-                <td className='p-4 w-[100px]'>
+                <td className='p-4 w-[110px]'>
                   <span className='text-sm font-medium text-gray-700 truncate block'>
                     {log.branch}
                   </span>
                 </td>
-                <td className='p-4 flex-1'>
+                <td className='p-4 w-[300px]'>
                   <div className='text-sm space-y-1'>
                     <div
                       className='font-medium text-gray-900 truncate hover:text-blue-700 transition-colors cursor-pointer'
@@ -211,7 +228,7 @@ const PipelineLogsTable: React.FC<PipelineLogsTableProps> = ({
                     </div>
                   </div>
                 </td>
-                <td className='p-4 w-[100px]'>
+                <td className='p-4 w-[120px]'>
                   <span className='text-sm font-medium text-gray-700 font-mono'>
                     {log.duration}
                   </span>
@@ -244,6 +261,24 @@ const PipelineLogsTable: React.FC<PipelineLogsTableProps> = ({
           {!hasMore && <span className='text-gray-400'> • All data loaded</span>}
         </div>
       </div>
+
+      {/* 로그 상세 패널 */}
+      {selectedBuildId && (
+        <LogDetailsPanel
+          buildId={selectedBuildId}
+          isOpen={isDetailsOpen}
+          onClose={handleCloseDetails}
+          onNavigate={(direction) => {
+            // 이전/다음 로그로 네비게이션 (옵션)
+            const currentIndex = logs.findIndex((log) => log.id === selectedBuildId);
+            if (direction === 'prev' && currentIndex > 0) {
+              setSelectedBuildId(logs[currentIndex - 1]?.id || selectedBuildId);
+            } else if (direction === 'next' && currentIndex < logs.length - 1) {
+              setSelectedBuildId(logs[currentIndex + 1]?.id || selectedBuildId);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };
