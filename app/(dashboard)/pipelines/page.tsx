@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { RotateCcw, Play } from 'lucide-react';
 import { usePipeline } from './components/usePipeline';
 import FlowCanvas from './components/FlowCanvas';
 import { useUIStore } from '@/app/lib/uiStore';
@@ -41,7 +42,23 @@ const YamlFlowEditor = () => {
   >([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // ✅ SDK를 사용한 파이프라인 저장
+  /**
+   * 파이프라인 캔버스와 YAML 내용을 초기화합니다.
+   * 모든 노드와 YAML 텍스트를 빈 상태로 리셋합니다.
+   * @description 사용자가 새로운 파이프라인을 시작하고 싶을 때 사용
+   */
+  const handleRefresh = () => {
+    // YAML 내용을 빈 문자열로 초기화
+    handleYamlChange('');
+  };
+
+  /**
+   * 현재 작성된 파이프라인을 서버에 저장합니다.
+   * @param name - 저장할 파이프라인의 이름
+   * @param projectID - 파이프라인을 저장할 프로젝트 ID (선택사항)
+   * @returns Promise<{success: boolean; pipelineId?: string}> - 저장 결과와 생성된 파이프라인 ID
+   * @description YAML 내용이 비어있으면 저장하지 않고 에러 메시지를 표시합니다.
+   */
   const savePipeline = async (name: string, projectID?: string) => {
     if (!yamlText.trim()) {
       alert('YAML 내용이 비어있습니다.');
@@ -79,7 +96,13 @@ const YamlFlowEditor = () => {
     }
   };
 
-  // ✅ SDK를 사용한 파이프라인 로드
+  /**
+   * 서버에서 기존 파이프라인을 불러와서 에디터에 로드합니다.
+   * @param pipelineID - 불러올 파이프라인의 고유 ID
+   * @returns Promise<void>
+   * @description 파이프라인의 YAML 내용을 가져와서 현재 에디터에 표시합니다.
+   * @throws 파이프라인 로드에 실패하면 에러 메시지를 표시합니다.
+   */
   const loadPipeline = async (pipelineID: string) => {
     setIsLoading(true);
     try {
@@ -98,7 +121,12 @@ const YamlFlowEditor = () => {
     }
   };
 
-  // ✅ SDK를 사용한 프로젝트별 파이프라인 목록 조회
+  /**
+   * 특정 프로젝트에 속한 모든 파이프라인 목록을 조회합니다.
+   * @param projectID - 파이프라인을 조회할 프로젝트의 고유 ID
+   * @returns Promise<void>
+   * @description 조회된 파이프라인 목록을 availablePipelines 상태에 저장합니다.
+   */
   const loadProjectPipelines = async (projectID: string) => {
     try {
       const result = await pipelineGetByProject(makeFetch(), projectID);
@@ -109,7 +137,14 @@ const YamlFlowEditor = () => {
     }
   };
 
-  // ✅ 실행: 저장 유무 확인 후 Run 호출
+  /**
+   * 현재 파이프라인을 실행합니다.
+   * 파이프라인이 저장되지 않은 경우 자동으로 임시 파이프라인을 생성한 후 실행합니다.
+   * @param projectID - 파이프라인을 실행할 프로젝트 ID (선택사항, 기본값은 currentProjectId)
+   * @returns Promise<void>
+   * @description YAML 내용과 프로젝트가 선택되어 있어야 실행 가능합니다.
+   * @throws 파이프라인 실행에 실패하면 에러 메시지를 표시합니다.
+   */
   const runPipeline = async (projectID?: string) => {
     if (!yamlText.trim()) {
       alert('YAML 내용이 비어있습니다.');
@@ -175,7 +210,27 @@ const YamlFlowEditor = () => {
   }, [setShowPipelineBuilder]);
 
   return (
-    <div>
+    <div className='relative'>
+      {/* ✅ Floating Action Buttons - 오른쪽 위 */}
+      <div className='fixed top-4 right-4 z-50 flex items-center space-x-2'>
+        <button
+          onClick={handleRefresh}
+          className='p-3 bg-white hover:bg-gray-50 rounded-lg shadow-lg border border-gray-200 transition-all hover:shadow-xl'
+          title='스크립트 내용 초기화'
+        >
+          <RotateCcw size={20} className='text-gray-600' />
+        </button>
+        
+        <button
+          onClick={runPipeline}
+          disabled={isLoading}
+          className='p-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 rounded-lg shadow-lg transition-all hover:shadow-xl disabled:cursor-not-allowed'
+          title='파이프라인 실행'
+        >
+          <Play size={20} className='text-white' fill='white' />
+        </button>
+      </div>
+
       {/* ✅ 파이프라인 상태 정보 헤더 */}
       {currentPipelineId && (
         <div className='bg-emerald-50 border-b border-emerald-200 px-4 py-2'>

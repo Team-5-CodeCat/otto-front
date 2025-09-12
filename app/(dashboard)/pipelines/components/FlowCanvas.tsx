@@ -13,7 +13,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 // import NodePalette from './NodePalette';
-import RightPanel from './RightPanel';
+// import RightPanel from './RightPanel'; // RightPanel 제거
 import JobNode from './JobNode';
 import CustomEdge from './CustomEdge';
 
@@ -38,18 +38,10 @@ interface FlowCanvasProps {
   onAddNode: (nodeType: string, position?: { x: number; y: number }) => void;
   onYamlChange: (value: string) => void;
   onUpdateNodeEnvironment: (nodeId: string, environment: Record<string, string>) => void;
-  // ✅ SDK 기반 함수들 추가
-  onSavePipeline?: (
-    name: string,
-    projectID?: string
-  ) => Promise<{ success: boolean; pipelineId?: string }>;
+  // RightPanel 관련 props들 제거됨 (더 이상 필요없음)
+  onSavePipeline?: (name: string, projectID?: string) => Promise<{ success: boolean; pipelineId?: string }>;
   onLoadPipeline?: (pipelineID: string) => Promise<void>;
-  availablePipelines?: Array<{
-    pipelineID: string;
-    name: string;
-    version: number;
-  }>;
-  // ✅ 실행 콜백 추가
+  availablePipelines?: Array<{ pipelineID: string; name: string; version: number; }>;
   onRunPipeline?: () => Promise<void>;
 }
 
@@ -163,18 +155,7 @@ const FlowCanvas: React.FC<FlowCanvasProps> = (props) => {
           </div>
         </div>
 
-        {/* 오른쪽 패널 - YAML 편집기 */}
-        <RightPanel
-          yamlText={props.yamlText}
-          onYamlChange={props.onYamlChange}
-          nodes={props.nodes}
-          onUpdateNodeEnvironment={props.onUpdateNodeEnvironment}
-          // ✅ SDK 기반 함수들 전달 (조건부)
-          {...(props.onSavePipeline && { onSavePipeline: props.onSavePipeline })}
-          {...(props.onLoadPipeline && { onLoadPipeline: props.onLoadPipeline })}
-          {...(props.availablePipelines && { availablePipelines: props.availablePipelines })}
-          {...(props.onRunPipeline && { onRunPipeline: props.onRunPipeline })}
-        />
+        {/* RightPanel 제거됨 - 이제 전체 화면 사용 */}
       </div>
     </>
   );

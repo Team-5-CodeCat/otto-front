@@ -145,11 +145,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     </div>
   );
 
-  // Environment variables management functions
+  /**
+   * 환경 변수들을 브라우저의 로컬 스토리지에 저장합니다.
+   * @description 모든 탭(build, test, deploy)의 환경 변수를 JSON 형태로 저장합니다.
+   */
   const saveEnvironmentVariables = () => {
     localStorage.setItem('otto-env-variables', JSON.stringify(environmentVariables));
   };
 
+  /**
+   * 특정 카테고리에 새로운 빈 환경 변수를 추가합니다.
+   * @param category - 환경 변수를 추가할 카테고리 ('build' | 'test' | 'deploy')
+   * @description 기본값으로 빈 key, value와 숨김 상태(isVisible: false)로 생성됩니다.
+   */
   const addEnvironmentVariable = (category: 'build' | 'test' | 'deploy') => {
     setEnvironmentVariables(prev => ({
       ...prev,
@@ -157,6 +165,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }));
   };
 
+  /**
+   * 특정 환경 변수의 key 또는 value를 업데이트합니다.
+   * @param category - 환경 변수가 속한 카테고리 ('build' | 'test' | 'deploy')
+   * @param index - 업데이트할 환경 변수의 인덱스
+   * @param field - 업데이트할 필드 ('key' | 'value')
+   * @param value - 새로운 값
+   * @description 해당 카테고리의 특정 인덱스에 있는 환경 변수를 수정합니다.
+   */
   const updateEnvironmentVariable = (
     category: 'build' | 'test' | 'deploy',
     index: number,
@@ -176,6 +192,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     });
   };
 
+  /**
+   * 특정 환경 변수의 가시성을 토글합니다 (보이기/숨기기).
+   * @param category - 환경 변수가 속한 카테고리 ('build' | 'test' | 'deploy')
+   * @param index - 가시성을 토글할 환경 변수의 인덱스
+   * @description 비밀번호 필드처럼 값을 숨기거나 보이게 할 때 사용합니다.
+   */
   const toggleVisibility = (category: 'build' | 'test' | 'deploy', index: number) => {
     setEnvironmentVariables(prev => {
       const updated = { ...prev };
@@ -193,6 +215,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     });
   };
 
+  /**
+   * 특정 환경 변수를 삭제합니다.
+   * @param category - 환경 변수가 속한 카테고리 ('build' | 'test' | 'deploy')
+   * @param index - 삭제할 환경 변수의 인덱스
+   * @description 해당 인덱스의 환경 변수를 배열에서 제거합니다.
+   */
   const removeEnvironmentVariable = (category: 'build' | 'test' | 'deploy', index: number) => {
     setEnvironmentVariables(prev => {
       const updated = { ...prev };
@@ -202,6 +230,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     });
   };
 
+  /**
+   * .env 파일을 업로드하여 환경 변수를 추가합니다.
+   * @param envVars - 파일에서 파싱된 환경 변수 객체 (key-value 쌍)
+   * @param file - 업로드된 .env 파일 객체
+   * @description 업로드된 환경 변수들을 현재 활성 탭에 추가하고, 보안을 위해 기본적으로 숨김 처리합니다.
+   */
   const handleEnvFileUpload = (envVars: Record<string, string>, file: File) => {
     // Convert uploaded env vars to EnvironmentVariable format
     const envArray: EnvironmentVariable[] = Object.entries(envVars).map(([key, value]) => ({
@@ -225,6 +259,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     alert(`Loaded ${envArray.length} environment variables into ${activeEnvTab} tab`);
   };
 
+  /**
+   * 업로드된 .env 파일을 제거합니다.
+   * @description 현재 활성 탭에서 업로드된 파일 정보를 null로 설정합니다.
+   */
   const handleFileRemove = () => {
     setUploadedFiles(prev => ({
       ...prev,
@@ -232,6 +270,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }));
   };
 
+  /**
+   * 모든 환경 변수를 .env 파일 형태로 다운로드합니다.
+   * @description 모든 탭(build, test, deploy)의 환경 변수를 포함한 .env 파일을 생성하여 다운로드합니다.
+   */
   const downloadEnvironmentVariables = () => {
     const allEnvVars: string[] = [];
     
