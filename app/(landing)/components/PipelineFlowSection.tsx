@@ -224,8 +224,6 @@ const PipelineFlowSection: React.FC = () => {
   useEffect(() => {
     const sequence = ['trigger', 'condition', 'build', 'test', 'deploy'];
     let allTimeouts: number[] = [];
-    let intervalId: number;
-
     const runAnimation = () => {
       // 이전 타이머들 정리
       allTimeouts.forEach((t) => clearTimeout(t));
@@ -261,7 +259,7 @@ const PipelineFlowSection: React.FC = () => {
     runAnimation();
 
     // 주기적 반복 (총 사이클: 6초 애니메이션 + 2초 대기 + 2초 간격 = 10초)
-    intervalId = window.setInterval(() => {
+    const intervalId = window.setInterval(() => {
       runAnimation();
     }, 10000);
 

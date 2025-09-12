@@ -1,16 +1,6 @@
 'use client';
 
-import {
-  Zap,
-  Shield,
-  BarChart3,
-  GitBranch,
-  Clock,
-  CheckCircle,
-  Workflow,
-  Rocket,
-  Eye,
-} from 'lucide-react';
+import { Zap, Shield, BarChart3, CheckCircle, Workflow, Rocket, Eye } from 'lucide-react';
 import AnimatedSection from './AnimatedSection';
 
 const features = [
