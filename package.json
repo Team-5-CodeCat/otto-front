@@ -10,7 +10,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@cooodecat/otto-sdk": "0.0.1",
+    "@cooodecat/otto-sdk": "0.0.2",
     "@nestia/fetcher": "^8.0.7",
     "@radix-ui/themes": "^3.2.1",
     "@react-three/drei": "^10.7.5",
