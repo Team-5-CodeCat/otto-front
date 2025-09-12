@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   GitCommit,
   Settings,
@@ -11,6 +12,7 @@ import {
   Code,
   TestTube,
   Rocket,
+  Zap,
 } from 'lucide-react';
 import AnimatedSection from './AnimatedSection';
 
@@ -99,9 +101,14 @@ const colorClasses = {
 };
 
 export default function WorkflowSection() {
+  const router = useRouter();
   const [activeStep, setActiveStep] = useState<string>('trigger');
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState<boolean>(true);
+
+  const handleGetStarted = () => {
+    router.push('/signin');
+  };
 
   // 자동 진행 애니메이션
   useEffect(() => {
@@ -400,6 +407,20 @@ export default function WorkflowSection() {
             </div>
           </AnimatedSection>
         </div>
+
+        {/* CTA Buttons */}
+        <AnimatedSection delay={600}>
+          <div className='flex justify-center mt-16 mb-8'>
+            <button
+              onClick={handleGetStarted}
+              className='group bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 shadow-2xl hover:shadow-blue-500/25 flex items-center gap-3 transform hover:scale-105'
+            >
+              <Zap className='w-5 h-5' />
+              Start Now
+              <ArrowRight className='w-5 h-5 group-hover:translate-x-1 transition-transform' />
+            </button>
+          </div>
+        </AnimatedSection>
       </div>
     </section>
   );
