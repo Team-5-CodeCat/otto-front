@@ -1,21 +1,63 @@
 'use client';
 
+/**
+ * 파이프라인 편집기 메인 페이지
+ * 
+ * 이 컴포넌트는 Block 기반의 JSON 파이프라인 시스템을 제공합니다.
+ * 사용자는 시각적으로 파이프라인을 구성하고, 백그라운드에서는 JSON 형태로 저장됩니다.
+ * 
+ * 주요 기능:
+ * 1. 시각적 파이프라인 편집 (React Flow)
+ * 2. Block 기반 타입 시스템
+ * 3. OS 패키지 매니저 선택 및 패키지 관리
+ * 4. JSON 기반 저장/불러오기
+ * 
+ * 지원하는 Block 타입:
+ * - OSBlock: OS 설정
+ * - OSPackageBlock: OS 패키지 설치 (apt, yum, dnf, apk, zypper, pacman, brew)
+ * - InstallNodePackageBlock: Node.js 패키지 설치
+ * - CustomTestBlock: 테스트 명령어
+ * - CustomCommandBlock: 사용자 정의 명령어
+ * 
+ * 사용법:
+ * 1. 새 블록 추가:
+ *    - handleAddNode(BlockType.CUSTOM_COMMAND): 커스텀 명령어 블록 생성
+ *    - handleAddNode(BlockType.CUSTOM_TEST_BLOCK): 테스트 명령어 블록 생성
+ *    - handleAddNode(BlockType.OS): OS 설정 블록 생성
+ *    - handleAddNode(BlockType.OS_PACKAGE): OS 패키지 설치 블록 생성
+ *    - handleAddNode(BlockType.INSTALL_MODULE_NODE): Node.js 패키지 설치 블록 생성
+ * 
+ * 2. 블록 편집:
+ *    - OS 패키지 블록: Edit 버튼 클릭 → 패키지 매니저 선택 및 패키지 추가/제거
+ *    - 다른 블록들: Environment 탭에서 환경변수 설정
+ * 
+ * 3. 연결 관리:
+ *    - 블록 간 연결: 드래그&드롭으로 간선 생성
+ *    - on_success: 성공 시 다음 블록 (필수)
+ *    - on_failed: 실패 시 다음 블록 (선택적)
+ * 
+ * 4. 저장/불러오기:
+ *    - 저장: 우상단 Save 버튼 → 파이프라인 이름 입력
+ *    - 불러오기: 우상단 Folder 버튼 → 저장된 파이프라인 선택
+ *    - 실행: 우상단 Play 버튼 → 파이프라인 즉시 실행
+ */
+
 import React, { useEffect, useState } from 'react';
 import { RotateCcw, Play } from 'lucide-react';
 import { usePipeline } from './components/usePipeline';
 import FlowCanvas from './components/FlowCanvas';
 import { useUIStore } from '@/app/lib/uiStore';
-
-import { projectGetUserProjects } from '@cooodecat/otto-sdk/lib/functional/projects';
+/*
+import { projectGetUserProjects } from '@cooodecat/otto-sdk/lib/functional/projects';*/
 import makeFetch from '@/app/lib/make-fetch';
-import { pipelineCreate, pipelineGetById } from '@cooodecat/otto-sdk/lib/functional/pipelines';
+/*import { pipelineCreate, pipelineGetById } from '@cooodecat/otto-sdk/lib/functional/pipelines';
 import { pipelineGetByProject } from '@cooodecat/otto-sdk/lib/functional/pipelines/project';
-import { pipelineCreateRun } from '@cooodecat/otto-sdk/lib/functional/pipelines/runs';
+import { pipelineCreateRun } from '@cooodecat/otto-sdk/lib/functional/pipelines/runs';*/
 
-const YamlFlowEditor = () => {
+const JsonFlowEditor = () => {
   // 파이프라인 상태 및 액션 관리
   const {
-    yamlText,
+    jsonText,
     nodes,
     edges,
     onEdgesChange,
@@ -23,8 +65,9 @@ const YamlFlowEditor = () => {
     onConnect,
     handleEdgeDelete,
     handleAddNode,
-    handleYamlChange,
+    handleJsonChange,
     handleUpdateNodeEnvironment,
+    handleUpdateBlock,
   } = usePipeline();
 
   // UI 스토어에서 Pipeline Builder 제어 함수 가져오기
@@ -60,8 +103,8 @@ const YamlFlowEditor = () => {
    * @description YAML 내용이 비어있으면 저장하지 않고 에러 메시지를 표시합니다.
    */
   const savePipeline = async (name: string, projectID?: string) => {
-    if (!yamlText.trim()) {
-      alert('YAML 내용이 비어있습니다.');
+    if (!jsonText.trim() || jsonText.trim() === '[]') {
+      alert('JSON 내용이 비어있습니다.');
       return { success: false };
     }
 
@@ -75,7 +118,7 @@ const YamlFlowEditor = () => {
     try {
       const response = await pipelineCreate(makeFetch(), {
         name,
-        yamlContent: yamlText,
+        yamlContent: jsonText, // JSON을 yamlContent로 전송 (백엔드 API 호환성)
         projectID: pid,
         version: 1,
       });
@@ -109,7 +152,7 @@ const YamlFlowEditor = () => {
       const pipeline = await pipelineGetById(makeFetch(), pipelineID);
 
       if (pipeline.originalSpec) {
-        handleYamlChange(pipeline.originalSpec);
+        handleJsonChange(pipeline.originalSpec);
         setCurrentPipelineId(pipelineID);
         alert(`파이프라인 "${pipeline.name}"을 불러왔습니다.`);
       }
@@ -146,8 +189,8 @@ const YamlFlowEditor = () => {
    * @throws 파이프라인 실행에 실패하면 에러 메시지를 표시합니다.
    */
   const runPipeline = async (projectID?: string) => {
-    if (!yamlText.trim()) {
-      alert('YAML 내용이 비어있습니다.');
+    if (!jsonText.trim() || jsonText.trim() === '[]') {
+      alert('JSON 내용이 비어있습니다.');
       return;
     }
     const pid = projectID ?? currentProjectId;
@@ -161,7 +204,7 @@ const YamlFlowEditor = () => {
       if (!pipelineID) {
         const created = await pipelineCreate(makeFetch(), {
           name: 'quick-run',
-          yamlContent: yamlText,
+          yamlContent: jsonText, // JSON을 yamlContent로 전송 (백엔드 API 호환성)
           projectID: pid,
           version: 1,
         });
@@ -250,14 +293,15 @@ const YamlFlowEditor = () => {
       <FlowCanvas
         nodes={nodes}
         edges={edges}
-        yamlText={yamlText}
+        jsonText={jsonText}
         onNodesChange={handleNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onEdgeDelete={handleEdgeDelete}
         onAddNode={handleAddNode}
-        onYamlChange={handleYamlChange}
+        onJsonChange={handleJsonChange}
         onUpdateNodeEnvironment={handleUpdateNodeEnvironment}
+        onUpdateBlock={handleUpdateBlock}
         // ✅ SDK 기반 함수들 전달
         onSavePipeline={savePipeline}
         onLoadPipeline={loadPipeline}
@@ -268,4 +312,4 @@ const YamlFlowEditor = () => {
   );
 };
 
-export default YamlFlowEditor;
+export default JsonFlowEditor;
