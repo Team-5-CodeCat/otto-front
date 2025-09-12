@@ -14,7 +14,7 @@ import { redirectToGitHub } from '@/app/lib/github-oauth';
 
 // Sign In 페이지 컴포넌트
 export default function SignInPage() {
-  const { isLoading, error } = useAuth();
+  const { error } = useAuth();
   const [isGitHubLoading, setIsGitHubLoading] = useState(false);
 
   // GitHub 로그인 핸들러
@@ -51,7 +51,9 @@ export default function SignInPage() {
           <div className='max-w-md w-full space-y-8'>
             <div className='text-center'>
               <h2 className='text-3xl font-extrabold text-gray-900'>Welcome to Otto</h2>
-              <p className='mt-2 text-sm text-gray-600'>Sign in or create your account with GitHub</p>
+              <p className='mt-2 text-sm text-gray-600'>
+                Sign in or create your account with GitHub
+              </p>
             </div>
 
             <Card className='w-full backdrop-blur supports-[backdrop-filter]:bg-white/60 bg-white/70 border border-gray-200 shadow-lg'>
@@ -90,9 +92,7 @@ export default function SignInPage() {
                   disabled={isGitHubLoading}
                 >
                   <div className='flex items-center justify-center space-x-3'>
-                    {!isGitHubLoading && (
-                      <Github className='w-5 h-5' />
-                    )}
+                    {!isGitHubLoading && <Github className='w-5 h-5' />}
                     <span className='font-medium'>
                       {isGitHubLoading ? 'Connecting to GitHub...' : 'Continue with GitHub'}
                     </span>

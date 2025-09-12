@@ -61,3 +61,58 @@ body {
 .animated-edge.selected {
   filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
 }
+
+/* Hero Section Animations */
+@keyframes gradient {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 3s ease infinite;
+}
+
+.bg-size-200 {
+  background-size: 200% 200%;
+}
+
+/* Workflow Section Animations */
+@keyframes flowProgress {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes stepPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+}
+
+.animate-flow-progress {
+  animation: flowProgress 1s ease-in-out;
+}
+
+.animate-step-pulse {
+  animation: stepPulse 2s infinite;
+}
