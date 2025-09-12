@@ -21,8 +21,37 @@ interface NodeData {
 }
 
 // 커스텀 트리거 노드 (Attio 스타일)
-const TriggerNode = ({ data, isActive }: { data: NodeData; isActive?: boolean }) => (
+const TriggerNode = ({
+  data,
+  isActive,
+  isCompleted,
+}: {
+  data: NodeData;
+  isActive?: boolean;
+  isCompleted?: boolean;
+}) => (
   <div className='relative' style={{ width: '200px', height: '60px' }}>
+    {/* 완료 배지 - Attio 스타일 */}
+    {isCompleted && (
+      <div className='absolute -top-3 -right-3 z-20'>
+        {/* 연결선 */}
+        <div className='absolute top-full left-1/2 w-px h-3 bg-[#E6E7EA] transform -translate-x-1/2'></div>
+
+        {/* 배지 */}
+        <div className='bg-[#DDF9E4] border border-[#C7F4D3] rounded-lg px-2.5 py-1.5 shadow-sm'>
+          <div className='flex items-center gap-1.5'>
+            <svg className='w-3 h-3 text-[#0B935D]' fill='currentColor' viewBox='0 0 20 20'>
+              <path
+                fillRule='evenodd'
+                d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
+                clipRule='evenodd'
+              />
+            </svg>
+            <span className='text-[#0B935D] text-xs font-medium'>Completed</span>
+          </div>
+        </div>
+      </div>
+    )}
     {/* 메인 카드 */}
     <div
       className={`h-full w-full bg-white border rounded-xl shadow-sm transition-all duration-500 ${
@@ -60,8 +89,37 @@ const TriggerNode = ({ data, isActive }: { data: NodeData; isActive?: boolean })
 );
 
 // 커스텀 조건 노드 (Attio 스타일)
-const ConditionNode = ({ data, isActive }: { data: NodeData; isActive?: boolean }) => (
+const ConditionNode = ({
+  data,
+  isActive,
+  isCompleted,
+}: {
+  data: NodeData;
+  isActive?: boolean;
+  isCompleted?: boolean;
+}) => (
   <div className='relative' style={{ width: '180px', height: '60px' }}>
+    {/* 완료 배지 - Attio 스타일 */}
+    {isCompleted && (
+      <div className='absolute -top-3 -right-3 z-20'>
+        {/* 연결선 */}
+        <div className='absolute top-full left-1/2 w-px h-3 bg-[#E6E7EA] transform -translate-x-1/2'></div>
+
+        {/* 배지 */}
+        <div className='bg-[#DDF9E4] border border-[#C7F4D3] rounded-lg px-2.5 py-1.5 shadow-sm'>
+          <div className='flex items-center gap-1.5'>
+            <svg className='w-3 h-3 text-[#0B935D]' fill='currentColor' viewBox='0 0 20 20'>
+              <path
+                fillRule='evenodd'
+                d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
+                clipRule='evenodd'
+              />
+            </svg>
+            <span className='text-[#0B935D] text-xs font-medium'>Completed</span>
+          </div>
+        </div>
+      </div>
+    )}
     <Handle
       type='target'
       position={Position.Top}
@@ -125,8 +183,37 @@ const ConditionNode = ({ data, isActive }: { data: NodeData; isActive?: boolean 
 );
 
 // 커스텀 파이프라인 노드 (Attio 스타일)
-const PipelineNode = ({ data, isActive }: { data: NodeData; isActive?: boolean }) => (
+const PipelineNode = ({
+  data,
+  isActive,
+  isCompleted,
+}: {
+  data: NodeData;
+  isActive?: boolean;
+  isCompleted?: boolean;
+}) => (
   <div className='relative' style={{ width: '190px', height: '60px' }}>
+    {/* 완료 배지 - Attio 스타일 */}
+    {isCompleted && (
+      <div className='absolute -top-3 -right-3 z-20'>
+        {/* 연결선 */}
+        <div className='absolute top-full left-1/2 w-px h-3 bg-[#E6E7EA] transform -translate-x-1/2'></div>
+
+        {/* 배지 */}
+        <div className='bg-[#DDF9E4] border border-[#C7F4D3] rounded-lg px-2.5 py-1.5 shadow-sm'>
+          <div className='flex items-center gap-1.5'>
+            <svg className='w-3 h-3 text-[#0B935D]' fill='currentColor' viewBox='0 0 20 20'>
+              <path
+                fillRule='evenodd'
+                d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
+                clipRule='evenodd'
+              />
+            </svg>
+            <span className='text-[#0B935D] text-xs font-medium'>Completed</span>
+          </div>
+        </div>
+      </div>
+    )}
     <Handle
       type='target'
       position={Position.Top}
@@ -199,8 +286,37 @@ const PipelineNode = ({ data, isActive }: { data: NodeData; isActive?: boolean }
 );
 
 // 커스텀 스킵 노드 (Attio 스타일)
-const SkipNode = ({ data, isActive }: { data: NodeData; isActive?: boolean }) => (
+const SkipNode = ({
+  data,
+  isActive,
+  isCompleted,
+}: {
+  data: NodeData;
+  isActive?: boolean;
+  isCompleted?: boolean;
+}) => (
   <div className='relative opacity-60' style={{ width: '160px', height: '60px' }}>
+    {/* 완료 배지 - Attio 스타일 */}
+    {isCompleted && (
+      <div className='absolute -top-3 -right-3 z-20'>
+        {/* 연결선 */}
+        <div className='absolute top-full left-1/2 w-px h-3 bg-[#E6E7EA] transform -translate-x-1/2'></div>
+
+        {/* 배지 */}
+        <div className='bg-[#DDF9E4] border border-[#C7F4D3] rounded-lg px-2.5 py-1.5 shadow-sm'>
+          <div className='flex items-center gap-1.5'>
+            <svg className='w-3 h-3 text-[#0B935D]' fill='currentColor' viewBox='0 0 20 20'>
+              <path
+                fillRule='evenodd'
+                d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
+                clipRule='evenodd'
+              />
+            </svg>
+            <span className='text-[#0B935D] text-xs font-medium'>Completed</span>
+          </div>
+        </div>
+      </div>
+    )}
     <Handle
       type='target'
       position={Position.Top}
@@ -241,6 +357,7 @@ const BackgroundFlow: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [completedNodes, setCompletedNodes] = useState<Set<string>>(new Set());
 
   // 노드 순서 정의
   const nodeOrder = ['trigger', 'condition', 'build', 'test', 'deploy'];
@@ -249,19 +366,35 @@ const BackgroundFlow: React.FC = () => {
   const getCurrentActiveNode = () => nodeOrder[currentStepIndex];
   const isNodeActive = (nodeId: string) => getCurrentActiveNode() === nodeId;
 
-  // 동적 nodeTypes (활성 상태 전달)
+  // 동적 nodeTypes (활성 상태 및 완료 상태 전달)
   const nodeTypes = {
     trigger: (props: { data: NodeData; id: string }) => (
-      <TriggerNode {...props} isActive={isNodeActive('trigger')} />
+      <TriggerNode
+        {...props}
+        isActive={isNodeActive('trigger')}
+        isCompleted={completedNodes.has('trigger')}
+      />
     ),
     condition: (props: { data: NodeData; id: string }) => (
-      <ConditionNode {...props} isActive={isNodeActive('condition')} />
+      <ConditionNode
+        {...props}
+        isActive={isNodeActive('condition')}
+        isCompleted={completedNodes.has('condition')}
+      />
     ),
     pipeline: (props: { data: NodeData; id: string }) => (
-      <PipelineNode {...props} isActive={isNodeActive(props.id)} />
+      <PipelineNode
+        {...props}
+        isActive={isNodeActive(props.id)}
+        isCompleted={completedNodes.has(props.id)}
+      />
     ),
     skip: (props: { data: NodeData; id: string }) => (
-      <SkipNode {...props} isActive={isNodeActive('skip')} />
+      <SkipNode
+        {...props}
+        isActive={isNodeActive('skip')}
+        isCompleted={completedNodes.has('skip')}
+      />
     ),
   };
 
@@ -270,7 +403,28 @@ const BackgroundFlow: React.FC = () => {
     if (!isAutoPlaying) return;
 
     const interval = setInterval(() => {
-      setCurrentStepIndex((prev) => (prev + 1) % nodeOrder.length);
+      setCurrentStepIndex((prev) => {
+        const nextIndex = (prev + 1) % nodeOrder.length;
+
+        // 이전 노드를 완료 상태로 추가
+        if (prev < nodeOrder.length) {
+          const prevNodeId = nodeOrder[prev];
+          setCompletedNodes((completed) => {
+            const newCompleted = new Set(completed);
+            newCompleted.add(prevNodeId);
+            return newCompleted;
+          });
+        }
+
+        // 사이클이 완료되면 완료 상태 초기화
+        if (nextIndex === 0) {
+          setTimeout(() => {
+            setCompletedNodes(new Set());
+          }, 1000); // 1초 후 초기화
+        }
+
+        return nextIndex;
+      });
     }, 2500); // 2.5초마다 다음 단계로
 
     return () => clearInterval(interval);
