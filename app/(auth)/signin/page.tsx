@@ -5,6 +5,7 @@ import { Cpu, Github } from 'lucide-react';
 import Button from '@/app/components/ui/Button';
 import Card from '@/app/components/ui/Card';
 import BackgroundElements from '@/app/(landing)/components/BackgroundElements';
+import { PublicRoute } from '@/app/components/auth/AuthGuard';
 
 // 인증 훅
 import { useAuth } from '@/app/hooks/useAuth';
@@ -24,6 +25,7 @@ export default function SignInPage() {
   };
 
   return (
+    <PublicRoute>
     <div className='min-h-screen bg-gray-50 text-gray-900 relative overflow-hidden'>
       {/* Background Elements - 랜딩 페이지와 동일한 배경 */}
       <BackgroundElements />
@@ -108,5 +110,6 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
+    </PublicRoute>
   );
 }

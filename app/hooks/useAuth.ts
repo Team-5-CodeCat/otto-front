@@ -2,12 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { authSignIn } from '@cooodecat/otto-sdk/lib/functional/auth/sign_in';
 import makeFetch from '@/app/lib/make-fetch';
 import { userMyInfo } from '@cooodecat/otto-sdk/lib/functional/user';
-import { authSignInByRefresh } from '@cooodecat/otto-sdk/lib/functional/auth/sign_in/refresh';
-import { authSignUp } from '@cooodecat/otto-sdk/lib/functional/auth/sign_up';
-import { authSignOut } from '@cooodecat/otto-sdk/lib/functional/auth/sign_out';
+import { authRefreshSignIn } from '@cooodecat/otto-sdk/lib/functional/auth/refresh';
+import { authSignOut } from '@cooodecat/otto-sdk/lib/functional/auth/logout';
 import { mapErrorToUserMessage, type ErrorInfo } from '@/app/lib/error-messages';
 
 // 인증 상태 타입
@@ -16,7 +14,7 @@ interface AuthState {
   isLoading: boolean;
   user: userMyInfo.Output | null;
   error: string | null;
-  errorInfo?: ErrorInfo | null;  // 상세한 에러 정보 추가
+  errorInfo?: ErrorInfo | null; // 상세한 에러 정보 추가
 }
 
 // 로그인 응답 타입 (프론트엔드용)
@@ -43,7 +41,7 @@ export function useAuth() {
   // 세션 검증
   const checkSession = useCallback(async (): Promise<boolean> => {
     try {
-      await authSignInByRefresh(makeFetch());
+      await authRefreshSignIn(makeFetch());
       return true;
     } catch (error) {
       console.error('세션 검증 실패:', error);
@@ -56,19 +54,51 @@ export function useAuth() {
     const initializeAuth = async () => {
       setAuthState((prev) => ({ ...prev, isLoading: true }));
 
-      const isSessionValid = await checkSession();
+      // 먼저 쿠키/로컬 스토리지에서 토큰 존재 여부만 확인
+      // 실제 토큰 갱신은 필요할 때만 수행
       try {
+        // 사용자 정보 조회를 먼저 시도
         const user = await userMyInfo(makeFetch());
-        if (isSessionValid) {
-          // 세션이 유효한 경우 - 실제로는 사용자 정보 API를 호출해야 함
-          setAuthState({
-            isAuthenticated: true,
-            isLoading: false,
-            user: user,
-            error: null,
-          });
+        
+        // 성공하면 세션이 유효한 것
+        setAuthState({
+          isAuthenticated: true,
+          isLoading: false,
+          user: user,
+          error: null,
+        });
+      } catch (error) {
+        // 401 에러 시에만 refresh 시도
+        if ((error as any)?.status === 401) {
+          const isSessionValid = await checkSession();
+          
+          if (isSessionValid) {
+            try {
+              const user = await userMyInfo(makeFetch());
+              setAuthState({
+                isAuthenticated: true,
+                isLoading: false,
+                user: user,
+                error: null,
+              });
+            } catch {
+              setAuthState({
+                isAuthenticated: false,
+                isLoading: false,
+                user: null,
+                error: null,
+              });
+            }
+          } else {
+            setAuthState({
+              isAuthenticated: false,
+              isLoading: false,
+              user: null,
+              error: null,
+            });
+          }
         } else {
-          // 세션이 유효하지 않은 경우
+          // 다른 에러는 미인증 상태로 처리
           setAuthState({
             isAuthenticated: false,
             isLoading: false,
@@ -76,28 +106,63 @@ export function useAuth() {
             error: null,
           });
         }
-      } catch (error) {
-        setAuthState((prev) => ({ ...prev, isLoading: false }));
-        console.error('인증 상태 초기화 실패:', error);
       }
     };
 
     initializeAuth();
   }, [checkSession]);
 
-  // 로그인
+  // 로그인 (현재는 GitHub OAuth만 지원)
   const signIn = useCallback(
-    async (formData: authSignIn.Body): Promise<SignInResponse> => {
+    async (_formData: { email: string; password: string }): Promise<SignInResponse> => {
+      setAuthState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: 'Password 로그인은 현재 지원되지 않습니다. GitHub OAuth를 사용해주세요.',
+      }));
+
+      return {
+        success: false,
+        message: 'Password 로그인은 현재 지원되지 않습니다. GitHub OAuth를 사용해주세요.',
+      };
+    },
+    []
+  );
+
+  // 회원가입 (현재는 GitHub OAuth만 지원)
+  const signUp = useCallback(
+    async (_formData: {
+      email: string;
+      password: string;
+      username: string;
+    }): Promise<SignInResponse> => {
+      setAuthState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: 'Password 회원가입은 현재 지원되지 않습니다. GitHub OAuth를 사용해주세요.',
+      }));
+
+      return {
+        success: false,
+        message: 'Password 회원가입은 현재 지원되지 않습니다. GitHub OAuth를 사용해주세요.',
+      };
+    },
+    []
+  );
+
+  // GitHub 로그인
+  const signInWithGitHub = useCallback(
+    async (_tokens: {
+      accessToken: string;
+      refreshToken: string;
+      accessTokenExpiresIn: number;
+      refreshTokenExpiresIn: number;
+    }): Promise<SignInResponse> => {
       try {
         setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-        const response = await authSignIn(makeFetch(), {
-          email: formData.email,
-          password: formData.password,
-        });
-
-        // 세션 기반이므로 httpOnly 쿠키로 자동 관리됨
-        // 사용자 정보는 응답에서 가져오거나 별도 API 호출
+        // 토큰은 이미 백엔드에서 쿠키로 설정됨
+        // 사용자 정보 조회
         const user = await userMyInfo(makeFetch());
 
         setAuthState({
@@ -107,18 +172,16 @@ export function useAuth() {
           error: null,
         });
 
-        // 프로젝트 페이지로 리다이렉트
-        router.push('/projects');
+        // 리다이렉트는 호출하는 쪽에서 처리하도록 변경
 
         return {
           success: true,
-          message: response.message,
+          message: 'GitHub 로그인 성공',
           user,
         };
       } catch (error: unknown) {
-        // 사용자 친화적 에러 메시지로 변환
         const errorInfo = mapErrorToUserMessage(error);
-        
+
         setAuthState((prev) => ({
           ...prev,
           isLoading: false,
@@ -132,51 +195,7 @@ export function useAuth() {
         };
       }
     },
-    [router]
-  );
-
-  // 회원가입
-  const signUp = useCallback(
-    async (formData: authSignUp.Body): Promise<SignInResponse> => {
-      try {
-        setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-        const response = await authSignUp(makeFetch(), {
-          email: formData.email,
-          password: formData.password,
-          username: formData.username,
-        });
-
-        console.log('회원가입 성공');
-        
-        // 회원가입 성공 후 로그인 페이지로 이동
-        router.push('/signin');
-        
-        // 로딩 상태 해제
-        setAuthState((prev) => ({ ...prev, isLoading: false }));
-        
-        return {
-          success: true,
-          message: response.message,
-        };
-      } catch (error: unknown) {
-        // 사용자 친화적 에러 메시지로 변환
-        const errorInfo = mapErrorToUserMessage(error);
-        
-        setAuthState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: errorInfo.message,
-          errorInfo: errorInfo,
-        }));
-
-        return {
-          success: false,
-          message: errorInfo.message,
-        };
-      }
-    },
-    [router]
+    []
   );
 
   // 로그아웃 (세션 기반)
@@ -213,9 +232,10 @@ export function useAuth() {
     ...authState,
     signIn,
     signUp,
+    signInWithGitHub,
     signOut,
     validateToken,
     refreshToken,
-    errorInfo: authState.errorInfo,  // 에러 상세 정보 노출
+    errorInfo: authState.errorInfo, // 에러 상세 정보 노출
   };
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   Search,
   Plus,
@@ -66,21 +67,33 @@ interface Workspace {
 }
 
 /**
+ * 캔버스 레이아웃이 필요한 경로 패턴 체크
+ */
+const isCanvasLayoutPath = (pathname: string): boolean => {
+  if (pathname === '/pipelines') return true;
+  const pipelineDetailPattern = /^\/projects\/[^\/]+\/pipelines\/[^\/]+$/;
+  return pipelineDetailPattern.test(pathname);
+};
+
+/**
  * GlobalSidebar 컴포넌트
  *
- * 워크스페이스 네비게이션과 블록 팔레트 기능을 제공하는 플로팅 사이드바 컴포넌트입니다.
+ * 워크스페이스 네비게이션과 블록 팔레트 기능을 제공하는 사이드바 컴포넌트입니다.
+ * 경로에 따라 두 가지 레이아웃 모드로 작동:
+ * 1. 캔버스 모드: 파이프라인 페이지에서 fixed positioning (floating)
+ * 2. 표준 모드: 그 외 페이지에서 relative positioning (분할 레이아웃)
+ *
  * 주요 기능:
  * - 검색 기능이 있는 워크스페이스 헤더
  * - 폴더 관리 섹션
  * - 워크플로 생성을 위한 드래그 가능한 블록 팔레트
  * - 하단 네비게이션 아이콘
  *
- * 사이드바는 화면 왼쪽에 고정된 오버레이로 위치하며,
- * 더 나은 시각적 계층구조를 위해 분리된 카드 섹션들로 구성됩니다.
- *
- * @returns 플로팅 사이드바를 나타내는 JSX 엘리먼트
+ * @returns 사이드바를 나타내는 JSX 엘리먼트
  */
 const GlobalSidebar = () => {
+  const pathname = usePathname();
+  const isCanvasLayout = isCanvasLayoutPath(pathname);
   /** 글로벌 워크스페이스 검색용 쿼리 */
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -261,8 +274,13 @@ const GlobalSidebar = () => {
     setIsSettingsModalOpen(false);
   };
 
+  // 레이아웃 모드에 따라 다른 positioning 사용
+  const containerClassName = isCanvasLayout
+    ? 'fixed left-4 top-4 w-72 z-50 flex flex-col space-y-3 h-[calc(100vh-2rem)]' // 캔버스 모드: floating
+    : 'relative w-full h-full flex flex-col space-y-3'; // 표준 모드: 부모 컨테이너에 맞춤
+
   return (
-    <div className='fixed left-4 top-4 w-72 z-50 flex flex-col space-y-3 h-[calc(100vh-2rem)]'>
+    <div className={containerClassName}>
       {/* Workspace Header Card */}
       <div className='bg-white rounded-xl shadow-lg border border-gray-200 p-4'>
         <div className='flex items-center justify-between'>

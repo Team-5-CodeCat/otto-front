@@ -31,6 +31,30 @@ npx eslint .
 npx tsc --noEmit
 ```
 
+## 레이아웃 아키텍처
+
+### 레이아웃 시스템
+프로젝트는 경로에 따라 두 가지 레이아웃 모드를 사용합니다:
+
+1. **캔버스 레이아웃 (Canvas Layout)**
+   - 적용 페이지: `/pipelines`, `/projects/{project_id}/pipelines/{pipeline_id}`
+   - 특징: 전체 화면을 캔버스가 차지하며, 사이드바는 캔버스 위에 floating (z-index로 겹침)
+   - 용도: 파이프라인 에디터와 같이 전체 화면이 필요한 인터랙티브 캔버스 페이지
+
+2. **표준 레이아웃 (Standard Layout)**
+   - 적용 페이지: 그 외 모든 대시보드 페이지 (예: `/projects/{project_id}/logs`)
+   - 특징: 사이드바(320px)와 메인 콘텐츠가 화면을 분할, 서로 겹치지 않음
+   - 용도: 일반적인 대시보드 페이지, 테이블, 폼 등
+
+3. **사이드바 제외 페이지**
+   - 적용 페이지: `/` (랜딩), `/signin`, `/signup`, `/callback`
+   - 특징: 사이드바가 전혀 표시되지 않음
+
+### 레이아웃 컴포넌트 구조
+- `app/components/layout/GlobalLayout.tsx`: 전역 레이아웃 컨트롤러
+- `app/components/layout/GlobalSidebar.tsx`: 적응형 사이드바 컴포넌트
+- `app/components/dashboard/DashboardLayout.tsx`: 대시보드 페이지 래퍼
+
 ## 아키텍처 개요
 
 ### 기술 스택
