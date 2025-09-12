@@ -1,7 +1,7 @@
 // Health Check 상태 관리 스토어
 
-import { functional } from '@Team-5-CodeCat/otto-sdk';
-import type { OttoscalerHealthDto } from '@Team-5-CodeCat/otto-sdk/lib/structures/OttoscalerHealthDto';
+import { functional } from '@cooodecat/otto-sdk';
+import type { OttoscalerHealthDto } from '@cooodecat/otto-sdk/lib/structures/OttoscalerHealthDto';
 import { makeFetch } from './make-fetch';
 
 // SDK의 타입을 그대로 사용

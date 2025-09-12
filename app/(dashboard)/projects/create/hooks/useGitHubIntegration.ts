@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { functional, type IConnection } from '@Team-5-CodeCat/otto-sdk';
+import { functional, type IConnection } from '@cooodecat/otto-sdk';
 import makeFetch from '@/app/lib/make-fetch';
 
 // SDK 타입 추출

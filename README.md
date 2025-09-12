@@ -8,7 +8,7 @@ Otto CI/CD 파이프라인 자동화 플랫폼의 프론트엔드 애플리케�
 
 - Node.js 18.x 이상
 - pnpm 9.15.9 이상
-- GitHub Package Registry 접근 권한 (@Team-5-CodeCat/otto-sdk 설치용)
+- GitHub Package Registry 접근 권한 (@cooodecat/otto-sdk 설치용)
 
 ### 환경 설정
 
@@ -44,7 +44,7 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:4000  # 개발: localhost:4000, 프로
 3. GitHub Package Registry 인증 설정
 ```bash
 # GitHub Personal Access Token이 필요합니다
-echo "@Team-5-CodeCat:registry=https://npm.pkg.github.com" > ~/.npmrc
+echo "@cooodecat:registry=https://npm.pkg.github.com" > ~/.npmrc
 echo "//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN" >> ~/.npmrc
 ```
 
@@ -106,7 +106,7 @@ otto-front/
 - **언어**: [TypeScript](https://www.typescriptlang.org/)
 - **스타일링**: [Tailwind CSS v4](https://tailwindcss.com/) + [Radix UI](https://www.radix-ui.com/)
 - **상태 관리**: [Zustand](https://github.com/pmndrs/zustand)
-- **API 클라이언트**: @Team-5-CodeCat/otto-sdk
+- **API 클라이언트**: @cooodecat/otto-sdk
 - **패키지 매니저**: [pnpm](https://pnpm.io/)
 - **빌드 도구**: Turbopack
 
