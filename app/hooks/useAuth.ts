@@ -2,12 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { authSignIn } from '@cooodecat/otto-sdk/lib/functional/auth/sign_in';
 import makeFetch from '@/app/lib/make-fetch';
 import { userMyInfo } from '@cooodecat/otto-sdk/lib/functional/user';
-import { authSignInByRefresh } from '@cooodecat/otto-sdk/lib/functional/auth/sign_in/refresh';
-import { authSignUp } from '@cooodecat/otto-sdk/lib/functional/auth/sign_up';
-import { authSignOut } from '@cooodecat/otto-sdk/lib/functional/auth/sign_out';
 import { mapErrorToUserMessage, type ErrorInfo } from '@/app/lib/error-messages';
 
 // 인증 상태 타입
@@ -16,7 +12,7 @@ interface AuthState {
   isLoading: boolean;
   user: userMyInfo.Output | null;
   error: string | null;
-  errorInfo?: ErrorInfo | null;  // 상세한 에러 정보 추가
+  errorInfo?: ErrorInfo | null; // 상세한 에러 정보 추가
 }
 
 // 로그인 응답 타입 (프론트엔드용)
@@ -118,7 +114,7 @@ export function useAuth() {
       } catch (error: unknown) {
         // 사용자 친화적 에러 메시지로 변환
         const errorInfo = mapErrorToUserMessage(error);
-        
+
         setAuthState((prev) => ({
           ...prev,
           isLoading: false,
@@ -148,13 +144,13 @@ export function useAuth() {
         });
 
         console.log('회원가입 성공');
-        
+
         // 회원가입 성공 후 로그인 페이지로 이동
         router.push('/signin');
-        
+
         // 로딩 상태 해제
         setAuthState((prev) => ({ ...prev, isLoading: false }));
-        
+
         return {
           success: true,
           message: response.message,
@@ -162,7 +158,7 @@ export function useAuth() {
       } catch (error: unknown) {
         // 사용자 친화적 에러 메시지로 변환
         const errorInfo = mapErrorToUserMessage(error);
-        
+
         setAuthState((prev) => ({
           ...prev,
           isLoading: false,
@@ -216,6 +212,6 @@ export function useAuth() {
     signOut,
     validateToken,
     refreshToken,
-    errorInfo: authState.errorInfo,  // 에러 상세 정보 노출
+    errorInfo: authState.errorInfo, // 에러 상세 정보 노출
   };
 }

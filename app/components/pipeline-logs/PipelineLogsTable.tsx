@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Check, Circle } from 'lucide-react';
-import { LogDetailsPanel } from '../../../components/log-details-panel';
+import { LogDetailsPanel } from './LogDetailsPanel';
 
 interface LogItem {
   id: string;
