@@ -128,7 +128,10 @@ const FlowCanvasInner: React.FC<FlowCanvasProps> = ({
         }}
       >
         <Background color='#d1fae5' />
-        <Controls className='bg-white border border-emerald-200 rounded-lg shadow-sm' />
+        <Controls
+          className='bg-white border border-emerald-200 rounded-lg shadow-sm'
+          position='bottom-right'
+        />
       </ReactFlow>
     </div>
   );
