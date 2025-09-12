@@ -316,12 +316,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           <h3 className='text-lg font-semibold'>Environment Variables</h3>
           <div className='flex space-x-2'>
             <button
-              onClick={saveEnvironmentVariables}
-              className='px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700'
-            >
-              Save All
-            </button>
-            <button
               onClick={downloadEnvironmentVariables}
               className='px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700'
             >
