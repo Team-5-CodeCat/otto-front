@@ -4,7 +4,6 @@ import ReactFlow, {
   Edge,
   Background,
   Controls,
-  MiniMap,
   Connection,
   ReactFlowProvider,
   NodeChange,
@@ -120,12 +119,22 @@ const FlowCanvasInner: React.FC<FlowCanvasProps> = ({
           animated: true,
         }}
       >
-        <Background color='#e5e7eb' />
-        <Controls className='bg-white/90 backdrop-blur-sm border border-gray-200/80 rounded-lg shadow-sm' />
-        <MiniMap
-          className='bg-white/90 backdrop-blur-sm border border-gray-200/80 rounded-lg shadow-sm'
-          maskColor='rgba(0, 0, 0, 0.1)'
-        />
+      {/* env_to_settings의 회색 배경 유지 (또는 dev의 녹색 선택 가능) */}
+      <Background color='#e5e7eb' />
+      
+      {/* env_to_settings의 스타일 + dev의 position 속성 병합 */}
+      <Controls 
+        className='bg-white/90 backdrop-blur-sm border border-gray-200/80 rounded-lg shadow-sm'
+        position='bottom-right'
+      />
+      
+      {/* MiniMap은 필요에 따라 포함/제외 결정 */}
+      {/* env_to_settings에만 있던 MiniMap - 필요시 주석 해제
+      <MiniMap
+        className='bg-white/90 backdrop-blur-sm border border-gray-200/80 rounded-lg shadow-sm'
+        maskColor='rgba(0, 0, 0, 0.1)'
+      />
+      */}
       </ReactFlow>
     </div>
   );
