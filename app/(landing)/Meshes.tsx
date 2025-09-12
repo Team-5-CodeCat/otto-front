@@ -27,7 +27,7 @@ const Meshes: React.FC<MeshesProps> = ({
   centerSize = 6,
 }) => {
   return (
-    <group>
+    <group dispose={null}>
       <Text
         position={[0, 0, 0]}
         anchorX='center'

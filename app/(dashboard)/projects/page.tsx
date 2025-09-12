@@ -8,6 +8,16 @@ import makeFetch from '@/app/lib/make-fetch';
 // Otto SDK 타입 추출
 type UserProject = Awaited<ReturnType<typeof functional.projects.projectGetUserProjects>>[0];
 
+// 프로젝트 목록 아이템 타입
+interface ProjectListItem {
+  id: string;
+  name: string;
+  description: string;
+  repo: string;
+  status: 'active' | 'inactive' | 'error';
+  lastBuild: string | null;
+  updatedAt: string;
+}
 
 // 프로젝트 목록 컴포넌트
 function ProjectsList() {
