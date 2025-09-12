@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@cooodecat/otto-sdk':
-        specifier: 0.0.1
-        version: 0.0.1(@types/node@20.19.13)(typescript@5.9.2)
+        specifier: 0.0.2
+        version: 0.0.2(@types/node@20.19.13)(typescript@5.9.2)
       '@nestia/fetcher':
         specifier: ^8.0.7
         version: 8.0.7
@@ -140,8 +140,8 @@ packages:
     resolution: {integrity: sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ==}
     engines: {node: '>=6.9.0'}
 
-  '@cooodecat/otto-sdk@0.0.1':
-    resolution: {integrity: sha512-F4Et2kY5rKErZoZG64q/G3fP+dXKJs96PjqRDXX1KBKKjOx7Cirj+8K80aa0h3+AuKCu89/B7EcE79McyPR35Q==, tarball: https://npm.pkg.github.com/download/@cooodecat/otto-sdk/0.0.1/71eec651eb993a384227f5ca1f49c7037d8c67f1}
+  '@cooodecat/otto-sdk@0.0.2':
+    resolution: {integrity: sha512-+2T4H8fNaN4NV4jYv/VXKP2W8JrKj4P1xXsw2mA/pkigEXZK4I6zqX+J9jHQKi49c1jhUYSHt4V+6dpQS5aT4g==, tarball: https://npm.pkg.github.com/download/@cooodecat/otto-sdk/0.0.2/20a7e31e0840fa9e28250f581aee22c11ae12a33}
 
   '@dimforge/rapier3d-compat@0.12.0':
     resolution: {integrity: sha512-uekIGetywIgopfD97oDL5PfeezkFpNhwlzlaEYNOA0N6ghdsOvh/HYjSMek5Q2O1PYvRSDFcqFVJl4r4ZBwOow==}
@@ -3885,7 +3885,7 @@ snapshots:
 
   '@babel/runtime@7.28.4': {}
 
-  '@cooodecat/otto-sdk@0.0.1(@types/node@20.19.13)(typescript@5.9.2)':
+  '@cooodecat/otto-sdk@0.0.2(@types/node@20.19.13)(typescript@5.9.2)':
     dependencies:
       '@nestia/fetcher': 7.4.0
       typia: 9.7.2(@types/node@20.19.13)(typescript@5.9.2)
