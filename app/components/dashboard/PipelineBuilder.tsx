@@ -13,7 +13,6 @@ interface PipelineBuilderProps {
 const PipelineBuilder: React.FC<PipelineBuilderProps> = ({
   className = '',
   showHeader = false,
-  showVersionSelector = true,
   onDragStart,
 }) => {
   // 기본 노드 버전 사용

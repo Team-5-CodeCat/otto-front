@@ -5,9 +5,6 @@ import Link from 'next/link';
 import Button from '@/app/components/ui/Button';
 import Input from '@/app/components/ui/Input';
 import Card from '@/app/components/ui/Card';
-import Header from '@/app/(landing)/components/Header';
-import Footer from '@/app/(landing)/components/Footer';
-import BackgroundElements from '@/app/(landing)/components/BackgroundElements';
 
 // 인증 훅
 import { useAuth } from '@/app/hooks/useAuth';
@@ -34,7 +31,6 @@ export default function SignInPage() {
   // 비밀번호 표시/숨김 상태
   const [showPassword, setShowPassword] = useState(false);
 
-  // 컴포넌트 마운트 시 인증 상태 확인
   // 이미 로그인된 사용자는 자동으로 리다이렉트됨 (useAuth에서 처리)
 
   // 입력 필드 변경 핸들러
@@ -79,10 +75,6 @@ export default function SignInPage() {
 
   return (
     <div className='min-h-screen bg-gray-50 text-gray-900 relative overflow-hidden'>
-      <BackgroundElements />
-      <div className='relative z-10'>
-        <Header />
-      </div>
       <div className='relative z-10 flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8'>
         <div className='max-w-md w-full space-y-8'>
           <div className='text-center'>
@@ -231,9 +223,6 @@ export default function SignInPage() {
             </div>
           </Card>
         </div>
-      </div>
-      <div className='relative z-10'>
-        <Footer />
       </div>
     </div>
   );
