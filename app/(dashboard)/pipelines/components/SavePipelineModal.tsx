@@ -1,3 +1,35 @@
+/**
+ * SavePipelineModal 컴포넌트
+ * 
+ * 파이프라인을 저장할 때 사용하는 모달 다이얼로그입니다.
+ * 사용자가 파이프라인 이름을 입력하고 Otto SDK를 통해 저장할 수 있게 합니다.
+ * 
+ * 주요 기능:
+ * - 파이프라인 이름 입력: 텍스트 input으로 이름 설정
+ * - Enter 키 지원: 입력 후 Enter로 빠른 저장 가능
+ * - 유효성 검사: 빈 이름일 때 저장 버튼 비활성화
+ * - 모달 오버레이: 배경 어둡게 처리하여 포커스 집중
+ * - 취소/확인 버튼: 명확한 액션 구분
+ * 
+ * 사용법:
+ * - RightPanel에서 Save 버튼 클릭 시 표시
+ * - pipelineName state와 onChange로 이름 입력 관리
+ * - onConfirm으로 실제 저장 로직 실행
+ * - confirmDisabled로 저장 버튼 활성화/비활성화 제어
+ * 
+ * Props:
+ * - open: 모달 표시 여부
+ * - pipelineName: 현재 입력된 파이프라인 이름
+ * - onChange: 이름 변경 핸들러
+ * - onCancel: 취소 버튼 클릭 핸들러
+ * - onConfirm: 저장 버튼 클릭 핸들러
+ * - confirmDisabled: 저장 버튼 비활성화 여부 (이름이 비어있을 때)
+ * 
+ * 키보드 지원:
+ * - Enter: 이름이 입력되어 있으면 저장 실행
+ * - Escape: 모달 닫기 (브라우저 기본 동작)
+ */
+
 'use client';
 
 import React from 'react';

@@ -1,7 +1,45 @@
+/**
+ * RightPanel 컴포넌트
+ * 
+ * 파이프라인 편집기의 우측 패널로, 파이프라인 관리 및 환경 변수 설정 기능을 제공합니다.
+ * JSON 편집기는 숨겨져 있으며, Environment 탭만 사용자에게 노출됩니다.
+ * 
+ * 주요 기능:
+ * - 파이프라인 관리: 저장, 불러오기, 실행, 초기화
+ * - 환경 변수 관리: 노드별 환경 변수 설정 및 .env 파일 업로드
+ * - 탭 기반 UI: Environment 탭으로 구성 (JSON 탭은 숨김)
+ * - 모달 다이얼로그: 저장/불러오기를 위한 모달 UI
+ * 
+ * 버튼 기능:
+ * - Refresh: 파이프라인 초기화 (JSON을 빈 배열로 리셋)
+ * - Save: 현재 파이프라인을 이름과 함께 저장
+ * - FolderOpen: 저장된 파이프라인 목록에서 선택하여 불러오기
+ * - Play: 파이프라인 즉시 실행
+ * 
+ * Environment 탭 기능:
+ * - 노드별 환경 변수: 각 블록에 개별 환경 변수 설정
+ * - .env 파일 업로드: 파일에서 환경 변수 일괄 로드
+ * - 가시성 토글: 민감한 정보 숨김/표시
+ * - 탭별 관리: build, test, deploy 노드별로 독립 관리
+ * 
+ * SDK 통합:
+ * - onSavePipeline: Otto SDK를 통한 파이프라인 저장
+ * - onLoadPipeline: 파이프라인 ID로 기존 파이프라인 불러오기
+ * - onRunPipeline: 파이프라인 실행 (저장 후 실행 또는 바로 실행)
+ * - availablePipelines: 프로젝트의 파이프라인 목록
+ * 
+ * 레이아웃:
+ * - 고정 너비 (w-64 ~ w-[26rem] 반응형)
+ * - 헤더: 액션 버튼들
+ * - 탭 영역: Environment 탭만 표시
+ * - 모달: SavePipelineModal, LoadPipelineModal 오버레이
+ */
+
 import React, { useState } from 'react';
 import { RotateCcw, Play, Save, FolderOpen } from 'lucide-react';
 import { Node } from 'reactflow';
-import YamlEditor from '../../../components/ui/YamlEditor';
+// JsonEditor는 사용하지 않음 - 주석 처리
+// import JsonEditor from '../../../components/ui/JsonEditor';
 import EnvironmentTab from '../../../components/ui/EnvironmentTab';
 import SavePipelineModal from './SavePipelineModal';
 import { EnvironmentVariable } from '../../../components/ui/EnvironmentVariableList';
@@ -9,9 +47,9 @@ import LoadPipelineModal from './LoadPipelineModel';
 // import { userMyInfo } from '@cooodecat/otto-sdk/lib/functional/user';
 // import makeFetch from '@/app/lib/make-fetch';
 
-interface RightPanelProps {
-  yamlText: string;
-  onYamlChange: (value: string) => void;
+export interface RightPanelProps {
+  jsonText: string;
+  onJsonChange: (value: string) => void;
   nodes: Node[];
   onUpdateNodeEnvironment: (nodeId: string, environment: Record<string, string>) => void;
   // ✅ SDK 기반 함수들 추가
@@ -30,8 +68,8 @@ interface RightPanelProps {
 }
 
 const RightPanel: React.FC<RightPanelProps> = ({
-  yamlText,
-  onYamlChange,
+  jsonText,
+  onJsonChange,
   nodes,
   onUpdateNodeEnvironment,
   onSavePipeline,
@@ -39,7 +77,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   availablePipelines = [],
   onRunPipeline,
 }) => {
-  const [activeTab, setActiveTab] = useState<'yaml' | 'env'>('yaml');
+  const [activeTab, setActiveTab] = useState<'yaml' | 'env'>('env'); // 기본적으로 env 탭 활성화
   const [activeEnvTab, setActiveEnvTab] = useState<'build' | 'test' | 'deploy'>('build');
   const [nodeEnvironments, setNodeEnvironments] = useState<Record<string, EnvironmentVariable[]>>(
     {}
@@ -60,8 +98,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
   });
 
   const handleRefresh = () => {
-    // YAML 내용을 빈 문자열로 초기화
-    onYamlChange('');
+    // JSON 내용을 빈 배열로 초기화
+    onJsonChange('[]');
 
     // 업로드된 파일들 초기화
     setUploadedFiles({
@@ -76,8 +114,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
   // ✅ SDK를 통한 저장 함수
   const handleSave = () => {
-    if (!yamlText.trim()) {
-      alert('YAML 내용이 비어있습니다.');
+    if (!jsonText.trim() || jsonText.trim() === '[]') {
+      alert('JSON 내용이 비어있습니다.');
       return;
     }
     setShowSaveModal(true);
@@ -288,8 +326,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
         </div>
       </div>
 
-      {/* 탭 헤더 */}
+      {/* 탭 헤더 - JSON 탭 숨김 */}
       <div className='flex border-b border-gray-200'>
+        {/* JSON 탭 주석 처리
         <button
           onClick={() => setActiveTab('yaml')}
           className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
@@ -298,8 +337,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
-          YAML
+          JSON
         </button>
+        */}
         <button
           onClick={() => setActiveTab('env')}
           className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
@@ -308,13 +348,15 @@ const RightPanel: React.FC<RightPanelProps> = ({
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
-          .env
+          Environment
         </button>
       </div>
 
-      {/* 탭 컨텐츠 */}
+      {/* 탭 컨텐츠 - JSON 에디터 제거 */}
       <div className='flex-1 overflow-hidden'>
-        {activeTab === 'yaml' && <YamlEditor value={yamlText} onChange={onYamlChange} />}
+        {/* JSON 에디터 주석 처리
+        {activeTab === 'yaml' && <JsonEditor value={jsonText} onChange={onJsonChange} />}
+        */}
 
         {activeTab === 'env' && (
           <EnvironmentTab

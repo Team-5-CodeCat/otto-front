@@ -1,3 +1,29 @@
+/**
+ * LoadPipelineModal 컴포넌트
+ *
+ * 저장된 파이프라인 목록을 보여주고 선택할 수 있는 모달 다이얼로그입니다.
+ * Otto SDK를 통해 가져온 파이프라인 목록을 표시하며, 사용자가 선택한 파이프라인을 불러올 수 있습니다.
+ *
+ * 주요 기능:
+ * - 파이프라인 목록 표시: 이름, 버전, ID 정보 표시
+ * - 클릭 선택: 파이프라인 클릭 시 onSelect 콜백 호출
+ * - 빈 상태 처리: 저장된 파이프라인이 없을 때 안내 메시지 표시
+ * - 스크롤 지원: 많은 파이프라인에 대해 max-h-64로 스크롤 영역 제한
+ * - 모달 오버레이: 배경 클릭으로 닫기 불가, 취소 버튼으로만 닫기 가능
+ *
+ * 사용법:
+ * - RightPanel에서 폴더 아이콘 클릭 시 표시
+ * - availablePipelines props로 파이프라인 목록 전달
+ * - onSelect로 선택된 파이프라인 ID를 상위 컴포넌트로 전달
+ * - onCancel로 모달 닫기 처리
+ *
+ * Props:
+ * - open: 모달 표시 여부
+ * - pipelines: 파이프라인 목록 (PipelineItem[])
+ * - onCancel: 취소 버튼 클릭 핸들러
+ * - onSelect: 파이프라인 선택 핸들러 (pipelineID string 전달)
+ */
+
 'use client';
 
 import React from 'react';
