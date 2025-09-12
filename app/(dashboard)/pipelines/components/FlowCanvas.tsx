@@ -36,7 +36,8 @@ import ReactFlow, {
   useReactFlow,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import RightPanel from './RightPanel';
+// import NodePalette from './NodePalette';
+// import RightPanel from './RightPanel'; // RightPanel 제거
 import JobNode from './JobNode';
 import CustomEdge from './CustomEdge';
 import { AnyBlock } from './types';
@@ -66,12 +67,7 @@ interface FlowCanvasProps {
     projectID?: string
   ) => Promise<{ success: boolean; pipelineId?: string }>;
   onLoadPipeline?: (pipelineID: string) => Promise<void>;
-  availablePipelines?: Array<{
-    pipelineID: string;
-    name: string;
-    version: number;
-  }>;
-  // ✅ 실행 콜백 추가
+  availablePipelines?: Array<{ pipelineID: string; name: string; version: number }>;
   onRunPipeline?: () => Promise<void>;
 }
 
@@ -100,7 +96,9 @@ const FlowCanvasInner: React.FC<FlowCanvasProps> = ({
   const nodeTypes = React.useMemo(
     () => ({
       jobNode: (props: { data: AnyBlock }) => <JobNode {...props} onUpdateBlock={onUpdateBlock} />,
-      blockNode: (props: { data: AnyBlock }) => <JobNode {...props} onUpdateBlock={onUpdateBlock} />,
+      blockNode: (props: { data: AnyBlock }) => (
+        <JobNode {...props} onUpdateBlock={onUpdateBlock} />
+      ),
     }),
     [onUpdateBlock]
   );
@@ -142,7 +140,7 @@ const FlowCanvasInner: React.FC<FlowCanvasProps> = ({
   }));
 
   return (
-    <div className='flex-1 bg-emerald-50/40 h-full' ref={reactFlowWrapper}>
+    <div className='flex-1 bg-gray-50/60 h-full' ref={reactFlowWrapper}>
       <ReactFlow
         nodes={nodes}
         edges={edgesWithDelete}
@@ -154,17 +152,28 @@ const FlowCanvasInner: React.FC<FlowCanvasProps> = ({
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
-        className='w-full h-full bg-emerald-50/40'
+        className='w-full h-full bg-gray-50/60'
         defaultEdgeOptions={{
           type: 'custom-edge',
           animated: true,
         }}
       >
-        <Background color='#d1fae5' />
+        {/* env_to_settings의 회색 배경 유지 (또는 dev의 녹색 선택 가능) */}
+        <Background color='#e5e7eb' />
+
+        {/* env_to_settings의 스타일 + dev의 position 속성 병합 */}
         <Controls
-          className='bg-white border border-emerald-200 rounded-lg shadow-sm'
+          className='bg-white/90 backdrop-blur-sm border border-gray-200/80 rounded-lg shadow-sm'
           position='bottom-right'
         />
+
+        {/* MiniMap은 필요에 따라 포함/제외 결정 */}
+        {/* env_to_settings에만 있던 MiniMap - 필요시 주석 해제
+      <MiniMap
+        className='bg-white/90 backdrop-blur-sm border border-gray-200/80 rounded-lg shadow-sm'
+        maskColor='rgba(0, 0, 0, 0.1)'
+      />
+      */}
       </ReactFlow>
     </div>
   );
@@ -187,27 +196,14 @@ const FlowCanvas: React.FC<FlowCanvasProps> = (props) => {
       >
         {/* 중앙 영역 - 플로우 캔버스 */}
         <div className='flex-1 min-w-0 flex flex-col relative'>
-          <div className='flex-1 bg-gray-50 h-full'>
+          <div className='flex-1 bg-gray-50/80 h-full'>
             <ReactFlowProvider>
               <FlowCanvasInner {...props} />
             </ReactFlowProvider>
           </div>
         </div>
 
-        {/* 오른쪽 패널 - JSON 편집기 */}
-        {(() => {
-          const rightPanelProps = {
-            jsonText: props.jsonText,
-            onJsonChange: props.onJsonChange,
-            nodes: props.nodes,
-            onUpdateNodeEnvironment: props.onUpdateNodeEnvironment,
-            ...(props.onSavePipeline && { onSavePipeline: props.onSavePipeline }),
-            ...(props.onLoadPipeline && { onLoadPipeline: props.onLoadPipeline }),
-            ...(props.availablePipelines && { availablePipelines: props.availablePipelines }),
-            ...(props.onRunPipeline && { onRunPipeline: props.onRunPipeline }),
-          };
-          return <RightPanel {...rightPanelProps} />;
-        })()}
+        {/* RightPanel 제거됨 - 이제 전체 화면 사용 */}
       </div>
     </>
   );
