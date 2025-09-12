@@ -26,7 +26,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
       const parsed = JSON.parse(value);
       const formatted = JSON.stringify(parsed, null, 2);
       onChange(formatted);
-    } catch (error) {
+    } catch {
       // JSON이 유효하지 않으면 포맷팅하지 않음
       console.warn('Invalid JSON, skipping format');
     }

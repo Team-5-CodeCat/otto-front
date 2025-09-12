@@ -71,7 +71,7 @@ interface Workspace {
  */
 const isCanvasLayoutPath = (pathname: string): boolean => {
   if (pathname === '/pipelines') return true;
-  const pipelineDetailPattern = /^\/projects\/[^\/]+\/pipelines\/[^\/]+$/;
+  const pipelineDetailPattern = /^\/projects\/[^/]+\/pipelines\/[^/]+$/;
   return pipelineDetailPattern.test(pathname);
 };
 

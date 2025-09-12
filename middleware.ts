@@ -17,7 +17,7 @@ const publicOnlyPaths = [
 ];
 
 // 인증 체크가 필요 없는 경로
-const publicPaths = [
+const _publicPaths = [
   '/',
   '/callback',
   '/api',

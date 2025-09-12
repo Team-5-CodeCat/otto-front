@@ -69,7 +69,7 @@ export function useAuth() {
         });
       } catch (error) {
         // 401 에러 시에만 refresh 시도
-        if ((error as any)?.status === 401) {
+        if ((error as { status?: number })?.status === 401) {
           const isSessionValid = await checkSession();
           
           if (isSessionValid) {

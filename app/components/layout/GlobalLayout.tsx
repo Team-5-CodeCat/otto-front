@@ -20,9 +20,9 @@ const SIDEBAR_EXCLUDED_PATHS = ['/', '/signin', '/callback', '/signup'];
 const isCanvasLayoutPath = (pathname: string): boolean => {
   // /pipelines 페이지 (파이프라인 에디터)
   if (pathname === '/pipelines') return true;
-  
+
   // /projects/{project_id}/pipelines/{pipeline_id} 패턴
-  const pipelineDetailPattern = /^\/projects\/[^\/]+\/pipelines\/[^\/]+$/;
+  const pipelineDetailPattern = /^\/projects\/[^/]+\/pipelines\/[^/]+$/;
   return pipelineDetailPattern.test(pathname);
 };
 
@@ -37,7 +37,7 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
 
   // 현재 경로가 사이드바 제외 목록에 있는지 확인
   const shouldShowSidebar = !SIDEBAR_EXCLUDED_PATHS.includes(pathname);
-  
+
   // 캔버스 레이아웃 사용 여부
   const isCanvasLayout = shouldShowSidebar && isCanvasLayoutPath(pathname);
 
@@ -73,9 +73,7 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
         </div>
       </div>
       {/* 메인 콘텐츠 - 나머지 공간 차지 */}
-      <main className='flex-1 min-h-screen'>
-        {children}
-      </main>
+      <main className='flex-1 min-h-screen'>{children}</main>
     </div>
   );
 };

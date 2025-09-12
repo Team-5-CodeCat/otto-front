@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Settings, User, Palette, Server, Monitor, Key, Shield, CreditCard, X, Plus, Eye, EyeOff, Github, LogOut, Mail } from 'lucide-react';
+import { Settings, User, Palette, Server, Monitor, Key, Shield, CreditCard, X, Plus, Eye, EyeOff, Github, LogOut } from 'lucide-react';
 import { useAuth } from '@/app/hooks/useAuth';
 import EnvFileUploader from '../ui/EnvFileUploader';
 import { EnvironmentVariable } from '../ui/EnvironmentVariableList';

@@ -200,7 +200,7 @@ export default function CallbackPage() {
       </div>
 
       {/* CSS for animation */}
-      <style jsx>{`
+      <style>{`
         @keyframes progress {
           0% { width: 0%; }
           100% { width: 100%; }

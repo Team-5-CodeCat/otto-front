@@ -32,7 +32,7 @@ interface PipelineLogsTableProps {
 // 향상된 로그 테이블 컴포넌트
 const PipelineLogsTable: React.FC<PipelineLogsTableProps> = ({
   logs,
-  newLogIds,
+  newLogIds: _newLogIds,
   onLoadMore,
   hasMore,
   isLoading,
