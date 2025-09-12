@@ -2,9 +2,9 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useAuth as useAuthHook, SignInResponse } from '@/app/hooks/useAuth';
-import type { authSignIn } from '@Team-5-CodeCat/otto-sdk/lib/functional/auth/sign_in';
-import type { authSignUp } from '@Team-5-CodeCat/otto-sdk/lib/functional/auth/sign_up';
-import { userMyInfo } from '@Team-5-CodeCat/otto-sdk/lib/functional/user';
+import type { authSignIn } from '@cooodecat/otto-sdk/lib/functional/auth/sign_in';
+import type { authSignUp } from '@cooodecat/otto-sdk/lib/functional/auth/sign_up';
+import { userMyInfo } from '@cooodecat/otto-sdk/lib/functional/user';
 
 // 인증 상태 타입
 export interface AuthState {

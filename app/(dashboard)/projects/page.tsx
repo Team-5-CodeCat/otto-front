@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { functional } from '@Team-5-CodeCat/otto-sdk';
+import { functional } from '@cooodecat/otto-sdk';
 import makeFetch from '@/app/lib/make-fetch';
 
 // Otto SDK 타입 추출
