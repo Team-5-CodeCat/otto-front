@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 
 import { cn } from '@/lib/utils';
+import { Cpu, Menu, X } from 'lucide-react';
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -35,7 +36,8 @@ export default function Header() {
           </div>
 
           {/* Desktop Nav - Empty for now */}
-          <nav className='hidden md:flex items-center gap-4'></nav>
+          <nav className='hidden md:flex items-center gap-4'>
+          </nav>
 
           {/* Mobile Menu Button */}
           <button
@@ -50,7 +52,9 @@ export default function Header() {
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className='md:hidden bg-white/95 backdrop-blur-xl border-t border-gray-200'>
-          <nav className='flex flex-col space-y-4 p-6'>{/* Empty for now */}</nav>
+          <nav className='flex flex-col space-y-4 p-6'>
+            {/* Empty for now */}
+          </nav>
         </div>
       )}
     </header>
