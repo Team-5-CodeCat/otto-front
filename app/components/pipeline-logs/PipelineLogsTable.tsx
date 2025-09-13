@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Check, Circle } from 'lucide-react';
+import { LogDetailsPanel } from './LogDetailsPanel';
 
 interface LogItem {
   id: string;
@@ -27,6 +28,8 @@ interface PipelineLogsTableProps {
   onLoadMore: () => void;
   hasMore: boolean;
   isLoading: boolean;
+  searchQuery?: string;
+  onMarkAsRead?: (logId: string) => void; // 키보드 내비게이션에서 읽음 처리용
 }
 
 // 향상된 로그 테이블 컴포넌트
@@ -36,7 +39,44 @@ const PipelineLogsTable: React.FC<PipelineLogsTableProps> = ({
   onLoadMore,
   hasMore,
   isLoading,
+  searchQuery: _searchQuery,
+  onMarkAsRead,
 }) => {
+  const [selectedBuildId, setSelectedBuildId] = useState<string | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  // 읽지 않은 로그 ID들을 관리 (초기값: newLogIds와 동일)
+  const [unreadLogIds, setUnreadLogIds] = useState<Set<string>>(newLogIds);
+
+  // newLogIds가 변경될 때 unreadLogIds 업데이트 (새로운 로그 추가 시)
+  useEffect(() => {
+    setUnreadLogIds(prev => {
+      const newSet = new Set(prev);
+      newLogIds.forEach(id => newSet.add(id)); // 새로운 로그들을 읽지 않음으로 추가
+      return newSet;
+    });
+  }, [newLogIds]);
+
+  // 읽음 처리 함수 (마우스 클릭과 키보드 내비게이션에서 공통 사용)
+  const markLogAsRead = (logId: string) => {
+    setUnreadLogIds(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(logId);
+      return newSet;
+    });
+    // 부모 컴포넌트에도 읽음 처리 알림 (헤더 카운트 업데이트용)
+    onMarkAsRead?.(logId);
+  };
+
+  const handleRowClick = (logId: string) => {
+    markLogAsRead(logId); // 읽음 처리
+    setSelectedBuildId(logId);
+    setIsDetailsOpen(true);
+  };
+
+  const handleCloseDetails = () => {
+    setIsDetailsOpen(false);
+    setSelectedBuildId(null);
+  };
   const observerRef = React.useRef<HTMLTableRowElement>(null);
 
   React.useEffect(() => {
@@ -56,45 +96,38 @@ const PipelineLogsTable: React.FC<PipelineLogsTableProps> = ({
     return () => observer.disconnect();
   }, [hasMore, isLoading, onLoadMore]);
 
-  // 최신 로그 판별 (5분 이내)
-  const isRecentLog = (timeString: string) => {
-    const timeValue = parseInt(timeString.match(/\d+/)?.[0] || '0');
-    const unit = timeString.includes('s ago')
-      ? 'seconds'
-      : timeString.includes('m ago')
-        ? 'minutes'
-        : timeString.includes('h ago')
-          ? 'hours'
-          : 'hours';
-
-    if (unit === 'seconds') return true;
-    if (unit === 'minutes') return timeValue <= 5;
-    return false;
+  // 읽지 않은 로그인지 판단하는 함수 (시간 기반에서 상태 기반으로 변경)
+  const isUnreadLog = (logId: string): boolean => {
+    return unreadLogIds.has(logId);
   };
 
   // 행의 배경 스타일 결정
   const getRowClassName = (log: LogItem, index: number) => {
     const isRunning = log.status === 'running';
-    const isRecent = isRecentLog(log.trigger.time);
+    const isUnread = isUnreadLog(log.id); // 시간 기반에서 상태 기반으로 변경
+    const isSelected = selectedBuildId === log.id && isDetailsOpen;
 
     // 기본 클래스
     let className = 'transition-all duration-200 group cursor-pointer ';
 
-    // 배경 색상 결정 (우선순위: Running > 최신 로그 > 일반)
+    // 배경 색상 결정 (우선순위: Running > 선택됨 > 읽지 않음 > 일반)
     if (isRunning) {
       // Running 상태: 노란색 그라데이션 + 펄스
       className +=
         'bg-gradient-to-r from-green-50 to-amber-50 border-l-4 border-green-200 animate-pulse ';
-    } else if (isRecent) {
-      // 최신 로그 (5분 이내): 파란색 그라데이션 + 펄스
+    } else if (isSelected) {
+      // 선택된 상태: 호버보다 조금 더 진한 회색
+      className += 'bg-gray-100 ';
+    } else if (isUnread) {
+      // 읽지 않은 로그: 파란색 그라데이션 (펄스 효과 유지)
       className += 'bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-200';
     } else {
       // 일반 로그: 기본 스타일
       className += index % 2 === 0 ? 'bg-white ' : 'bg-gray-50/30 ';
     }
 
-    // 호버 효과 (Running 상태가 아닐 때만)
-    if (!isRunning) {
+    // 호버 효과 (Running 상태와 선택된 상태가 아닐 때만)
+    if (!isRunning && !isSelected) {
       className += 'hover:bg-gray-50 ';
     }
 
@@ -149,22 +182,22 @@ const PipelineLogsTable: React.FC<PipelineLogsTableProps> = ({
         <table className='w-full'>
           <thead>
             <tr>
-              <th className='text-left p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[120px]'>
+              <th className='text-center p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[120px]'>
                 Status
               </th>
-              <th className='text-left p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[150px]'>
+              <th className='text-left p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[140px]'>
                 Pipeline
               </th>
-              <th className='text-left p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[200px]'>
+              <th className='text-center p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[180px]'>
                 Trigger
               </th>
-              <th className='text-left p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[100px]'>
+              <th className='text-center p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[110px]'>
                 Branch
               </th>
-              <th className='text-left p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider flex-1'>
+              <th className='text-center p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[300px]'>
                 Commit
               </th>
-              <th className='text-left p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[100px]'>
+              <th className='text-left p-4 text-sm font-semibold text-gray-700 uppercase tracking-wider w-[120px]'>
                 Duration
               </th>
             </tr>
@@ -177,14 +210,18 @@ const PipelineLogsTable: React.FC<PipelineLogsTableProps> = ({
         <table className='w-full'>
           <tbody className='divide-y divide-gray-100 bg-white'>
             {logs.map((log: LogItem, index: number) => (
-              <tr key={log.id} className={getRowClassName(log, index)}>
+              <tr
+                key={log.id}
+                className={getRowClassName(log, index)}
+                onClick={() => handleRowClick(log.id)}
+              >
                 <td className='p-4 w-[120px]'>{getStatusBadge(log.status)}</td>
-                <td className='p-4 w-[150px]'>
+                <td className='p-4 w-[140px]'>
                   <span className='font-semibold text-gray-900 group-hover:text-blue-700 transition-colors truncate block'>
                     {log.pipelineName}
                   </span>
                 </td>
-                <td className='p-4 w-[200px]'>
+                <td className='p-4 w-[180px]'>
                   <div className='text-sm space-y-1'>
                     <div className='font-medium text-gray-800 truncate'>{log.trigger.type}</div>
                     <div className='text-gray-500 flex items-center gap-1 truncate'>
@@ -193,12 +230,12 @@ const PipelineLogsTable: React.FC<PipelineLogsTableProps> = ({
                     </div>
                   </div>
                 </td>
-                <td className='p-4 w-[100px]'>
+                <td className='p-4 w-[110px]'>
                   <span className='text-sm font-medium text-gray-700 truncate block'>
                     {log.branch}
                   </span>
                 </td>
-                <td className='p-4 flex-1'>
+                <td className='p-4 w-[300px]'>
                   <div className='text-sm space-y-1'>
                     <div
                       className='font-medium text-gray-900 truncate hover:text-blue-700 transition-colors cursor-pointer'
@@ -211,7 +248,7 @@ const PipelineLogsTable: React.FC<PipelineLogsTableProps> = ({
                     </div>
                   </div>
                 </td>
-                <td className='p-4 w-[100px]'>
+                <td className='p-4 w-[120px]'>
                   <span className='text-sm font-medium text-gray-700 font-mono'>
                     {log.duration}
                   </span>
@@ -244,6 +281,31 @@ const PipelineLogsTable: React.FC<PipelineLogsTableProps> = ({
           {!hasMore && <span className='text-gray-400'> • All data loaded</span>}
         </div>
       </div>
+
+      {/* 로그 상세 패널 */}
+      {selectedBuildId && (
+        <LogDetailsPanel
+          buildId={selectedBuildId}
+          isOpen={isDetailsOpen}
+          onClose={handleCloseDetails}
+          onNavigate={(direction) => {
+            // 이전/다음 로그로 네비게이션 + 읽음 처리
+            const currentIndex = logs.findIndex((log) => log.id === selectedBuildId);
+            let newLogId: string | undefined;
+            
+            if (direction === 'prev' && currentIndex > 0) {
+              newLogId = logs[currentIndex - 1]?.id;
+            } else if (direction === 'next' && currentIndex < logs.length - 1) {
+              newLogId = logs[currentIndex + 1]?.id;
+            }
+            
+            if (newLogId) {
+              markLogAsRead(newLogId); // 키보드 내비게이션 시 즉시 읽음 처리
+              setSelectedBuildId(newLogId);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

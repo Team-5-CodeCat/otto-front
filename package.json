@@ -12,6 +12,7 @@
   "dependencies": {
     "@cooodecat/otto-sdk": "0.0.5",
     "@nestia/fetcher": "^8.0.7",
+    "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/themes": "^3.2.1",
     "@react-three/drei": "^10.7.5",
     "@react-three/fiber": "^9.3.0",
