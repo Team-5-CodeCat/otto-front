@@ -13,7 +13,7 @@ export const NodeVersionSelector: React.FC<NodeVersionSelectorProps> = ({ classN
   const [isOpen, setIsOpen] = useState(false);
 
   const handleVersionSelect = (version: NodeVersion) => {
-    setSelectedVersion(version);
+    setSelectedVersion(version.version);
     setIsOpen(false);
   };
 
@@ -34,9 +34,9 @@ export const NodeVersionSelector: React.FC<NodeVersionSelectorProps> = ({ classN
           <div className='flex items-center justify-between'>
             <div className='flex items-center'>
               <span className='block truncate text-gray-900 dark:text-gray-100'>
-                {currentVersionInfo?.label || `Node.js ${selectedVersion}`}
+                {currentVersionInfo?.description || `Node.js ${selectedVersion}`}
               </span>
-              {currentVersionInfo?.isLTS && (
+              {currentVersionInfo?.lts && (
                 <span className='ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'>
                   LTS
                 </span>
@@ -67,7 +67,7 @@ export const NodeVersionSelector: React.FC<NodeVersionSelectorProps> = ({ classN
               <button
                 key={versionInfo.version}
                 type='button'
-                onClick={() => handleVersionSelect(versionInfo.version)}
+                onClick={() => handleVersionSelect(versionInfo)}
                 className={cn(
                   'w-full text-left px-4 py-2 text-sm hover:bg-emerald-50 dark:hover:bg-gray-700',
                   selectedVersion === versionInfo.version
@@ -76,8 +76,8 @@ export const NodeVersionSelector: React.FC<NodeVersionSelectorProps> = ({ classN
                 )}
               >
                 <div className='flex items-center justify-between'>
-                  <span>{versionInfo.label}</span>
-                  {versionInfo.isLTS && (
+                  <span>{versionInfo.description}</span>
+                  {versionInfo.lts && (
                     <span className='inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'>
                       LTS
                     </span>

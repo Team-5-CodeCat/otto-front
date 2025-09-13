@@ -19,7 +19,7 @@ const PipelineBuilder: React.FC<PipelineBuilderProps> = ({
   const defaultVersion = '18'; // 기본값으로 Node.js 18 사용
   
   // 노드 템플릿 정의
-  const nodeTemplates = createNodeTemplates(defaultVersion);
+  const nodeTemplates = createNodeTemplates();
 
   // 기본 드래그 시작 핸들러
   const defaultOnDragStart = (event: React.DragEvent, nodeType: string) => {
@@ -43,7 +43,7 @@ const PipelineBuilder: React.FC<PipelineBuilderProps> = ({
       {/* 노드 팔레트 */}
       <div className='flex-1 p-4 overflow-y-auto'>
         <div className='space-y-3'>
-          {nodeTemplates.map((template) => (
+          {nodeTemplates.map((template: any) => (
             <div
               key={template.type}
               draggable

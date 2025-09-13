@@ -11,7 +11,7 @@ export default function CallbackPage() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [error, setError] = useState<string>('');
   const router = useRouter();
-  const { signInWithGitHub } = useAuth();
+  const { signInWithGitHub, determinePostLoginRoute } = useAuth();
 
   useEffect(() => {
     const processCallback = async () => {
@@ -25,12 +25,13 @@ export default function CallbackPage() {
           if (signInResult.success) {
             setStatus('success');
             
-            // 성공 UI를 보여준 후 projects로 리다이렉트
-            setTimeout(() => {
-              router.push('/projects');
+            // 성공 UI를 보여준 후 적절한 라우트로 리다이렉트
+            setTimeout(async () => {
+              const route = await determinePostLoginRoute();
+              router.push(route);
             }, 2000);
           } else {
-            setError(signInResult.message || 'Login failed');
+            setError(signInResult.message || '로그인에 실패했습니다');
             setStatus('error');
 
             // 에러 시 로그인 페이지로 리다이렉트
@@ -39,7 +40,7 @@ export default function CallbackPage() {
             }, 3000);
           }
         } else {
-          setError(result.error || 'Login failed');
+          setError(result.error || '로그인에 실패했습니다');
           setStatus('error');
 
           // 에러 시 로그인 페이지로 리다이렉트
@@ -49,7 +50,7 @@ export default function CallbackPage() {
         }
       } catch (err) {
         console.error('Callback processing error:', err);
-        setError('An unexpected error occurred');
+        setError('예상치 못한 오류가 발생했습니다');
         setStatus('error');
 
         setTimeout(() => {
@@ -59,7 +60,7 @@ export default function CallbackPage() {
     };
 
     processCallback();
-  }, [router, signInWithGitHub]);
+  }, [router, signInWithGitHub, determinePostLoginRoute]);
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-50 via-white to-emerald-50/20 relative overflow-hidden'>
@@ -96,13 +97,13 @@ export default function CallbackPage() {
                 {/* Loading Progress */}
                 <div className='w-full space-y-3'>
                   <h2 className='text-xl font-semibold text-gray-900 text-center'>
-                    Authenticating with GitHub
+                    GitHub 인증 중
                   </h2>
                   <div className='w-full bg-gray-200 rounded-full h-2 overflow-hidden'>
                     <div className='bg-gradient-to-r from-emerald-500 to-emerald-600 h-2 rounded-full animate-progress'></div>
                   </div>
                   <p className='text-sm text-gray-600 text-center'>
-                    Verifying your credentials and setting up your workspace...
+                    인증 정보를 확인하고 워크스페이스를 설정하는 중...
                   </p>
                 </div>
 
@@ -110,15 +111,15 @@ export default function CallbackPage() {
                 <div className='w-full space-y-2 mt-4'>
                   <div className='flex items-center space-x-3 text-sm text-gray-600'>
                     <div className='w-2 h-2 bg-emerald-500 rounded-full animate-pulse'></div>
-                    <span>Connecting to GitHub</span>
+                    <span>GitHub에 연결 중</span>
                   </div>
                   <div className='flex items-center space-x-3 text-sm text-gray-400'>
                     <div className='w-2 h-2 bg-gray-300 rounded-full'></div>
-                    <span>Verifying permissions</span>
+                    <span>권한 확인 중</span>
                   </div>
                   <div className='flex items-center space-x-3 text-sm text-gray-400'>
                     <div className='w-2 h-2 bg-gray-300 rounded-full'></div>
-                    <span>Creating session</span>
+                    <span>세션 생성 중</span>
                   </div>
                 </div>
               </div>
@@ -139,9 +140,9 @@ export default function CallbackPage() {
                 
                 {/* Success Message */}
                 <div className='w-full space-y-3 text-center'>
-                  <h2 className='text-2xl font-bold text-gray-900'>Welcome to Otto!</h2>
+                  <h2 className='text-2xl font-bold text-gray-900'>Otto에 오신 것을 환영합니다!</h2>
                   <p className='text-gray-600'>
-                    Authentication successful. Preparing your workspace...
+                    인증이 완료되었습니다. 워크스페이스를 준비하는 중...
                   </p>
                 </div>
 
@@ -152,7 +153,7 @@ export default function CallbackPage() {
                     <div className='w-2 h-2 bg-emerald-600 rounded-full animate-bounce' style={{animationDelay: '150ms'}}></div>
                     <div className='w-2 h-2 bg-emerald-600 rounded-full animate-bounce' style={{animationDelay: '300ms'}}></div>
                   </div>
-                  <span>Redirecting to projects</span>
+                  <span>프로젝트로 이동 중</span>
                 </div>
               </div>
             </div>
@@ -172,11 +173,11 @@ export default function CallbackPage() {
                 
                 {/* Error Message */}
                 <div className='w-full space-y-3 text-center'>
-                  <h2 className='text-2xl font-bold text-gray-900'>Authentication Failed</h2>
+                  <h2 className='text-2xl font-bold text-gray-900'>인증 실패</h2>
                   <div className='bg-red-50 border border-red-200 rounded-lg p-4'>
                     <div className='flex items-start space-x-2'>
                       <AlertCircle className='w-5 h-5 text-red-600 flex-shrink-0 mt-0.5' />
-                      <p className='text-sm text-red-800 text-left'>{error || 'An unexpected error occurred during authentication.'}</p>
+                      <p className='text-sm text-red-800 text-left'>{error || '인증 중 예상치 못한 오류가 발생했습니다.'}</p>
                     </div>
                   </div>
                 </div>
@@ -187,10 +188,10 @@ export default function CallbackPage() {
                     onClick={() => router.push('/signin')}
                     className='w-full px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-lg font-medium hover:from-emerald-700 hover:to-emerald-600 transition-all shadow-lg'
                   >
-                    Try Again
+                    다시 시도
                   </button>
                   <p className='text-xs text-gray-500 text-center'>
-                    You will be redirected automatically in a few seconds...
+                    몇 초 후 자동으로 이동됩니다...
                   </p>
                 </div>
               </div>

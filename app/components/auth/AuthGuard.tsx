@@ -36,7 +36,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
 
     // 인증이 필요하지 않은 페이지인데 인증된 경우 (로그인/회원가입 페이지 등)
     if (!requireAuth && isAuthenticated) {
-      const redirectPath = redirectTo || '/projects';
+      const redirectPath = redirectTo || '/projects/onboarding';
       router.push(redirectPath);
       return;
     }
@@ -66,7 +66,7 @@ const DefaultLoadingFallback: React.FC = () => (
   <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-emerald-50/20'>
     <div className='text-center'>
       <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto'></div>
-      <p className='mt-4 text-gray-600'>Verifying authentication...</p>
+      <p className='mt-4 text-gray-600'>인증을 확인하는 중...</p>
     </div>
   </div>
 );

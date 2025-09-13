@@ -52,9 +52,9 @@ export default function SignInPage() {
         <div className='flex items-center justify-center px-4 sm:px-6 lg:px-8 py-16'>
           <div className='max-w-md w-full space-y-8'>
             <div className='text-center'>
-              <h2 className='text-3xl font-extrabold text-gray-900'>Welcome to Otto</h2>
+              <h2 className='text-3xl font-extrabold text-gray-900'>Otto에 오신 것을 환영합니다</h2>
               <p className='mt-2 text-sm text-gray-600'>
-                Sign in or create your account with GitHub
+                GitHub으로 로그인하거나 계정을 생성하세요
               </p>
             </div>
 
@@ -96,13 +96,13 @@ export default function SignInPage() {
                   <div className='flex items-center justify-center space-x-3'>
                     {!isGitHubLoading && <Github className='w-5 h-5' />}
                     <span className='font-medium'>
-                      {isGitHubLoading ? 'Connecting to GitHub...' : 'Continue with GitHub'}
+                      {isGitHubLoading ? 'GitHub에 연결 중...' : 'GitHub으로 계속하기'}
                     </span>
                   </div>
                 </Button>
 
                 <div className='text-center text-sm text-gray-500'>
-                  <p>One account for everything - powered by GitHub</p>
+                  <p>모든 것을 위한 하나의 계정 - GitHub로 구동됩니다</p>
                 </div>
               </div>
             </Card>

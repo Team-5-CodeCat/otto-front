@@ -6,6 +6,8 @@ import makeFetch from '@/app/lib/make-fetch';
 import { userMyInfo } from '@cooodecat/otto-sdk/lib/functional/user';
 import { authRefreshSignIn } from '@cooodecat/otto-sdk/lib/functional/auth/refresh';
 import { authSignOut } from '@cooodecat/otto-sdk/lib/functional/auth/logout';
+import { functional } from '@cooodecat/otto-sdk';
+import { projectGetRecentPipeline } from '@cooodecat/otto-sdk/lib/functional/projects/recent_pipeline';
 import { mapErrorToUserMessage, type ErrorInfo } from '@/app/lib/error-messages';
 
 // 인증 상태 타입
@@ -228,6 +230,41 @@ export function useAuth() {
     return await checkSession();
   }, [checkSession]);
 
+  // 로그인 후 적절한 라우트 결정
+  const determinePostLoginRoute = useCallback(async (): Promise<string> => {
+    try {
+      const connection = makeFetch();
+      
+      // 프로젝트 목록 조회
+      const projects = await functional.projects.projectGetUserProjects(connection);
+      
+      if (projects.length === 0) {
+        // 신규 유저: 온보딩으로 이동
+        return '/projects/onboarding';
+      }
+      
+      // 기존 유저: 최근 활동 파이프라인 조회
+      try {
+        const recentPipeline = await projectGetRecentPipeline(connection);
+        
+        if (recentPipeline) {
+          return `/projects/${recentPipeline.projectId}/pipelines/${recentPipeline.pipelineId}`;
+        }
+      } catch (error) {
+        console.warn('최근 파이프라인 조회 실패:', error);
+        // 최근 파이프라인 조회 실패 시 프로젝트 목록으로
+      }
+      
+      // 파이프라인이 없으면 첫 번째 프로젝트의 파이프라인 목록으로
+      return `/projects/${projects[0]?.projectId}/pipelines`;
+      
+    } catch (error) {
+      console.error('Failed to determine post-login route:', error);
+      // 에러 시 기본값: 온보딩으로 (새 사용자로 간주)
+      return '/projects/onboarding';
+    }
+  }, []);
+
   return {
     ...authState,
     signIn,
@@ -236,6 +273,7 @@ export function useAuth() {
     signOut,
     validateToken,
     refreshToken,
+    determinePostLoginRoute,
     errorInfo: authState.errorInfo, // 에러 상세 정보 노출
   };
 }

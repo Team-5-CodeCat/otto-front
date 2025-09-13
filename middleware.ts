@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// 보호된 경로 목록
+// 보호된 경로 목록 (/projects는 더 이상 존재하지 않으므로 제거)
 const protectedPaths = [
-  '/projects',
+  '/projects/', // /projects/onboarding, /projects/[projectId] 등은 보호
   '/pipelines',
   '/builds',
   '/settings',
@@ -55,9 +55,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/signin', request.url));
   }
 
-  // 공개 전용 경로인데 이미 인증된 경우
+  // 공개 전용 경로인데 이미 인증된 경우 - 온보딩으로 보내서 적절한 페이지로 리다이렉트
   if (isPublicOnlyPath && isAuthenticated) {
-    return NextResponse.redirect(new URL('/projects', request.url));
+    return NextResponse.redirect(new URL('/projects/onboarding', request.url));
   }
 
   return NextResponse.next();

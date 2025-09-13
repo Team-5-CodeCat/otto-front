@@ -102,21 +102,21 @@ export async function handleGitHubCallback(): Promise<{
     const { code, state } = extractOAuthParams();
 
     if (!code) {
-      return { success: false, error: 'Authorization code not found' };
+      return { success: false, error: '인증 코드를 찾을 수 없습니다' };
     }
 
     if (!state || !verifyOAuthState(state)) {
-      return { success: false, error: 'Invalid state parameter' };
+      return { success: false, error: '잘못된 상태 매개변수입니다' };
     }
 
     const tokens = await exchangeCodeForToken(code, state);
 
     return { success: true, tokens };
   } catch (error) {
-    console.error('GitHub OAuth callback error:', error);
+    console.error('GitHub OAuth 콜백 오류:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'OAuth callback failed',
+      error: error instanceof Error ? error.message : 'OAuth 콜백에 실패했습니다',
     };
   }
 }

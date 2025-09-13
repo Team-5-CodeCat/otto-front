@@ -194,10 +194,17 @@ export function useGitHubIntegration() {
       setLoading((prev) => ({ ...prev, installations: true }));
       setErrors((prev) => ({ ...prev, installations: null }));
 
-      const installations =
+      const installationsResponse =
         await functional.projects.github_installations.projectGetUserGithubInstallations(
           connection
         );
+      
+      // API 응답을 GitHubInstallation 형태로 변환 (id 필드 추가)
+      const installations = installationsResponse.map((installation) => ({
+        ...installation,
+        id: installation.installationId, // id 필드를 installationId로 매핑
+      }));
+      
       setData((prev) => ({ ...prev, installations }));
 
       return installations;

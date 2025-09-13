@@ -28,11 +28,9 @@ export default function PipelineDetailPage() {
     onNodesChange,
     onEdgesChange,
     onConnect,
-    selectedNodeId,
-    setSelectedNodeId,
   } = usePipeline();
   
-  const { setTab } = useUIStore();
+  const _uiStore = useUIStore();
 
   useEffect(() => {
     // 파이프라인 데이터 로드
@@ -67,7 +65,7 @@ export default function PipelineDetailPage() {
   const handleRun = async () => {
     try {
       // TODO: 파이프라인 실행 로직
-      console.log('Running pipeline...', { projectId, pipelineId });
+      console.log('파이프라인 실행 중...', { projectId, pipelineId });
     } catch (error) {
       console.error('Failed to run pipeline:', error);
     }
@@ -78,7 +76,7 @@ export default function PipelineDetailPage() {
       <div className="w-full h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading pipeline...</p>
+          <p className="mt-4 text-gray-600">파이프라인을 불러오는 중...</p>
         </div>
       </div>
     );
@@ -92,9 +90,9 @@ export default function PipelineDetailPage() {
           {/* 왼쪽: 뒤로가기 및 파이프라인 정보 */}
           <div className="flex items-center space-x-4">
             <button
-              onClick={() => router.push(`/projects/${projectId}`)}
+              onClick={() => router.push(`/projects/${projectId}/pipelines`)}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Back to project"
+              title="파이프라인으로 돌아가기"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
@@ -108,7 +106,7 @@ export default function PipelineDetailPage() {
           {/* 오른쪽: 액션 버튼들 */}
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => setTab('settings')}
+              onClick={() => {}} // setTab 메서드가 UI 스토어에 없으므로 빈 함수로 대체
               className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-2"
             >
               <Settings className="w-4 h-4" />
@@ -128,7 +126,7 @@ export default function PipelineDetailPage() {
               className="px-4 py-2 bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg transition-colors flex items-center space-x-2"
             >
               <Play className="w-4 h-4" />
-              <span>Run</span>
+              <span>실행</span>
             </button>
           </div>
         </div>
@@ -139,11 +137,13 @@ export default function PipelineDetailPage() {
         <FlowCanvas
           nodes={nodes}
           edges={edges}
+          jsonText=""
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          selectedNodeId={selectedNodeId}
-          setSelectedNodeId={setSelectedNodeId}
+          onAddNode={() => {}}
+          onJsonChange={() => {}}
+          onUpdateNodeEnvironment={() => {}}
         />
       </div>
     </div>

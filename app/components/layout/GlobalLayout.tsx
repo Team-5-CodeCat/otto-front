@@ -11,7 +11,7 @@ interface GlobalLayoutProps {
 /**
  * 사이드바가 표시되지 않아야 하는 경로들
  */
-const SIDEBAR_EXCLUDED_PATHS = ['/', '/signin', '/callback', '/signup'];
+const SIDEBAR_EXCLUDED_PATHS = ['/', '/signin', '/callback', '/signup', '/projects/onboarding'];
 
 /**
  * 캔버스 레이아웃이 필요한 경로 패턴

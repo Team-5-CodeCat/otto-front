@@ -94,7 +94,7 @@ const PipelineLogsPage: React.FC<PipelineLogsPageProps> = () => {
     setDisplayedLogs(initialLogs);
     setPage(1);
     setNewLogIds(new Set(['5']));
-  }, []);
+  }, [sampleLogs]);
 
   // 더 많은 데이터 로드 함수
   const loadMore = useCallback(() => {
@@ -122,7 +122,7 @@ const PipelineLogsPage: React.FC<PipelineLogsPageProps> = () => {
       
       setIsLoading(false);
     }, 1000); // 1초 딜레이 시뮬레이션
-  }, [isLoading, hasMore, page, displayedLogs.length]);
+  }, [isLoading, hasMore, page, displayedLogs.length, sampleLogs]);
 
   // Live 모드 시뮬레이션 (polling 시뮬레이션)
   useEffect(() => {
@@ -167,7 +167,7 @@ const PipelineLogsPage: React.FC<PipelineLogsPageProps> = () => {
           {/* 로그 테이블 - 스크롤 가능 */}
           <div className='flex-1 overflow-hidden'>
             <PipelineLogsTable 
-              logs={displayedLogs} 
+              logs={displayedLogs as any} 
               newLogIds={newLogIds}
               onLoadMore={loadMore}
               hasMore={hasMore}
