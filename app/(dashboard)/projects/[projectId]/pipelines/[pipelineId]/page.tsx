@@ -8,6 +8,7 @@ import { usePipeline } from '@/app/(dashboard)/pipelines/components/usePipeline'
 import { useUIStore } from '@/app/lib/uiStore';
 import { functional } from '@cooodecat/otto-sdk';
 import makeFetch from '@/app/lib/make-fetch';
+import { createPipelineRun } from '@/app/lib/pipelineRunManager';
 
 /**
  * 파이프라인 상세 페이지
@@ -50,10 +51,10 @@ export default function PipelineDetailPage() {
   }, [pipelineId]);
 
   /**
-   * 파이프라인을 저장하고 즉시 실행합니다.
+   * 기존 파이프라인을 업데이트하고 새로운 실행 기록을 생성합니다.
    *
-   * @description 현재 파이프라인의 JSON 데이터를 백엔드에 저장한 후 실행을 시작합니다.
-   * 웹훅 트리거와 동일한 JSON 구조(AnyBlock[])를 사용합니다.
+   * @description 현재 편집 중인 파이프라인 JSON으로 기존 파이프라인을 업데이트한 후
+   * 새로운 실행 기록(Run)을 생성하여 실행합니다. 매번 실행 번호가 증가합니다.
    *
    * @async
    * @returns {Promise<void>} 실행 시작시 resolve되는 Promise
@@ -61,15 +62,13 @@ export default function PipelineDetailPage() {
    *
    * @example
    * ```typescript
-   * // 실행 버튼 클릭시 호출
+   * // 실행 버튼 클릭시 호출 - Run #1, #2, #3... 자동 증가
    * await handleRun();
    * ```
-   *
-   * @see {@link https://docs.anthropic.com/en/docs/claude-code} - 웹훅과 동일한 JSON 구조 사용
    */
   const handleRun = async (): Promise<void> => {
     try {
-      console.log('파이프라인 저장 및 실행 중...', { projectId, pipelineId });
+      console.log('파이프라인 업데이트 및 실행 중...', { projectId, pipelineId });
 
       // JSON 내용 검증
       if (!jsonText.trim() || jsonText.trim() === '[]') {
@@ -83,20 +82,36 @@ export default function PipelineDetailPage() {
       const connection = makeFetch();
 
       try {
-        // 1. 파이프라인 저장
+        // 1. 기존 파이프라인 업데이트 (임시: 새로 생성)
+        // TODO: 백엔드에 파이프라인 업데이트 API 구현 필요
         const result = await functional.pipelines.create(connection, {
-          name: `pipeline-execution-${Date.now()}`,
+          name: `${pipelineName}-updated-${Date.now()}`,
           content: jsonText,
           projectID: projectId,
           version: 1,
         } as any);
 
-        console.log('파이프라인 저장 결과:', result);
+        console.log('파이프라인 업데이트 완료:', result.pipelineId);
 
-        // 2. TODO: 파이프라인 실행 트리거 (백엔드 실행 API 준비되면 추가)
-        // await functional.pipelines.execute(connection, result.pipelineId);
+        // 2. 새로운 실행 기록(Run) 생성
+        const runResult = await createPipelineRun({
+          pipelineId: result.pipelineId,
+          trigger: 'manual',
+          triggerBy: 'user', // TODO: 실제 사용자 ID 사용
+          pipelineSnapshot: jsonText,
+        });
 
-        alert(`파이프라인이 저장되고 실행이 시작되었습니다!\nPipeline ID: ${result.pipelineId}`);
+        console.log('파이프라인 실행 기록 생성:', {
+          runId: runResult.id,
+          runNumber: runResult.runNumber,
+          pipelineId: runResult.pipelineId,
+        });
+
+        alert(
+          `파이프라인 실행이 시작되었습니다!\n` +
+          `Pipeline ID: ${result.pipelineId}\n` +
+          `Run #${runResult.runNumber} (${runResult.id})`
+        );
       } catch (apiError) {
         console.error('SDK API 호출 실패:', apiError);
         alert(

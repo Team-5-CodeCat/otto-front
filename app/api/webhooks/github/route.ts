@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { functional } from '@cooodecat/otto-sdk';
 import makeFetch from '@/app/lib/make-fetch';
 import { findPipelineByWebhook } from '@/app/lib/webhookManager';
+import { createPipelineRun } from '@/app/lib/pipelineRunManager';
 
 /**
  * GitHub 웹훅 페이로드 타입 정의
@@ -64,66 +65,81 @@ function extractBranchName(ref: string): string {
 
 
 /**
- * 연결된 파이프라인을 기존 정의대로 실행합니다 (새로 생성하지 않음).
+ * 연결된 파이프라인의 새로운 실행 기록(Run)을 생성합니다.
  *
- * @description GitHub 웹훅으로 트리거될 때 기존에 생성된 파이프라인을 실행합니다.
- * 새로운 파이프라인을 생성하지 않고 기존 파이프라인의 정의를 사용하여 실행합니다.
+ * @description GitHub 웹훅으로 트리거될 때 기존 파이프라인의 새로운 Run 기록을 생성하고
+ * 실행 번호를 자동으로 증가시킵니다. 파이프라인 정의는 변경하지 않고 실행만 수행합니다.
  *
  * @async
  * @param pipelineId - 실행할 기존 파이프라인의 ID
- * @param webhookData - GitHub 웹훅 페이로드 (로깅용)
- * @returns 파이프라인 실행 결과
+ * @param webhookData - GitHub 웹훅 페이로드
+ * @returns 파이프라인 실행 Run 기록
  * @throws {Error} 파이프라인 실행 중 오류 발생시
  *
  * @example
  * ```typescript
- * const result = await executeExistingPipeline(
+ * const result = await createWebhookPipelineRun(
  *   "pipeline-123",
  *   webhookPayload
  * );
+ * // Result: { runId: "run-456", runNumber: 5, ... }
  * ```
- *
- * @todo 백엔드에 기존 파이프라인 실행 API 구현 필요
- * 현재는 임시로 새 파이프라인 생성 방식 사용
  */
-async function executeExistingPipeline(
+async function createWebhookPipelineRun(
   pipelineId: string,
   webhookData: GitHubWebhookPayload
 ) {
   try {
     const connection = makeFetch();
 
-    // TODO: 백엔드에 기존 파이프라인 실행 API가 필요
-    // 예: await functional.pipelines.execute(connection, pipelineId);
-
-    // 현재는 임시로 기존 파이프라인을 조회해서 새로운 실행 인스턴스 생성
+    // 1. 기존 파이프라인 조회 (실행할 파이프라인 정의 확인)
     const existingPipeline = await functional.pipelines.findOne(connection, pipelineId);
 
     if (!existingPipeline) {
       throw new Error(`파이프라인을 찾을 수 없습니다: ${pipelineId}`);
     }
 
-    // 기존 파이프라인의 content를 사용해서 새 실행 인스턴스 생성
-    const result = await functional.pipelines.create(connection, {
-      name: `webhook-${extractBranchName(webhookData.ref)}-${Date.now()}`,
-      content: (existingPipeline as any).content || '[]',
-      projectID: (existingPipeline as any).projectId,
-      version: 1,
-    } as any);
+    const pipelineContent = (existingPipeline as any).content || '[]';
 
-    console.log('웹훅으로 연결된 파이프라인 실행 완료:', {
-      originalPipelineId: pipelineId,
-      executionPipelineId: result.pipelineId,
+    // 2. 웹훅 트리거 메타데이터 생성
+    const webhookTriggerData = {
       repository: webhookData.repository.full_name,
       branch: extractBranchName(webhookData.ref),
-      commit: webhookData.head_commit.id.substring(0, 7),
+      commit: webhookData.head_commit.id,
       commitMessage: webhookData.head_commit.message,
+      author: webhookData.head_commit.author?.name || 'Unknown',
+      webhookReceivedAt: new Date().toISOString(),
+    };
+
+    // 3. 새로운 파이프라인 실행 기록(Run) 생성
+    const runResult = await createPipelineRun({
+      pipelineId: pipelineId,
+      trigger: 'webhook',
+      triggerBy: 'github',
+      pipelineSnapshot: pipelineContent,
+      webhookData: webhookTriggerData,
     });
 
-    return { success: true, pipelineId: result.pipelineId, originalPipelineId: pipelineId };
+    console.log('웹훅으로 파이프라인 실행 기록 생성 완료:', {
+      pipelineId: pipelineId,
+      runId: runResult.id,
+      runNumber: runResult.runNumber,
+      repository: webhookTriggerData.repository,
+      branch: webhookTriggerData.branch,
+      commit: webhookTriggerData.commit.substring(0, 7),
+      commitMessage: webhookTriggerData.commitMessage,
+    });
+
+    return {
+      success: true,
+      pipelineId: pipelineId,
+      runId: runResult.id,
+      runNumber: runResult.runNumber,
+      webhookData: webhookTriggerData,
+    };
 
   } catch (error) {
-    console.error('연결된 파이프라인 실행 실패:', error);
+    console.error('웹훅 파이프라인 실행 기록 생성 실패:', error);
     throw error;
   }
 }
@@ -211,24 +227,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 7. 연결된 기존 파이프라인 실행
-    const result = await executeExistingPipeline(webhookMatch.pipelineId, payload);
+    // 7. 연결된 파이프라인의 새로운 실행 기록(Run) 생성
+    const result = await createWebhookPipelineRun(webhookMatch.pipelineId, payload);
 
     // 8. 성공 응답
     return NextResponse.json({
       success: true,
-      message: '연결된 파이프라인 자동 실행이 시작되었습니다.',
+      message: '연결된 파이프라인 실행이 시작되었습니다.',
       data: {
-        originalPipelineId: result.originalPipelineId,
-        executionPipelineId: result.pipelineId,
+        pipelineId: result.pipelineId,
+        runId: result.runId,
+        runNumber: result.runNumber,
         projectId: webhookMatch.projectId,
-        repository: payload.repository.full_name,
-        branch: branchName,
-        commit: payload.head_commit.id.substring(0, 7),
-        commitMessage: payload.head_commit.message,
+        repository: result.webhookData.repository,
+        branch: result.webhookData.branch,
+        commit: result.webhookData.commit.substring(0, 7),
+        commitMessage: result.webhookData.commitMessage,
+        author: result.webhookData.author,
         webhookConfig: {
           triggerBranch: webhookMatch.webhookConfig.triggerBranch,
           githubRepoName: webhookMatch.webhookConfig.githubRepoName,
+        },
+        execution: {
+          trigger: 'webhook',
+          startedAt: new Date().toISOString(),
         },
       },
     });
