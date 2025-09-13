@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { functional } from '@cooodecat/otto-sdk';
 import makeFetch from '@/app/lib/make-fetch';
+import { findPipelineByWebhook } from '@/app/lib/webhookManager';
 
 /**
  * GitHub 웹훅 페이로드 타입 정의
@@ -61,147 +62,68 @@ function extractBranchName(ref: string): string {
   return ref.replace('refs/heads/', '');
 }
 
-/**
- * GitHub 저장소 ID를 기반으로 연결된 프로젝트를 찾습니다.
- *
- * @description GitHub 저장소 ID와 프로젝트 간의 매핑을 통해 웹훅을 수신할
- * 해당하는 프로젝트를 식별합니다. 현재는 임시로 첫 번째 프로젝트를 반환하지만,
- * 실제로는 프로젝트 테이블에 github_repo_id 필드가 필요합니다.
- *
- * @async
- * @param repositoryId - GitHub 저장소의 고유 ID
- * @returns 매칭되는 프로젝트 ID 또는 null (찾지 못한 경우)
- * @throws {Error} 프로젝트 조회 중 오류 발생시
- *
- * @example
- * ```typescript
- * const projectId = await findProjectByRepository(123456789);
- * if (projectId) {
- *   console.log(`찾은 프로젝트: ${projectId}`);
- * } else {
- *   console.log('연결된 프로젝트가 없습니다.');
- * }
- * ```
- *
- * @todo 백엔드에 저장소 ID -> 프로젝트 매핑 API 구현 필요
- */
-async function findProjectByRepository(repositoryId: number): Promise<string | null> {
-  try {
-    const connection = makeFetch();
-
-    // TODO: 백엔드에 저장소 ID -> 프로젝트 매핑 API가 필요
-    // 현재는 임시로 모든 프로젝트를 조회해서 찾는 방식 사용
-    const projects = await functional.projects.projectGetUserProjects(connection);
-
-    // 실제로는 프로젝트 테이블에 github_repo_id 필드가 있어야 함
-    // 현재는 첫 번째 프로젝트를 반환 (임시)
-    if (projects.length > 0) {
-      return projects[0].projectId;
-    }
-
-    return null;
-  } catch (error) {
-    console.error('프로젝트 조회 실패:', error);
-    return null;
-  }
-}
 
 /**
- * 지정된 프로젝트의 활성 파이프라인을 조회합니다.
+ * 연결된 파이프라인을 기존 정의대로 실행합니다 (새로 생성하지 않음).
  *
- * @description 프로젝트 ID를 기반으로 해당 프로젝트에 등록된 파이프라인 중
- * 가장 최근에 생성된 파이프라인을 반환합니다. 웹훅으로 자동 실행할 파이프라인을 결정합니다.
- *
- * @async
- * @param projectId - 파이프라인을 조회할 프로젝트의 고유 ID
- * @returns 활성 파이프라인 객체 또는 null (파이프라인이 없는 경우)
- * @throws {Error} 파이프라인 조회 중 오류 발생시
- *
- * @example
- * ```typescript
- * const pipeline = await getActivePipeline("project-123");
- * if (pipeline && pipeline.content) {
- *   console.log(`활성 파이프라인: ${pipeline.name}`);
- *   // 파이프라인 실행 로직
- * } else {
- *   console.log('실행할 파이프라인이 없습니다.');
- * }
- * ```
- */
-async function getActivePipeline(projectId: string) {
-  try {
-    const connection = makeFetch();
-    const result = await functional.pipelines.findAll(connection, {
-      projectId: projectId,
-      page: 1,
-      limit: 1
-    });
-
-    if (result.pipelines && result.pipelines.length > 0) {
-      return result.pipelines[0];
-    }
-
-    return null;
-  } catch (error) {
-    console.error('파이프라인 조회 실패:', error);
-    return null;
-  }
-}
-
-/**
- * 웹훅으로 트리거된 파이프라인을 자동 실행합니다.
- *
- * @description GitHub 웹훅 이벤트를 기반으로 파이프라인을 생성하고 실행합니다.
- * 수동 실행과 동일한 otto-sdk API를 사용하여 일관된 실행 방식을 보장합니다.
+ * @description GitHub 웹훅으로 트리거될 때 기존에 생성된 파이프라인을 실행합니다.
+ * 새로운 파이프라인을 생성하지 않고 기존 파이프라인의 정의를 사용하여 실행합니다.
  *
  * @async
- * @param projectId - 파이프라인을 실행할 프로젝트의 고유 ID
- * @param pipelineContent - 실행할 파이프라인의 JSON 콘텐츠 (AnyBlock[] 구조)
- * @param webhookData - GitHub 웹훅 페이로드 (로깅 및 메타데이터용)
- * @returns 파이프라인 실행 결과 (success, pipelineId 포함)
+ * @param pipelineId - 실행할 기존 파이프라인의 ID
+ * @param webhookData - GitHub 웹훅 페이로드 (로깅용)
+ * @returns 파이프라인 실행 결과
  * @throws {Error} 파이프라인 실행 중 오류 발생시
  *
  * @example
  * ```typescript
- * const result = await executePipeline(
- *   "project-123",
- *   '["pipeline", "json", "content"]',
+ * const result = await executeExistingPipeline(
+ *   "pipeline-123",
  *   webhookPayload
  * );
- *
- * console.log(`실행된 파이프라인 ID: ${result.pipelineId}`);
  * ```
  *
- * @see {@link handleRun} - 수동 실행과 동일한 API 사용
+ * @todo 백엔드에 기존 파이프라인 실행 API 구현 필요
+ * 현재는 임시로 새 파이프라인 생성 방식 사용
  */
-async function executePipeline(
-  projectId: string,
-  pipelineContent: string,
+async function executeExistingPipeline(
+  pipelineId: string,
   webhookData: GitHubWebhookPayload
 ) {
   try {
     const connection = makeFetch();
 
-    // 웹훅 트리거로 파이프라인 생성 및 실행
+    // TODO: 백엔드에 기존 파이프라인 실행 API가 필요
+    // 예: await functional.pipelines.execute(connection, pipelineId);
+
+    // 현재는 임시로 기존 파이프라인을 조회해서 새로운 실행 인스턴스 생성
+    const existingPipeline = await functional.pipelines.findOne(connection, pipelineId);
+
+    if (!existingPipeline) {
+      throw new Error(`파이프라인을 찾을 수 없습니다: ${pipelineId}`);
+    }
+
+    // 기존 파이프라인의 content를 사용해서 새 실행 인스턴스 생성
     const result = await functional.pipelines.create(connection, {
-      name: `webhook-trigger-${Date.now()}`,
-      content: pipelineContent,
-      projectID: projectId,
+      name: `webhook-${extractBranchName(webhookData.ref)}-${Date.now()}`,
+      content: (existingPipeline as any).content || '[]',
+      projectID: (existingPipeline as any).projectId,
       version: 1,
     } as any);
 
-    console.log('웹훅으로 파이프라인 실행 완료:', {
-      pipelineId: result.pipelineId,
+    console.log('웹훅으로 연결된 파이프라인 실행 완료:', {
+      originalPipelineId: pipelineId,
+      executionPipelineId: result.pipelineId,
       repository: webhookData.repository.full_name,
       branch: extractBranchName(webhookData.ref),
       commit: webhookData.head_commit.id.substring(0, 7),
       commitMessage: webhookData.head_commit.message,
     });
 
-    return { success: true, pipelineId: result.pipelineId };
+    return { success: true, pipelineId: result.pipelineId, originalPipelineId: pipelineId };
 
   } catch (error) {
-    console.error('웹훅 파이프라인 실행 실패:', error);
+    console.error('연결된 파이프라인 실행 실패:', error);
     throw error;
   }
 }
@@ -270,40 +192,44 @@ export async function POST(request: NextRequest) {
     const branchName = extractBranchName(payload.ref);
     console.log(`웹훅 처리 시작: ${payload.repository.full_name}/${branchName}`);
 
-    // 5. 저장소 ID로 프로젝트 찾기
-    const projectId = await findProjectByRepository(payload.repository.id);
-    if (!projectId) {
-      console.log('해당 저장소와 연결된 프로젝트를 찾을 수 없습니다.');
+    // 5. 저장소 ID와 브랜치로 연결된 파이프라인 찾기
+    const webhookMatch = await findPipelineByWebhook(payload.repository.id, branchName);
+    if (!webhookMatch) {
+      console.log(`해당 저장소와 브랜치에 연결된 파이프라인이 없습니다: ${payload.repository.full_name}/${branchName}`);
       return NextResponse.json(
-        { error: '연결된 프로젝트를 찾을 수 없습니다.' },
+        { error: '연결된 파이프라인이 없습니다.' },
         { status: 404 }
       );
     }
 
-    // 6. 프로젝트의 활성 파이프라인 조회
-    const pipeline = await getActivePipeline(projectId);
-    if (!pipeline || !pipeline.content) {
-      console.log('실행할 활성 파이프라인이 없습니다.');
+    // 6. 파이프라인 실행 가능 여부 확인
+    if (!webhookMatch.canExecute) {
+      console.log(`파이프라인 실행 불가: ${webhookMatch.reason}`);
       return NextResponse.json(
-        { error: '실행할 파이프라인이 없습니다.' },
-        { status: 404 }
+        { error: webhookMatch.reason || '파이프라인을 실행할 수 없습니다.' },
+        { status: 400 }
       );
     }
 
-    // 7. 파이프라인 자동 실행
-    const result = await executePipeline(projectId, pipeline.content, payload);
+    // 7. 연결된 기존 파이프라인 실행
+    const result = await executeExistingPipeline(webhookMatch.pipelineId, payload);
 
     // 8. 성공 응답
     return NextResponse.json({
       success: true,
-      message: '파이프라인 자동 실행이 시작되었습니다.',
+      message: '연결된 파이프라인 자동 실행이 시작되었습니다.',
       data: {
-        pipelineId: result.pipelineId,
-        projectId: projectId,
+        originalPipelineId: result.originalPipelineId,
+        executionPipelineId: result.pipelineId,
+        projectId: webhookMatch.projectId,
         repository: payload.repository.full_name,
         branch: branchName,
         commit: payload.head_commit.id.substring(0, 7),
         commitMessage: payload.head_commit.message,
+        webhookConfig: {
+          triggerBranch: webhookMatch.webhookConfig.triggerBranch,
+          githubRepoName: webhookMatch.webhookConfig.githubRepoName,
+        },
       },
     });
 
