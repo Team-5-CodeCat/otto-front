@@ -9,6 +9,7 @@ interface PipelineLogsHeaderProps {
   onLiveToggle: (value: boolean) => void;
   searchQuery: string;
   onSearchChange: (value: string) => void;
+  unreadCount?: number; // 읽지 않은 로그 개수
 }
 
 // 향상된 헤더 컴포넌트
@@ -17,6 +18,7 @@ const PipelineLogsHeader: React.FC<PipelineLogsHeaderProps> = ({
   onLiveToggle,
   searchQuery,
   onSearchChange,
+  unreadCount = 0,
 }) => {
   return (
     <div className='bg-gradient-to-r from-white to-gray-50/50 rounded-xl shadow-lg border border-gray-200 p-6 backdrop-blur-sm'>
@@ -24,6 +26,14 @@ const PipelineLogsHeader: React.FC<PipelineLogsHeaderProps> = ({
         <div className='flex items-center gap-3'>
           <div className='h-8 w-1 bg-gradient-to-b from-blue-500 to-purple-600 rounded-full'></div>
           <h1 className='text-2xl font-bold text-gray-900'>Pipeline Logs</h1>
+          {unreadCount > 0 && (
+            <div className='flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full border border-blue-200'>
+              <div className='w-2 h-2 bg-blue-500 rounded-full animate-pulse'></div>
+              <span className='text-sm font-medium'>
+                {unreadCount} new build{unreadCount > 1 ? 's' : ''}
+              </span>
+            </div>
+          )}
         </div>
         <div className='flex items-center gap-4'>
           <ToggleSwitch label='Live' isOn={isLive} onToggle={onLiveToggle} />

@@ -96,6 +96,26 @@ const PipelineLogsPage: React.FC<PipelineLogsPageProps> = () => {
     setNewLogIds(new Set(['5']));
   }, []);
 
+  // 검색 필터링 함수
+  const filterLogs = useCallback((logs: any[], query: string) => {
+    if (!query.trim()) return logs;
+    
+    const searchTerm = query.toLowerCase().trim();
+    return logs.filter(log => 
+      log.pipelineName.toLowerCase().includes(searchTerm) ||
+      log.trigger.type.toLowerCase().includes(searchTerm) ||
+      log.trigger.author.toLowerCase().includes(searchTerm) ||
+      log.branch.toLowerCase().includes(searchTerm) ||
+      log.commit.message.toLowerCase().includes(searchTerm) ||
+      log.commit.author.toLowerCase().includes(searchTerm) ||
+      log.commit.sha.toLowerCase().includes(searchTerm) ||
+      log.status.toLowerCase().includes(searchTerm)
+    );
+  }, []);
+
+  // 필터링된 로그 계산
+  const filteredLogs = filterLogs(displayedLogs, searchQuery);
+
   // 더 많은 데이터 로드 함수
   const loadMore = useCallback(() => {
     if (isLoading || !hasMore) return;
@@ -144,6 +164,15 @@ const PipelineLogsPage: React.FC<PipelineLogsPageProps> = () => {
     setSearchQuery(query);
   };
 
+  // 로그를 읽음 처리할 때 newLogIds에서도 제거
+  const handleMarkAsRead = (logId: string) => {
+    setNewLogIds(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(logId);
+      return newSet;
+    });
+  };
+
   return (
     <div className='h-screen bg-gradient-to-br from-gray-50 to-blue-50/20 p-4 flex flex-col overflow-hidden'>
       <div className='flex gap-6 flex-1 max-w-[1600px] mx-auto w-full overflow-hidden'>
@@ -161,17 +190,20 @@ const PipelineLogsPage: React.FC<PipelineLogsPageProps> = () => {
               onLiveToggle={handleLiveToggle}
               searchQuery={searchQuery}
               onSearchChange={handleSearchChange}
+              unreadCount={newLogIds.size}
             />
           </div>
 
           {/* 로그 테이블 - 스크롤 가능 */}
           <div className='flex-1 overflow-hidden'>
             <PipelineLogsTable 
-              logs={displayedLogs} 
+              logs={filteredLogs} 
               newLogIds={newLogIds}
               onLoadMore={loadMore}
               hasMore={hasMore}
               isLoading={isLoading}
+              searchQuery={searchQuery}
+              onMarkAsRead={handleMarkAsRead}
             />
           </div>
         </div>
