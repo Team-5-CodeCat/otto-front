@@ -31,7 +31,7 @@ export function createGitHubOAuthUrl(): string {
   const state = generateRandomState();
   saveOAuthState(state);
 
-  const redirectUri = `${window.location.origin}/auth/callback`;
+  const redirectUri = `${window.location.origin}/callback`;
 
   const params = new URLSearchParams({
     client_id: GITHUB_CLIENT_ID,
@@ -64,67 +64,59 @@ export function extractOAuthParams(): { code: string | null; state: string | nul
   };
 }
 
-// GitHub API - 액세스 토큰 교환
-export async function exchangeCodeForToken(_code: string): Promise<string> {
-  // TODO: API 요청 구현 - GitHub OAuth code를 access token으로 교환
-  // POST /api/auth/github/callback
-  // Body: { code: string }
-  // Response: { access_token: string }
-
-  throw new Error('GitHub token exchange not implemented yet');
-}
-
-// GitHub API - 사용자 정보 조회
-export async function fetchGitHubUser(_accessToken: string): Promise<{
-  id: number;
-  login: string;
-  email: string;
-  name: string;
-  avatar_url: string;
+// GitHub API - 액세스 토큰 교환 (otto-sdk 사용)
+export async function exchangeCodeForToken(
+  code: string,
+  state: string
+): Promise<{
+  accessToken: string;
+  refreshToken: string;
+  accessTokenExpiresIn: number;
+  refreshTokenExpiresIn: number;
+  message: string;
 }> {
-  // TODO: API 요청 구현 - GitHub 사용자 정보 조회
-  // GET /api/auth/github/user
-  // Headers: { Authorization: `Bearer ${accessToken}` }
+  const { authGithubSignIn } = await import('@cooodecat/otto-sdk/lib/functional/auth/github');
+  const makeFetch = (await import('@/app/lib/make-fetch')).default;
 
-  throw new Error('GitHub user fetch not implemented yet');
-}
+  const response = await authGithubSignIn(makeFetch(), {
+    code,
+    state,
+  });
 
-// GitHub 사용자 정보 타입 정의
-interface GitHubUser {
-  id: number;
-  login: string;
-  email: string;
-  name: string;
-  avatar_url: string;
+  return response;
 }
 
 // 통합 GitHub 로그인 플로우
 export async function handleGitHubCallback(): Promise<{
   success: boolean;
   error?: string;
-  user?: GitHubUser;
+  tokens?: {
+    accessToken: string;
+    refreshToken: string;
+    accessTokenExpiresIn: number;
+    refreshTokenExpiresIn: number;
+    message: string;
+  };
 }> {
   try {
     const { code, state } = extractOAuthParams();
 
     if (!code) {
-      return { success: false, error: 'Authorization code not found' };
+      return { success: false, error: '인증 코드를 찾을 수 없습니다' };
     }
 
     if (!state || !verifyOAuthState(state)) {
-      return { success: false, error: 'Invalid state parameter' };
+      return { success: false, error: '잘못된 상태 매개변수입니다' };
     }
 
-    // TODO: 실제 API 호출로 대체
-    const accessToken = await exchangeCodeForToken(code);
-    const user = await fetchGitHubUser(accessToken);
+    const tokens = await exchangeCodeForToken(code, state);
 
-    return { success: true, user };
+    return { success: true, tokens };
   } catch (error) {
-    console.error('GitHub OAuth callback error:', error);
+    console.error('GitHub OAuth 콜백 오류:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'OAuth callback failed',
+      error: error instanceof Error ? error.message : 'OAuth 콜백에 실패했습니다',
     };
   }
 }

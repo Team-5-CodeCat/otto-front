@@ -60,7 +60,7 @@ interface FlowCanvasProps {
   onAddNode: (nodeType: string, position?: { x: number; y: number }) => void;
   onJsonChange: (value: string) => void;
   onUpdateNodeEnvironment: (nodeId: string, environment: Record<string, string>) => void;
-  onUpdateBlock?: (blockId: string, updatedBlock: any) => void;
+  onUpdateBlock?: (blockId: string, updatedBlock: AnyBlock) => void;
   // ✅ SDK 기반 함수들 추가
   onSavePipeline?: (
     name: string,
@@ -95,10 +95,10 @@ const FlowCanvasInner: React.FC<FlowCanvasProps> = ({
   // onUpdateBlock을 포함한 동적 노드 타입 생성
   const nodeTypes = React.useMemo(
     () => ({
-      jobNode: (props: { data: AnyBlock }) => <JobNode {...props} onUpdateBlock={onUpdateBlock} />,
-      blockNode: (props: { data: AnyBlock }) => (
-        <JobNode {...props} onUpdateBlock={onUpdateBlock} />
-      ),
+      jobNode: (props: { data: AnyBlock }) => 
+        onUpdateBlock ? <JobNode {...props} onUpdateBlock={onUpdateBlock} /> : <JobNode {...props} onUpdateBlock={() => {}} />,
+      blockNode: (props: { data: AnyBlock }) =>
+        onUpdateBlock ? <JobNode {...props} onUpdateBlock={onUpdateBlock} /> : <JobNode {...props} onUpdateBlock={() => {}} />,
     }),
     [onUpdateBlock]
   );

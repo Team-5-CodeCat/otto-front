@@ -2,7 +2,7 @@
 
 import React, { useEffect, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuth } from '@/app/contexts/AuthContext';
+import { useAuth } from '@/app/hooks/useAuth';
 
 // AuthGuard Props 타입
 interface AuthGuardProps {
@@ -29,14 +29,14 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
 
     // 인증이 필요한 페이지인데 인증되지 않은 경우
     if (requireAuth && !isAuthenticated) {
-      const redirectPath = redirectTo || `/signin?redirect=${encodeURIComponent(pathname)}`;
+      const redirectPath = redirectTo || '/signin';
       router.push(redirectPath);
       return;
     }
 
     // 인증이 필요하지 않은 페이지인데 인증된 경우 (로그인/회원가입 페이지 등)
     if (!requireAuth && isAuthenticated) {
-      const redirectPath = redirectTo || '/projects';
+      const redirectPath = redirectTo || '/projects/onboarding';
       router.push(redirectPath);
       return;
     }
@@ -63,10 +63,10 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
 
 // 기본 로딩 fallback 컴포넌트
 const DefaultLoadingFallback: React.FC = () => (
-  <div className='min-h-screen flex items-center justify-center bg-gray-50'>
+  <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-emerald-50/20'>
     <div className='text-center'>
-      <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto'></div>
-      <p className='mt-4 text-gray-600'>로딩 중...</p>
+      <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto'></div>
+      <p className='mt-4 text-gray-600'>인증을 확인하는 중...</p>
     </div>
   </div>
 );

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 import { LogData, PipelineStage, LogLine } from './types';
 
 // Mock log lines generator
@@ -76,7 +78,8 @@ const generateMockLogLines = (count: number, hasErrors: boolean = false): LogLin
     }
 
     const levelMessages = messages[level];
-    const message = levelMessages[Math.floor(Math.random() * levelMessages.length)];
+    const message =
+      levelMessages[Math.floor(Math.random() * levelMessages.length)] || 'Unknown message';
     const source = sources[Math.floor(Math.random() * sources.length)];
 
     logs.push({

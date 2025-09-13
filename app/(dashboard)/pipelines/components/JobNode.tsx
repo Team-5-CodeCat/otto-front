@@ -95,8 +95,8 @@ const JobNode: React.FC<JobNodeProps> = ({ data, onUpdateBlock }) => {
   };
 
   // 첫 번째/마지막 노드 처리는 on_success/on_failed 기반으로 판단
-  const hasIncomingConnection = data.on_failed || data.on_success; // 다른 노드에서 오는 연결 있을 것으로 추정
-  const hasOutgoingConnection = data.on_success || data.on_failed;
+  const _hasIncomingConnection = data.on_failed || data.on_success; // 다른 노드에서 오는 연결 있을 것으로 추정
+  const _hasOutgoingConnection = data.on_success || data.on_failed;
 
   return (
     <div className='px-4 py-3 shadow-lg rounded-lg bg-white border border-emerald-200 min-w-[180px] max-w-[220px] relative hover:shadow-xl transition-shadow'>

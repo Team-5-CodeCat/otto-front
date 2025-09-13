@@ -30,7 +30,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNodesState, useEdgesState, Edge, addEdge, Connection, NodeChange } from 'reactflow';
 import { blocksToNodes, blocksToEdges, nodesToBlocks, jsonToBlocks, blocksToJson } from './utils';
-import { AnyBlock, BlockType, CustomCommandBlock } from './types';
+import { AnyBlock, BlockType } from './types';
 // crypto.randomUUID() 사용 (브라우저 네이티브)
 
 export const usePipeline = () => {
@@ -178,7 +178,7 @@ export const usePipeline = () => {
           };
           break;
         case BlockType.CUSTOM_COMMAND:
-        default:
+        default: {
           // 기존 문자열 호환성을 위해 유지
           const isLegacyString = typeof blockType === 'string' && !Object.values(BlockType).includes(blockType as BlockType);
           newBlock = {
@@ -196,6 +196,7 @@ export const usePipeline = () => {
             on_success: '', // 새 블록은 연결되지 않은 상태로 시작
           };
           break;
+        }
       }
 
       const newNode = {

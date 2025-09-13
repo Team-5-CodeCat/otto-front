@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   Search,
   Plus,
@@ -14,6 +15,9 @@ import {
   Check,
 } from 'lucide-react';
 import SettingsModal from '../settings/SettingsModal';
+import { useProjectStore } from '@/lib/projectStore';
+import { usePipelineStore } from '@/lib/pipelineStore';
+import { SidebarSkeleton, WorkspaceDropdownSkeleton } from './SidebarSkeleton';
 
 /**
  * 블록 팔레트 아이템의 인터페이스
@@ -30,7 +34,7 @@ interface Block {
 /**
  * 폴더 섹션 아이템의 인터페이스
  */
-interface Folder {
+interface _Folder {
   /** 폴더의 표시 이름 */
   name: string;
   /** 폴더의 이모지 아이콘 */
@@ -50,51 +54,79 @@ interface BottomIcon {
 }
 
 /**
- * 워크스페이스의 인터페이스 (GitHub 연동 준비)
+ * 파이프라인 아이템의 인터페이스 (폴더 대신 사용)
  */
-interface Workspace {
-  /** 워크스페이스 고유 ID */
-  id: string;
-  /** 워크스페이스 표시 이름 */
+interface PipelineItem {
+  /** 파이프라인 표시 이름 */
   name: string;
-  /** GitHub 저장소 URL (옵션) */
-  githubUrl?: string;
-  /** 워크스페이스 소유자 */
-  owner: string;
-  /** 현재 선택된 워크스페이스인지 여부 */
+  /** 파이프라인 이모지 아이콘 */
+  icon: string;
+  /** 파이프라인 ID */
+  pipelineId: string;
+  /** 현재 파이프라인이 활성/선택 상태인지 여부 */
   isActive?: boolean;
 }
 
 /**
+ * 캔버스 레이아웃이 필요한 경로 패턴 체크
+ */
+const isCanvasLayoutPath = (pathname: string): boolean => {
+  if (pathname === '/pipelines') return true;
+  const pipelineDetailPattern = /^\/projects\/[^/]+\/pipelines\/[^/]+$/;
+  return pipelineDetailPattern.test(pathname);
+};
+
+/**
  * GlobalSidebar 컴포넌트
  *
- * 워크스페이스 네비게이션과 블록 팔레트 기능을 제공하는 플로팅 사이드바 컴포넌트입니다.
+ * 프로젝트 네비게이션과 파이프라인 관리, 블록 팔레트 기능을 제공하는 사이드바 컴포넌트입니다.
+ * 경로에 따라 두 가지 레이아웃 모드로 작동:
+ * 1. 캔버스 모드: 파이프라인 페이지에서 fixed positioning (floating)
+ * 2. 표준 모드: 그 외 페이지에서 relative positioning (분할 레이아웃)
+ *
  * 주요 기능:
- * - 검색 기능이 있는 워크스페이스 헤더
- * - 폴더 관리 섹션
+ * - 검색 기능이 있는 프로젝트 헤더
+ * - 파이프라인 관리 섹션
  * - 워크플로 생성을 위한 드래그 가능한 블록 팔레트
  * - 하단 네비게이션 아이콘
+ * - 실시간 데이터 로딩 및 스켈레톤 UI
  *
- * 사이드바는 화면 왼쪽에 고정된 오버레이로 위치하며,
- * 더 나은 시각적 계층구조를 위해 분리된 카드 섹션들로 구성됩니다.
- *
- * @returns 플로팅 사이드바를 나타내는 JSX 엘리먼트
+ * @returns 사이드바를 나타내는 JSX 엘리먼트
  */
 const GlobalSidebar = () => {
+  const pathname = usePathname();
+  const isCanvasLayout = isCanvasLayoutPath(pathname);
   /** 글로벌 워크스페이스 검색용 쿼리 */
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   /** 팔레트에서 블록 필터링을 위한 검색 쿼리 */
   const [searchBlocks, setSearchBlocks] = useState<string>('');
 
-  /** 현재 선택된 폴더 이름 */
-  const [_selectedFolder, setSelectedFolder] = useState<string>('dfsdfdsf');
+  /** 현재 선택된 파이프라인 ID */
+  const [_selectedPipelineId, setSelectedPipelineId] = useState<string | null>(null);
 
   /** 워크스페이스 드롭다운 열림/닫힘 상태 */
   const [isWorkspaceDropdownOpen, setIsWorkspaceDropdownOpen] = useState<boolean>(false);
 
-  /** 현재 선택된 워크스페이스 ID */
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>('workspace-1');
+  // Zustand 스토어 사용
+  const {
+    projects,
+    selectedProjectId,
+    isLoading: isProjectsLoading,
+    error: projectsError,
+    fetchProjects,
+    setSelectedProject,
+    getSelectedProject
+  } = useProjectStore();
+
+  const {
+    pipelines: _pipelines,
+    isLoading: isPipelinesLoading,
+    error: pipelinesError,
+    fetchPipelines: _fetchPipelines,
+    setCurrentProject,
+    getPipelinesByProject
+  } = usePipelineStore();
 
   /** 
    * Settings 모달의 열림/닫힘 상태를 관리하는 state
@@ -123,33 +155,17 @@ const GlobalSidebar = () => {
     };
   }, []);
 
-  /**
-   * 사용 가능한 워크스페이스 목록 (GitHub 연동 대비 모킹 데이터)
-   * 향후 GitHub API를 통해 실제 저장소 데이터로 교체될 예정
-   */
-  const workspaces: Workspace[] = [
-    {
-      id: 'workspace-1',
-      name: "dbswl030's Workspace",
-      owner: 'dbswl030',
-      githubUrl: 'https://github.com/dbswl030/otto-workspace',
-      isActive: true,
-    },
-    {
-      id: 'workspace-2',
-      name: 'Team Project Workspace',
-      owner: 'dbswl030',
-      githubUrl: 'https://github.com/dbswl030/team-project',
-      isActive: false,
-    },
-    {
-      id: 'workspace-3',
-      name: 'ML Pipeline Workspace',
-      owner: 'dbswl030',
-      githubUrl: 'https://github.com/dbswl030/ml-pipeline',
-      isActive: false,
-    },
-  ];
+  // 데이터 로딩 및 초기화
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
+
+  // 선택된 프로젝트가 변경되면 해당 프로젝트의 파이프라인들을 가져옴
+  useEffect(() => {
+    if (selectedProjectId) {
+      setCurrentProject(selectedProjectId);
+    }
+  }, [selectedProjectId, setCurrentProject]);
 
   /**
    * 팔레트에서 사용 가능한 블록들의 설정
@@ -163,14 +179,15 @@ const GlobalSidebar = () => {
     { name: 'Knowledge', icon: '🧠', color: 'bg-teal-500' },
   ];
 
-  /**
-   * 워크스페이스 폴더들의 설정
-   * 폴더는 다양한 프로젝트나 워크플로를 조직화하는데 도움을 줍니다
-   */
-  const folders: Folder[] = [
-    { name: 'Folder 1', icon: '📁' },
-    { name: 'dfsdfdsf', icon: '🔵', isActive: true },
-  ];
+  // 현재 선택된 프로젝트의 파이프라인들을 변환
+  const currentPipelines: PipelineItem[] = selectedProjectId 
+    ? getPipelinesByProject(selectedProjectId).map(pipeline => ({
+        name: pipeline.name || `Pipeline ${pipeline.pipelineId.slice(-6)}`,
+        icon: '🔧', // 파이프라인 기본 아이콘
+        pipelineId: pipeline.pipelineId,
+        isActive: pipeline.pipelineId === _selectedPipelineId
+      }))
+    : [];
 
   /**
    * 하단 네비게이션 아이콘들의 설정
@@ -196,25 +213,24 @@ const GlobalSidebar = () => {
   };
 
   /**
-   * 폴더 선택을 처리합니다
-   * 현재 선택된 폴더 상태를 업데이트합니다
+   * 파이프라인 선택을 처리합니다
+   * 현재 선택된 파이프라인 상태를 업데이트합니다
    *
-   * @param folderName - 선택할 폴더의 이름
+   * @param pipelineId - 선택할 파이프라인의 ID
    */
-  const handleFolderSelect = (folderName: string) => {
-    setSelectedFolder(folderName);
+  const handlePipelineSelect = (pipelineId: string) => {
+    setSelectedPipelineId(pipelineId);
   };
 
   /**
-   * 워크스페이스 선택을 처리합니다
-   * GitHub 연동 시 저장소 전환 로직이 추가될 예정입니다
+   * 프로젝트 선택을 처리합니다
+   * 선택된 프로젝트가 변경되면 해당 프로젝트의 파이프라인들을 가져옵니다
    *
-   * @param workspaceId - 선택할 워크스페이스의 ID
+   * @param projectId - 선택할 프로젝트의 ID
    */
-  const handleWorkspaceSelect = (workspaceId: string) => {
-    setSelectedWorkspaceId(workspaceId);
+  const handleProjectSelect = (projectId: string) => {
+    setSelectedProject(projectId);
     setIsWorkspaceDropdownOpen(false);
-    // TODO: GitHub 연동 시 저장소 전환 로직 추가
   };
 
   /**
@@ -225,14 +241,31 @@ const GlobalSidebar = () => {
   };
 
   /**
-   * 현재 선택된 워크스페이스를 반환합니다
+   * 현재 선택된 프로젝트를 반환합니다
    *
-   * @returns 현재 선택된 워크스페이스 객체
+   * @returns 현재 선택된 프로젝트 객체 또는 null
    */
-  const getSelectedWorkspace = (): Workspace => {
-    const selectedWorkspace = workspaces.find((ws) => ws.id === selectedWorkspaceId);
-    return selectedWorkspace || workspaces[0]!;
+  const getSelectedProjectInfo = () => {
+    return getSelectedProject();
   };
+
+  // 로딩 상태 확인
+  const isLoading = isProjectsLoading || isPipelinesLoading;
+  const _hasError = projectsError || pipelinesError;
+
+  // 레이아웃 모드에 따라 다른 positioning 사용
+  const containerClassName = isCanvasLayout
+    ? 'fixed left-4 top-4 w-72 z-50 flex flex-col space-y-3 h-[calc(100vh-2rem)]' // 캔버스 모드: floating
+    : 'relative w-full h-full flex flex-col space-y-3'; // 표준 모드: 부모 컨테이너에 맞춤
+
+  // 로딩 중이면 스켈레톤 표시
+  if (isLoading && projects.length === 0) {
+    return (
+      <div className={containerClassName}>
+        <SidebarSkeleton />
+      </div>
+    );
+  }
 
   /**
    * 검색 쿼리를 기반으로 블록들을 필터링합니다
@@ -262,7 +295,7 @@ const GlobalSidebar = () => {
   };
 
   return (
-    <div className='fixed left-4 top-4 w-72 z-50 flex flex-col space-y-3 h-[calc(100vh-2rem)]'>
+    <div className={containerClassName}>
       {/* Workspace Header Card */}
       <div className='bg-white rounded-xl shadow-lg border border-gray-200 p-4'>
         <div className='flex items-center justify-between'>
@@ -274,9 +307,11 @@ const GlobalSidebar = () => {
             >
               <div className='flex-1 min-w-0'>
                 <h1 className='text-lg font-semibold text-gray-900 truncate'>
-                  {getSelectedWorkspace().name}
+                  {getSelectedProjectInfo()?.name || '프로젝트 선택 안됨'}
                 </h1>
-                <p className='text-xs text-gray-500 truncate'>{getSelectedWorkspace().owner}</p>
+                <p className='text-xs text-gray-500 truncate'>
+                  {getSelectedProjectInfo()?.githubOwner || '소유자 없음'}
+                </p>
               </div>
               <ChevronDown
                 className={`w-4 h-4 text-gray-400 transition-transform ${
@@ -285,39 +320,52 @@ const GlobalSidebar = () => {
               />
             </button>
 
-            {/* 워크스페이스 드롭다운 메뉴 */}
+            {/* 프로젝트 드롭다운 메뉴 */}
             {isWorkspaceDropdownOpen && (
               <div className='absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-20'>
                 <div className='py-1 max-h-64 overflow-y-auto'>
-                  {workspaces.map((workspace) => (
-                    <button
-                      key={workspace.id}
-                      onClick={() => handleWorkspaceSelect(workspace.id)}
-                      className={`w-full flex items-center space-x-3 px-3 py-2.5 text-sm hover:bg-gray-50 transition-colors ${
-                        workspace.id === selectedWorkspaceId ? 'bg-blue-50' : ''
-                      }`}
-                    >
-                      <div className='flex-1 min-w-0 text-left'>
-                        <div
-                          className={`font-medium truncate ${
-                            workspace.id === selectedWorkspaceId ? 'text-blue-900' : 'text-gray-900'
-                          }`}
-                        >
-                          {workspace.name}
+                  {isProjectsLoading ? (
+                    <WorkspaceDropdownSkeleton />
+                  ) : projects.length > 0 ? (
+                    projects.map((project) => (
+                      <button
+                        key={project.projectId}
+                        onClick={() => handleProjectSelect(project.projectId)}
+                        className={`w-full flex items-center space-x-3 px-3 py-2.5 text-sm hover:bg-gray-50 transition-colors ${
+                          project.projectId === selectedProjectId ? 'bg-blue-50' : ''
+                        }`}
+                      >
+                        <div className='flex-1 min-w-0 text-left'>
+                          <div
+                            className={`font-medium truncate ${
+                              project.projectId === selectedProjectId ? 'text-blue-900' : 'text-gray-900'
+                            }`}
+                          >
+                            {project.name}
+                          </div>
+                          <div className='text-xs text-gray-500 truncate'>
+                            {project.githubOwner}/{project.githubRepoName}
+                          </div>
                         </div>
-                        <div className='text-xs text-gray-500 truncate'>{workspace.owner}</div>
-                      </div>
-                      {workspace.id === selectedWorkspaceId && (
-                        <Check className='w-4 h-4 text-blue-600' />
-                      )}
-                    </button>
-                  ))}
+                        {project.projectId === selectedProjectId && (
+                          <Check className='w-4 h-4 text-blue-600' />
+                        )}
+                      </button>
+                    ))
+                  ) : (
+                    <div className='px-3 py-6 text-center text-gray-500 text-sm'>
+                      아직 프로젝트가 없습니다
+                    </div>
+                  )}
 
-                  {/* GitHub에서 새 워크스페이스 가져오기 (향후 구현) */}
+                  {/* 새 프로젝트 만들기 */}
                   <div className='border-t border-gray-100 mt-1 pt-1'>
-                    <button className='w-full flex items-center space-x-3 px-3 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors'>
+                    <button 
+                      onClick={() => window.location.href = '/projects/onboarding'}
+                      className='w-full flex items-center space-x-3 px-3 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors'
+                    >
                       <Plus className='w-4 h-4' />
-                      <span>GitHub에서 가져오기</span>
+                      <span>새 프로젝트 만들기</span>
                     </button>
                   </div>
                 </div>
@@ -337,7 +385,7 @@ const GlobalSidebar = () => {
             <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
             <input
               type='text'
-              placeholder='Search anything'
+              placeholder='검색하기'
               className='w-full pl-10 pr-10 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -349,30 +397,46 @@ const GlobalSidebar = () => {
         </div>
       </div>
 
-      {/* Folders Section Card */}
+      {/* Pipelines Section Card */}
       <div className='bg-white rounded-xl shadow-lg border border-gray-200 p-4'>
         <div className='flex items-center justify-between mb-3'>
-          <h3 className='text-sm font-semibold text-gray-800'>Folder 1</h3>
+          <h3 className='text-sm font-semibold text-gray-800'>
+            {getSelectedProjectInfo()?.name ? `${getSelectedProjectInfo()?.name} Pipelines` : 'Pipelines'}
+          </h3>
           <button className='p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg'>
             <Plus className='w-3 h-3' />
           </button>
         </div>
 
         <div className='space-y-2'>
-          {folders.map((folder) => (
-            <div
-              key={folder.name}
-              className={`flex items-center p-2.5 rounded-lg cursor-pointer transition-all duration-200 ${
-                folder.isActive
-                  ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
-                  : 'hover:bg-gray-50 text-gray-700 border border-transparent'
-              }`}
-              onClick={() => handleFolderSelect(folder.name)}
-            >
-              <span className='mr-3 text-lg'>{folder.icon}</span>
-              <span className='text-sm font-medium truncate'>{folder.name}</span>
+          {isPipelinesLoading ? (
+            // 파이프라인 로딩 스켈레톤
+            Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className='flex items-center p-2.5 rounded-lg border border-gray-100 animate-pulse'>
+                <div className='w-5 h-5 bg-gray-200 rounded mr-3'></div>
+                <div className='h-4 bg-gray-200 rounded flex-1'></div>
+              </div>
+            ))
+          ) : currentPipelines.length > 0 ? (
+            currentPipelines.map((pipeline) => (
+              <div
+                key={pipeline.pipelineId}
+                className={`flex items-center p-2.5 rounded-lg cursor-pointer transition-all duration-200 ${
+                  pipeline.isActive
+                    ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                    : 'hover:bg-gray-50 text-gray-700 border border-transparent'
+                }`}
+                onClick={() => handlePipelineSelect(pipeline.pipelineId)}
+              >
+                <span className='mr-3 text-lg'>{pipeline.icon}</span>
+                <span className='text-sm font-medium truncate'>{pipeline.name}</span>
+              </div>
+            ))
+          ) : (
+            <div className='text-center py-4 text-gray-500 text-sm'>
+              {selectedProjectId ? '파이프라인이 없습니다' : '프로젝트를 선택하세요'}
             </div>
-          ))}
+          )}
         </div>
       </div>
 
@@ -383,7 +447,7 @@ const GlobalSidebar = () => {
             <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
             <input
               type='text'
-              placeholder='Search blocks...'
+              placeholder='블록 검색...'
               className='w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50'
               value={searchBlocks}
               onChange={(e) => setSearchBlocks(e.target.value)}

@@ -2,8 +2,6 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useAuth as useAuthHook, SignInResponse } from '@/app/hooks/useAuth';
-import type { authSignIn } from '@cooodecat/otto-sdk/lib/functional/auth/sign_in';
-import type { authSignUp } from '@cooodecat/otto-sdk/lib/functional/auth/sign_up';
 import { userMyInfo } from '@cooodecat/otto-sdk/lib/functional/user';
 
 // 인증 상태 타입
@@ -16,8 +14,18 @@ export interface AuthState {
 
 // 인증 컨텍스트 타입 - useAuth의 모든 기능을 포함
 export interface AuthContextType extends AuthState {
-  signIn: (formData: authSignIn.Body) => Promise<SignInResponse>;
-  signUp: (formData: authSignUp.Body) => Promise<SignInResponse>;
+  signIn: (formData: { email: string; password: string }) => Promise<SignInResponse>;
+  signUp: (formData: {
+    email: string;
+    password: string;
+    username: string;
+  }) => Promise<SignInResponse>;
+  signInWithGitHub: (tokens: {
+    accessToken: string;
+    refreshToken: string;
+    accessTokenExpiresIn: number;
+    refreshTokenExpiresIn: number;
+  }) => Promise<SignInResponse>;
   signOut: () => Promise<void>;
   validateToken: () => Promise<boolean>;
   refreshToken: () => Promise<boolean>;
@@ -36,6 +44,7 @@ const defaultContextValue: AuthContextType = {
   error: null,
   signIn: async () => ({ success: false }),
   signUp: async () => ({ success: false }),
+  signInWithGitHub: async () => ({ success: false }),
   signOut: async () => {},
   validateToken: async () => false,
   refreshToken: async () => false,
@@ -77,7 +86,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const clearError = () => {
     // 에러 클리어 기능은 useAuth에서 자동으로 처리됨
-    console.log('Error cleared (handled automatically by useAuth)');
+    console.log('에러가 클리어되었습니다 (useAuth에서 자동으로 처리됨)');
   };
 
   // 컨텍스트 값 구성
@@ -97,7 +106,7 @@ export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
 
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth는 AuthProvider 내에서 사용되어야 합니다');
   }
 
   return context;

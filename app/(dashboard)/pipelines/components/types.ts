@@ -180,6 +180,6 @@ export interface CustomCommandBlock extends Block {
  * 사용법:
  * - 함수 파라미터: (block: AnyBlock) => void
  * - switch문으로 타입 검사: switch(block.type) { case BlockType.OS: ... }
- * - 타입 가드: if(block.type === BlockType.OS_PACKAGE) { /* block은 OSPackageBlock */ }
+ * - 타입 가드: if(block.type === BlockType.OS_PACKAGE) - block은 OSPackageBlock
  */
 export type AnyBlock = OSBlock | OSPackageBlock | InstallNodePackageBlock | CustomTestBlock | CustomCommandBlock;

@@ -66,27 +66,27 @@ const workflowSteps = [
 
 const statusConfig = {
   triggered: {
-    label: 'Triggered',
+    label: '트리거됨',
     color: 'bg-green-100 text-green-700 border-green-200',
     icon: CheckCircle,
   },
   completed: {
-    label: 'Completed',
+    label: '완료',
     color: 'bg-green-100 text-green-700 border-green-200',
     icon: CheckCircle,
   },
   running: {
-    label: 'Running',
+    label: '실행 중',
     color: 'bg-blue-100 text-blue-700 border-blue-200',
     icon: Play,
   },
   pending: {
-    label: 'Pending',
+    label: '대기 중',
     color: 'bg-gray-100 text-gray-500 border-gray-200',
     icon: Play,
   },
   failed: {
-    label: 'Failed',
+    label: '실패',
     color: 'bg-red-100 text-red-700 border-red-200',
     icon: XCircle,
   },
@@ -416,7 +416,7 @@ export default function WorkflowSection() {
               className='group bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 shadow-2xl hover:shadow-blue-500/25 flex items-center gap-3 transform hover:scale-105'
             >
               <Zap className='w-5 h-5' />
-              Start Now
+              지금 시작하기
               <ArrowRight className='w-5 h-5 group-hover:translate-x-1 transition-transform' />
             </button>
           </div>

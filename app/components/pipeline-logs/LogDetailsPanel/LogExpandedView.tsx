@@ -49,8 +49,9 @@ const LogExpandedView: React.FC<LogExpandedViewProps> = ({
 
   return (
     <div className='flex flex-col h-full max-h-[90vh] overflow-hidden'>
-      <style dangerouslySetInnerHTML={{
-        __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
           .custom-scrollbar::-webkit-scrollbar {
             width: 4px;
           }
@@ -68,8 +69,9 @@ const LogExpandedView: React.FC<LogExpandedViewProps> = ({
             scrollbar-width: thin;
             scrollbar-color: #cbd5e0 transparent;
           }
-        `
-      }} />
+        `,
+        }}
+      />
       {/* 헤더 툴바 */}
       <div className='flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50 shrink-0'>
         <div className='flex items-center gap-4'>
@@ -187,7 +189,7 @@ const LogExpandedView: React.FC<LogExpandedViewProps> = ({
                   <ExternalLink className='w-3 h-3' />
                   Open in New Window
                 </button>
-                
+
                 <button
                   onClick={() => {
                     // GitHub 커밋 링크로 이동 (실제로는 API에서 URL 제공)

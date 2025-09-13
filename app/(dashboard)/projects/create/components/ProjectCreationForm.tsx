@@ -119,8 +119,12 @@ export function ProjectCreationForm() {
       const createProjectData: CreateProjectDto = {
         name: basicInfo.name,
         installationId: githubSelection.installationId?.toString() || '', // GitHub Installation ID를 문자열로 변환
-        repositoryFullName: githubSelection.repositoryName || '',
+        githubRepoName: githubSelection.repositoryName || '',
         selectedBranch: githubSelection.branch || '',
+        githubRepoId: (githubSelection as any).repositoryId?.toString() || '',
+        githubRepoUrl: `https://github.com/${(githubSelection as any).repositoryOwner}/${githubSelection.repositoryName}`,
+        githubOwner: (githubSelection as any).repositoryOwner || '',
+        isPrivate: (githubSelection as any).isPrivate || false,
       };
 
       const result = await functional.projects.with_github.createProjectWithGithub(
@@ -133,8 +137,13 @@ export function ProjectCreationForm() {
       // 세션 정리
       projectState.clearSession();
 
-      // 프로젝트 생성 완료 후 프로젝트 목록 페이지로 이동
-      router.push('/projects');
+      // 프로젝트 생성 완료 후 생성된 프로젝트의 파이프라인 페이지로 이동
+      if (result && result.project?.projectId) {
+        router.push(`/projects/${result.project.projectId}/pipelines`);
+      } else {
+        // projectId가 없으면 온보딩으로
+        router.push('/projects/onboarding');
+      }
     } catch (error) {
       console.error('프로젝트 생성 실패:', error);
       const errorMessage = error instanceof Error ? error.message : '프로젝트 생성에 실패했습니다.';
@@ -191,7 +200,7 @@ export function ProjectCreationForm() {
         return (
           <RepositorySelectionStep
             githubSelection={projectState.state.githubSelection}
-            installations={githubIntegration.installations}
+            installations={githubIntegration.installations.map((install: any) => ({ ...install, id: install.installationId || install.id }))}
             repositories={githubIntegration.repositories}
             branches={githubIntegration.branches}
             loading={{
@@ -218,7 +227,7 @@ export function ProjectCreationForm() {
           <CreateReviewStep
             basicInfo={projectState.state.basicInfo}
             githubSelection={projectState.state.githubSelection}
-            installations={githubIntegration.installations}
+            installations={githubIntegration.installations.map((install: any) => ({ ...install, id: install.installationId || install.id }))}
             isSubmitting={projectState.state.isSubmitting}
             submitError={projectState.state.submitError}
             onCreateProject={handleCreateProject}

@@ -2,10 +2,11 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Settings, User, Palette, Server, Monitor, Key, Shield, CreditCard, X, Plus, Eye, EyeOff } from 'lucide-react';
+import { Settings, User, Palette, Server, Monitor, Key, Shield, CreditCard, X, Plus, Eye, EyeOff, Github, LogOut } from 'lucide-react';
 import { useAuth } from '@/app/hooks/useAuth';
 import EnvFileUploader from '../ui/EnvFileUploader';
 import { EnvironmentVariable } from '../ui/EnvironmentVariableList';
+import { useRouter } from 'next/navigation';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -14,8 +15,10 @@ interface SettingsModalProps {
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [selectedTab, setSelectedTab] = React.useState('general');
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAuthenticated } = useAuth();
   const [mounted, setMounted] = React.useState(false);
+  const [isSigningOut, setIsSigningOut] = React.useState(false);
+  const router = useRouter();
   
   // Environment variables state
   const [activeEnvTab, setActiveEnvTab] = React.useState<'build' | 'test' | 'deploy'>('build');
@@ -86,61 +89,125 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     </div>
   );
 
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    try {
+      await signOut();
+      onClose(); // 모달 닫기
+      router.push('/signin'); // 로그인 페이지로 이동
+    } catch (error) {
+      console.error('Sign out failed:', error);
+      setIsSigningOut(false);
+    }
+  };
+
   const renderAccountContent = () => (
     <div className='space-y-6'>
-      <div className='flex items-center space-x-4'>
-        <div className='avatar'>
-          <div className='w-16 h-16 rounded-full bg-primary text-primary-content flex items-center justify-center'>
-            <User className='w-8 h-8' />
+      {/* User Profile Section */}
+      <div className='bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200'>
+        <div className='flex items-center space-x-4 mb-6'>
+          <div className='relative'>
+            <div className='w-20 h-20 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg'>
+              <Github className='w-10 h-10 text-white' />
+            </div>
+            <div className='absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white'></div>
+          </div>
+          <div className='flex-1'>
+            <h3 className='text-xl font-bold text-gray-900'>
+              {user?.nickname || 'GitHub User'}
+            </h3>
+            <p className='text-sm text-gray-600 flex items-center gap-1 mt-1'>
+              <Github className='w-3 h-3' />
+              Connected via GitHub OAuth
+            </p>
+            {isAuthenticated && (
+              <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-2'>
+                Active Session
+              </span>
+            )}
           </div>
         </div>
-        <div>
-          <h3 className='text-lg font-semibold'>{user?.nickname || 'Guest User'}</h3>
-          <p className='text-sm text-gray-500'>{user?.email || 'Not connected to server'}</p>
+
+        {/* User Information */}
+        <div className='space-y-4'>
+          <div className='bg-white rounded-lg p-4 border border-gray-200'>
+            <label className='text-xs font-medium text-gray-500 uppercase tracking-wider'>User ID</label>
+            <div className='mt-1 flex items-center justify-between'>
+              <p className='text-sm font-mono text-gray-900'>{user?.user_id || 'Not available'}</p>
+              <button
+                onClick={() => navigator.clipboard.writeText(user?.user_id || '')}
+                className='text-xs text-blue-600 hover:text-blue-700 font-medium'
+              >
+                Copy
+              </button>
+            </div>
+          </div>
+
+          <div className='bg-white rounded-lg p-4 border border-gray-200'>
+            <label className='text-xs font-medium text-gray-500 uppercase tracking-wider'>Username</label>
+            <div className='mt-1 flex items-center gap-2'>
+              <User className='w-4 h-4 text-gray-400' />
+              <p className='text-sm font-medium text-gray-900'>{user?.nickname || 'Not available'}</p>
+            </div>
+          </div>
+
+          <div className='bg-white rounded-lg p-4 border border-gray-200'>
+            <label className='text-xs font-medium text-gray-500 uppercase tracking-wider'>Authentication Method</label>
+            <div className='mt-1 flex items-center gap-2'>
+              <Github className='w-4 h-4 text-gray-400' />
+              <p className='text-sm font-medium text-gray-900'>GitHub OAuth 2.0</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className='form-control w-full max-w-xs'>
-        <label className='label'>
-          <span className='label-text'>Name</span>
-        </label>
-        <div className='flex space-x-2'>
-          <input
-            type='text'
-            value={user?.nickname || ''}
-            className='input input-bordered flex-1'
-            readOnly
-          />
-          <button className='btn btn-outline btn-sm'>update</button>
+      {/* Account Actions */}
+      <div className='border-t border-gray-200 pt-6'>
+        <h4 className='text-sm font-semibold text-gray-900 mb-4'>Account Actions</h4>
+        <div className='space-y-3'>
+          <button
+            className='w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2'
+            onClick={() => window.open('https://github.com/settings/profile', '_blank')}
+          >
+            <Github className='w-4 h-4' />
+            Manage GitHub Profile
+          </button>
+          
+          <button
+            className='w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2'
+            onClick={() => window.open('https://github.com/settings/applications', '_blank')}
+          >
+            <Shield className='w-4 h-4' />
+            Manage App Permissions
+          </button>
         </div>
       </div>
 
-      <div className='form-control w-full max-w-xs'>
-        <label className='label'>
-          <span className='label-text'>Email</span>
-        </label>
-        <input type='email' value={user?.email || ''} className='input input-bordered' readOnly />
-      </div>
-
-      <div className='form-control w-full max-w-xs'>
-        <label className='label'>
-          <span className='label-text'>Password</span>
-        </label>
-        <div className='flex space-x-2'>
-          <input
-            type='password'
-            value='••••••••'
-            className='input input-bordered flex-1'
-            readOnly
-          />
-          <button className='btn btn-outline btn-sm'>reset</button>
+      {/* Sign Out Section */}
+      <div className='border-t border-gray-200 pt-6'>
+        <div className='bg-red-50 border border-red-200 rounded-lg p-4'>
+          <h4 className='text-sm font-semibold text-red-900 mb-2'>Sign Out</h4>
+          <p className='text-xs text-red-700 mb-4'>
+            This will end your current session and you'll need to sign in again with GitHub.
+          </p>
+          <button
+            className='w-full px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+          >
+            {isSigningOut ? (
+              <>
+                <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></div>
+                Signing out...
+              </>
+            ) : (
+              <>
+                <LogOut className='w-4 h-4' />
+                Sign Out from Otto
+              </>
+            )}
+          </button>
         </div>
-      </div>
-
-      <div className='pt-4'>
-        <button className='btn btn-error' onClick={signOut}>
-          Sign Out
-        </button>
       </div>
     </div>
   );

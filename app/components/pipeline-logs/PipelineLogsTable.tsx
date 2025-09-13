@@ -35,7 +35,7 @@ interface PipelineLogsTableProps {
 // 향상된 로그 테이블 컴포넌트
 const PipelineLogsTable: React.FC<PipelineLogsTableProps> = ({
   logs,
-  newLogIds,
+  newLogIds: _newLogIds,
   onLoadMore,
   hasMore,
   isLoading,
@@ -44,21 +44,21 @@ const PipelineLogsTable: React.FC<PipelineLogsTableProps> = ({
 }) => {
   const [selectedBuildId, setSelectedBuildId] = useState<string | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  // 읽지 않은 로그 ID들을 관리 (초기값: newLogIds와 동일)
-  const [unreadLogIds, setUnreadLogIds] = useState<Set<string>>(newLogIds);
+  // 읽지 않은 로그 ID들을 관리 (초기값: _newLogIds와 동일)
+  const [unreadLogIds, setUnreadLogIds] = useState<Set<string>>(_newLogIds);
 
-  // newLogIds가 변경될 때 unreadLogIds 업데이트 (새로운 로그 추가 시)
+  // _newLogIds가 변경될 때 unreadLogIds 업데이트 (새로운 로그 추가 시)
   useEffect(() => {
-    setUnreadLogIds(prev => {
+    setUnreadLogIds((prev) => {
       const newSet = new Set(prev);
-      newLogIds.forEach(id => newSet.add(id)); // 새로운 로그들을 읽지 않음으로 추가
+      _newLogIds.forEach((id: string) => newSet.add(id)); // 새로운 로그들을 읽지 않음으로 추가
       return newSet;
     });
-  }, [newLogIds]);
+  }, [_newLogIds]);
 
   // 읽음 처리 함수 (마우스 클릭과 키보드 내비게이션에서 공통 사용)
   const markLogAsRead = (logId: string) => {
-    setUnreadLogIds(prev => {
+    setUnreadLogIds((prev) => {
       const newSet = new Set(prev);
       newSet.delete(logId);
       return newSet;
@@ -292,13 +292,13 @@ const PipelineLogsTable: React.FC<PipelineLogsTableProps> = ({
             // 이전/다음 로그로 네비게이션 + 읽음 처리
             const currentIndex = logs.findIndex((log) => log.id === selectedBuildId);
             let newLogId: string | undefined;
-            
+
             if (direction === 'prev' && currentIndex > 0) {
               newLogId = logs[currentIndex - 1]?.id;
             } else if (direction === 'next' && currentIndex < logs.length - 1) {
               newLogId = logs[currentIndex + 1]?.id;
             }
-            
+
             if (newLogId) {
               markLogAsRead(newLogId); // 키보드 내비게이션 시 즉시 읽음 처리
               setSelectedBuildId(newLogId);

@@ -30,7 +30,6 @@ const LogViewer: React.FC<LogViewerProps> = ({
   const [visibleRange, setVisibleRange] = useState({ start: 0, end: 100 });
   const [showFilters, setShowFilters] = useState(false);
 
-
   const {
     searchQuery,
     setSearchQuery,
@@ -116,7 +115,6 @@ const LogViewer: React.FC<LogViewerProps> = ({
   // 보이는 로그들
   const visibleLogs = filteredLogs.slice(visibleRange.start, visibleRange.end);
 
-
   // 레벨 필터 토글
   const toggleLevelFilter = (level: LogLine['level']) => {
     const newLevels = filter.levels.includes(level)
@@ -190,11 +188,11 @@ const LogViewer: React.FC<LogViewerProps> = ({
     );
   };
 
-
   return (
     <div className='bg-white border border-gray-200 rounded-lg overflow-hidden'>
-      <style dangerouslySetInnerHTML={{
-        __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
           .custom-scrollbar::-webkit-scrollbar {
             width: 4px;
           }
@@ -212,8 +210,9 @@ const LogViewer: React.FC<LogViewerProps> = ({
             scrollbar-width: thin;
             scrollbar-color: #cbd5e0 transparent;
           }
-        `
-      }} />
+        `,
+        }}
+      />
       {/* 툴바 */}
       <div className='bg-gray-50 border-b border-gray-200 px-4 py-3'>
         <div className='flex items-center gap-3'>
@@ -297,7 +296,10 @@ const LogViewer: React.FC<LogViewerProps> = ({
                 <span className='text-sm font-semibold text-gray-700'>Levels:</span>
                 <div className='flex items-center gap-3'>
                   {(['ERROR', 'WARN', 'INFO', 'DEBUG'] as LogLine['level'][]).map((level) => (
-                    <label key={level} className='flex items-center gap-1.5 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors'>
+                    <label
+                      key={level}
+                      className='flex items-center gap-1.5 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors'
+                    >
                       <input
                         type='checkbox'
                         checked={filter.levels.includes(level)}
@@ -348,9 +350,9 @@ const LogViewer: React.FC<LogViewerProps> = ({
       <div
         ref={containerRef}
         className='relative overflow-auto bg-gray-50 custom-scrollbar'
-        style={{ 
+        style={{
           height: maxHeight === '100%' ? '600px' : maxHeight,
-          minHeight: '400px'
+          minHeight: '400px',
         }}
         onScroll={handleScroll}
       >
@@ -384,7 +386,6 @@ const LogViewer: React.FC<LogViewerProps> = ({
           </div>
         )}
       </div>
-
     </div>
   );
 };
