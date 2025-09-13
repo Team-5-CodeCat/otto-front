@@ -31,17 +31,6 @@ interface Block {
   color: string;
 }
 
-/**
- * 폴더 섹션 아이템의 인터페이스
- */
-interface _Folder {
-  /** 폴더의 표시 이름 */
-  name: string;
-  /** 폴더의 이모지 아이콘 */
-  icon: string;
-  /** 현재 폴더가 활성/선택 상태인지 여부 */
-  isActive?: boolean;
-}
 
 /**
  * 하단 네비게이션 아이콘의 인터페이스
@@ -113,7 +102,7 @@ const GlobalSidebar = () => {
     projects,
     selectedProjectId,
     isLoading: isProjectsLoading,
-    error: projectsError,
+    error: _projectsError,
     fetchProjects,
     setSelectedProject,
     getSelectedProject
@@ -122,7 +111,7 @@ const GlobalSidebar = () => {
   const {
     pipelines: _pipelines,
     isLoading: isPipelinesLoading,
-    error: pipelinesError,
+    error: _pipelinesError,
     fetchPipelines: _fetchPipelines,
     setCurrentProject,
     getPipelinesByProject
@@ -251,7 +240,6 @@ const GlobalSidebar = () => {
 
   // 로딩 상태 확인
   const isLoading = isProjectsLoading || isPipelinesLoading;
-  const _hasError = projectsError || pipelinesError;
 
   // 레이아웃 모드에 따라 다른 positioning 사용
   const containerClassName = isCanvasLayout
@@ -440,39 +428,93 @@ const GlobalSidebar = () => {
         </div>
       </div>
 
-      {/* Blocks Palette Section Card */}
-      <div className='bg-white rounded-xl shadow-lg border border-gray-200 p-4 flex-1 flex flex-col min-h-0'>
-        <div className='mb-4'>
-          <div className='relative'>
-            <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
-            <input
-              type='text'
-              placeholder='블록 검색...'
-              className='w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50'
-              value={searchBlocks}
-              onChange={(e) => setSearchBlocks(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className='flex-1 overflow-y-auto space-y-2 pr-1'>
-          {getFilteredBlocks().map((block) => (
-            <div
-              key={block.name}
-              className='flex items-center p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-all duration-200 group border border-gray-100 hover:border-gray-200 hover:shadow-sm'
-              draggable
-              onDragStart={(e) => handleBlockDragStart(e, block.name)}
-            >
-              <div
-                className={`w-8 h-8 ${block.color} rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform shadow-sm`}
-              >
-                <span className='text-white text-sm font-medium'>{block.icon}</span>
+      {/* Dynamic Content Section Card - 페이지별로 다른 내용이 표시됩니다 */}
+      {(() => {
+        // /pipelines 페이지: Blocks Palette 표시
+        if (pathname === '/pipelines') {
+          return (
+            <div className='bg-white rounded-xl shadow-lg border border-gray-200 p-4 flex-1 flex flex-col min-h-0'>
+              <div className='mb-4'>
+                <div className='relative'>
+                  <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
+                  <input
+                    type='text'
+                    placeholder='블록 검색...'
+                    className='w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50'
+                    value={searchBlocks}
+                    onChange={(e) => setSearchBlocks(e.target.value)}
+                  />
+                </div>
               </div>
-              <span className='text-sm font-medium text-gray-900'>{block.name}</span>
+
+              <div className='flex-1 overflow-y-auto space-y-2 pr-1'>
+                {getFilteredBlocks().map((block) => (
+                  <div
+                    key={block.name}
+                    className='flex items-center p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-all duration-200 group border border-gray-100 hover:border-gray-200 hover:shadow-sm'
+                    draggable
+                    onDragStart={(e) => handleBlockDragStart(e, block.name)}
+                  >
+                    <div
+                      className={`w-8 h-8 ${block.color} rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform shadow-sm`}
+                    >
+                      <span className='text-white text-sm font-medium'>{block.icon}</span>
+                    </div>
+                    <span className='text-sm font-medium text-gray-900'>{block.name}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
+          );
+        }
+
+        // 로그 페이지: Filter Panel 표시 (예시)
+        if (pathname.includes('/logs')) {
+          return (
+            <div className='bg-white rounded-xl shadow-lg border border-gray-200 p-4 flex-1 flex flex-col min-h-0'>
+              <h3 className='text-sm font-semibold text-gray-800 mb-4'>Filters</h3>
+              <div className='flex-1 overflow-y-auto space-y-4'>
+                <div className='space-y-3'>
+                  <h4 className='text-sm font-medium text-gray-700'>Timeline</h4>
+                  <select className='w-full p-2 text-sm border border-gray-200 rounded-lg bg-gray-50'>
+                    <option>All time</option>
+                    <option>Today</option>
+                    <option>This week</option>
+                    <option>This month</option>
+                  </select>
+                </div>
+                
+                <div className='space-y-3'>
+                  <h4 className='text-sm font-medium text-gray-700'>Status</h4>
+                  <select className='w-full p-2 text-sm border border-gray-200 rounded-lg bg-gray-50'>
+                    <option>Any status</option>
+                    <option>Success</option>
+                    <option>Failed</option>
+                    <option>Running</option>
+                  </select>
+                </div>
+
+                <div className='space-y-3'>
+                  <h4 className='text-sm font-medium text-gray-700'>Branch</h4>
+                  <select className='w-full p-2 text-sm border border-gray-200 rounded-lg bg-gray-50'>
+                    <option>All branches</option>
+                    <option>main</option>
+                    <option>develop</option>
+                    <option>staging</option>
+                  </select>
+                </div>
+
+                <button className='w-full px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors'>
+                  Reset Filters
+                </button>
+              </div>
+            </div>
+          );
+        }
+
+        // 기본값: 아무것도 표시하지 않음 (섹션이 사라짐)
+        return null;
+      })()}
 
       {/* Bottom Section Cards */}
       <div className='space-y-2'>
