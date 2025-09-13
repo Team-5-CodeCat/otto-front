@@ -43,27 +43,40 @@ export const useLogSearch = (logs: LogLine[]): UseLogSearchResult => {
   });
   const [currentResultIndex, setCurrentResultIndex] = useState(0);
 
-  // 디바운싱된 검색어 (300ms 지연)
+  // 안전한 검색어 설정 함수 - useMemo로 안정화
+  const safeSetSearchQuery = useMemo(() => {
+    return (query: string) => {
+      // 입력값 검증
+      if (typeof query !== 'string') return;
+      // 너무 긴 검색어 제한 (성능상 문제 방지)  
+      const trimmedQuery = query.slice(0, 100);
+      setSearchQuery(trimmedQuery);
+    };
+  }, []);
+
+  // 디바운싱된 검색어 (300ms 지연 - 단순 검색으로 빨라짐)
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
 
   // 필터링된 로그 (디바운싱된 검색어 사용)
   const filteredLogs = useMemo(() => {
     try {
+      // 검색어가 없거나 너무 짧으면 레벨 필터만 적용
+      const trimmedQuery = debouncedSearchQuery.trim();
+      if (!trimmedQuery || trimmedQuery.length < 2) {
+        return logs.filter(log => filter.levels.includes(log.level));
+      }
+
       return logs.filter(log => {
         // 레벨 필터
         if (!filter.levels.includes(log.level)) {
           return false;
         }
         
-        // 검색 쿼리 필터 (디바운싱된 검색어 사용)
-        if (debouncedSearchQuery.trim()) {
-          const escapedQuery = escapeRegex(debouncedSearchQuery);
-          const regex = new RegExp(escapedQuery, 'gi');
-          return regex.test(log.message) || regex.test(log.source || '');
-        }
-        
-        return true;
+        // 검색 쿼리 필터 (단순 문자열 검색으로 변경)
+        const lowerQuery = trimmedQuery.toLowerCase();
+        return log.message.toLowerCase().includes(lowerQuery) ||
+               (log.source || '').toLowerCase().includes(lowerQuery);
       });
     } catch (error) {
       console.error('Error filtering logs:', error);
@@ -73,23 +86,33 @@ export const useLogSearch = (logs: LogLine[]): UseLogSearchResult => {
 
   // 검색 결과 (디바운싱된 검색어 사용)
   const searchResults = useMemo(() => {
-    if (!debouncedSearchQuery.trim()) return [];
+    const trimmedQuery = debouncedSearchQuery.trim();
+    if (!trimmedQuery || trimmedQuery.length < 2) return [];
     
     try {
       const results: LogSearchResult[] = [];
-      const escapedQuery = escapeRegex(debouncedSearchQuery);
-      const regex = new RegExp(escapedQuery, 'gi');
+      const lowerQuery = trimmedQuery.toLowerCase();
       
-      filteredLogs.forEach((log, index) => {
-        if (regex.test(log.message) || regex.test(log.source || '')) {
-          results.push({
-            lineNumber: index,
-            timestamp: log.timestamp,
-            message: log.message,
-            level: log.level
-          });
+      // 대량 데이터 처리를 위해 결과 제한 (최대 1000개)
+      let resultCount = 0;
+      const maxResults = 1000;
+      
+      for (let index = 0; index < filteredLogs.length && resultCount < maxResults; index++) {
+        const log = filteredLogs[index];
+        if (log) {
+          // 단순 문자열 검색으로 변경 (안정적이고 빠름)
+          if (log.message.toLowerCase().includes(lowerQuery) || 
+              (log.source || '').toLowerCase().includes(lowerQuery)) {
+            results.push({
+              lineNumber: index,
+              timestamp: log.timestamp,
+              message: log.message,
+              level: log.level
+            });
+            resultCount++;
+          }
         }
-      });
+      }
       
       return results;
     } catch (error) {
@@ -154,7 +177,7 @@ export const useLogSearch = (logs: LogLine[]): UseLogSearchResult => {
 
   return {
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: safeSetSearchQuery, // 안전한 함수로 교체
     filter,
     setFilter,
     filteredLogs,

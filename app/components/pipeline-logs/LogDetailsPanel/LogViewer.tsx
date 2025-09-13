@@ -45,19 +45,25 @@ const LogViewer: React.FC<LogViewerProps> = ({
     clearSearch,
   } = useLogSearch(logs);
 
-  // 외부에서 전달된 검색어 동기화
+  // 초기화 시에만 외부 검색어 동기화
+  const isInitialized = useRef(false);
   useEffect(() => {
-    if (externalSearchQuery !== searchQuery) {
+    if (!isInitialized.current) {
+      isInitialized.current = true;
       setSearchQuery(externalSearchQuery);
     }
-  }, [externalSearchQuery, searchQuery, setSearchQuery]);
+  }, []);
 
-  // 검색어 변경 시 외부로 알림
+  // 외부 검색어가 변경될 때만 동기화 (내부 변경 제외)
+  const prevExternalQuery = useRef(externalSearchQuery);
   useEffect(() => {
-    if (onSearchChange) {
-      onSearchChange(searchQuery);
+    if (externalSearchQuery !== prevExternalQuery.current) {
+      prevExternalQuery.current = externalSearchQuery;
+      setSearchQuery(externalSearchQuery);
     }
-  }, [searchQuery, onSearchChange]);
+  }, [externalSearchQuery]);
+
+  // 내부 검색어 변경은 입력 이벤트에서만 처리 (useEffect 제거)
 
   // 키보드 단축키 처리
   useEffect(() => {
@@ -220,7 +226,14 @@ const LogViewer: React.FC<LogViewerProps> = ({
                 type='text'
                 placeholder='Search logs...'
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  setSearchQuery(newValue);
+                  // 외부로 직접 알림 (useEffect 없이)
+                  if (onSearchChange) {
+                    onSearchChange(newValue);
+                  }
+                }}
                 className='w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent'
               />
               {searchQuery && (

@@ -98,6 +98,13 @@ const LogDetailsPanel: React.FC<LogDetailsPanelProps> = ({
             maxWidth: '90vw',
           }}
         >
+          {/* 접근성을 위한 숨겨진 제목과 설명 */}
+          <Dialog.Title className="sr-only">
+            Build Details - {buildId}
+          </Dialog.Title>
+          <Dialog.Description className="sr-only">
+            Detailed view of build logs, pipeline stages, and build information for build {buildId}
+          </Dialog.Description>
           {/* 로딩 상태 */}
           {loading && (
             <div className='flex items-center justify-center h-96'>

@@ -49,18 +49,44 @@ export const highlightSearchText = (text: string, searchQuery: string): string =
   if (!searchQuery.trim() || !text) return text || '';
   
   try {
-    const escapedQuery = escapeRegex(searchQuery);
-    const regex = new RegExp(`(${escapedQuery})`, 'gi');
-    return text.replace(regex, '<mark class="bg-yellow-200 text-yellow-900 px-1 rounded">$1</mark>');
+    // 단순 문자열 치환으로 변경 (정규식 제거)
+    const query = searchQuery.trim();
+    if (!query) return text;
+    
+    // 대소문자 무시하고 모든 일치 항목을 하이라이트
+    const parts = text.split(new RegExp(`(${escapeForSplit(query)})`, 'gi'));
+    return parts.map(part => 
+      part.toLowerCase() === query.toLowerCase() 
+        ? `<mark class="bg-yellow-200 text-yellow-900 px-1 rounded">${part}</mark>`
+        : part
+    ).join('');
   } catch (error) {
     console.error('Error highlighting search text:', error);
     return text;
   }
 };
 
+// split용 간단한 이스케이프 (정규식 최소화)
+const escapeForSplit = (string: string): string => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
 export const escapeRegex = (string: string): string => {
   if (!string || typeof string !== 'string') return '';
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  
+  try {
+    // 특수문자 이스케이프 처리
+    const escaped = string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+    // 이스케이프된 문자열로 정규식 생성 테스트
+    new RegExp(escaped, 'gi');
+    
+    return escaped;
+  } catch (error) {
+    // 정규식 생성 실패 시 빈 문자열 반환
+    console.warn('Failed to escape regex:', string, error);
+    return '';
+  }
 };
 
 export const truncateMessage = (message: string, maxLength: number = 100): string => {
