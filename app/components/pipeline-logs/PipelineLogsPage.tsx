@@ -9,21 +9,8 @@ interface PipelineLogsPageProps {
   projectId?: string;
 }
 
-// 메인 페이지 컴포넌트 (/project/{project-id}/logs)
-const PipelineLogsPage: React.FC<PipelineLogsPageProps> = () => {
-  const [isLive, setIsLive] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [newLogIds, setNewLogIds] = useState(new Set(['5'])); // 최신 로그를 계속 하이라이트
-  const [displayedLogs, setDisplayedLogs] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(0);
-  
-  const LOGS_PER_PAGE = 10;
-  const MAX_LOGS = 50;
-
-  // 샘플 데이터 (최신순 정렬 - id 5가 최신, id 1이 가장 오래된)
-  const sampleLogs = [
+// 샘플 데이터 (최신순 정렬 - id 5가 최신, id 1이 가장 오래된)
+const sampleLogs = [
     {
       id: '5',
       status: 'success',
@@ -86,7 +73,20 @@ const PipelineLogsPage: React.FC<PipelineLogsPageProps> = () => {
       duration: '19m 33s',
       isNew: false,
     },
-  ];
+];
+
+// 메인 페이지 컴포넌트 (/project/{project-id}/logs)
+const PipelineLogsPage: React.FC<PipelineLogsPageProps> = () => {
+  const [isLive, setIsLive] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [newLogIds, setNewLogIds] = useState(new Set(['5'])); // 최신 로그를 계속 하이라이트
+  const [displayedLogs, setDisplayedLogs] = useState<typeof sampleLogs>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
+  
+  const LOGS_PER_PAGE = 10;
+  const MAX_LOGS = 50;
 
   // 초기 데이터 로드
   useEffect(() => {
@@ -97,7 +97,7 @@ const PipelineLogsPage: React.FC<PipelineLogsPageProps> = () => {
   }, []);
 
   // 검색 필터링 함수
-  const filterLogs = useCallback((logs: any[], query: string) => {
+  const filterLogs = useCallback((logs: typeof sampleLogs, query: string) => {
     if (!query.trim()) return logs;
     
     const searchTerm = query.toLowerCase().trim();

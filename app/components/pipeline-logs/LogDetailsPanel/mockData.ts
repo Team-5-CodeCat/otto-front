@@ -2,7 +2,6 @@ import { LogData, PipelineStage, LogLine } from './types';
 
 // Mock log lines generator
 const generateMockLogLines = (count: number, hasErrors: boolean = false): LogLine[] => {
-  const levels: LogLine['level'][] = ['INFO', 'WARN', 'ERROR', 'DEBUG'];
   const sources = ['build', 'npm', 'docker', 'aws-cli', 'jest', 'next', 'deploy', 'health-check'];
 
   const messages = {

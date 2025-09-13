@@ -3,7 +3,7 @@
 import React from 'react';
 import { GitBranch, User, Clock, Tag, ExternalLink, Check } from 'lucide-react';
 import { LogData } from './types';
-import { formatTimestamp, getStatusColor, getStatusBgColor } from './utils/timeUtils';
+import { formatTimestamp } from './utils/timeUtils';
 import { formatCommitHash } from './utils/logFormatters';
 
 interface BuildSummaryProps {

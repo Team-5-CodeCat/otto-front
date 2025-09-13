@@ -52,7 +52,7 @@ const LogViewer: React.FC<LogViewerProps> = ({
       isInitialized.current = true;
       setSearchQuery(externalSearchQuery);
     }
-  }, []);
+  }, [externalSearchQuery, setSearchQuery]);
 
   // 외부 검색어가 변경될 때만 동기화 (내부 변경 제외)
   const prevExternalQuery = useRef(externalSearchQuery);
@@ -61,7 +61,7 @@ const LogViewer: React.FC<LogViewerProps> = ({
       prevExternalQuery.current = externalSearchQuery;
       setSearchQuery(externalSearchQuery);
     }
-  }, [externalSearchQuery]);
+  }, [externalSearchQuery, setSearchQuery]);
 
   // 내부 검색어 변경은 입력 이벤트에서만 처리 (useEffect 제거)
 

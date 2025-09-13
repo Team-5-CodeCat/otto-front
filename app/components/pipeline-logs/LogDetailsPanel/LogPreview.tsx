@@ -16,7 +16,7 @@ interface LogPreviewProps {
 const LogPreview: React.FC<LogPreviewProps> = ({
   logData,
   onExpandLogs,
-  onOpenInNewWindow,
+  onOpenInNewWindow: _onOpenInNewWindow,
   maxLines = 10,
 }) => {
   const previewLogs = getLogPreview(logData);

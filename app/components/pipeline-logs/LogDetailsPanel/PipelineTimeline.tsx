@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Check, X, Clock, Circle, ChevronRight } from 'lucide-react';
+import { Check, X, Circle, ChevronRight } from 'lucide-react';
 import { PipelineStage } from './types';
-import { formatTimestamp, getStatusColor } from './utils/timeUtils';
+import { formatTimestamp } from './utils/timeUtils';
 
 interface PipelineTimelineProps {
   stages: PipelineStage[];

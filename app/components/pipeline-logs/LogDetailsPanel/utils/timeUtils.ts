@@ -35,7 +35,7 @@ export const formatTimestamp = (
         second: '2-digit',
       });
 
-    case 'relative':
+    case 'relative': {
       const diffMs = now.getTime() - date.getTime();
       const diffSeconds = Math.floor(diffMs / 1000);
       const diffMinutes = Math.floor(diffSeconds / 60);
@@ -46,6 +46,7 @@ export const formatTimestamp = (
       if (diffHours > 0) return `${diffHours}h ago`;
       if (diffMinutes > 0) return `${diffMinutes}m ago`;
       return `${diffSeconds}s ago`;
+    }
 
     case 'full':
     default:

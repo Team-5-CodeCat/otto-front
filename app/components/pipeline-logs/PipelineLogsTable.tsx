@@ -39,7 +39,7 @@ const PipelineLogsTable: React.FC<PipelineLogsTableProps> = ({
   onLoadMore,
   hasMore,
   isLoading,
-  searchQuery,
+  searchQuery: _searchQuery,
   onMarkAsRead,
 }) => {
   const [selectedBuildId, setSelectedBuildId] = useState<string | null>(null);

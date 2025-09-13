@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { LogLine, LogFilter, LogSearchResult } from '../types';
-import { highlightSearchText, escapeRegex } from '../utils/logFormatters';
+// import { highlightSearchText, escapeRegex } from '../utils/logFormatters'; // Not used in current implementation
 
 // 디바운스 훅
 const useDebounce = (value: string, delay: number) => {
